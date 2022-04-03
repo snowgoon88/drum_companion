@@ -84,6 +84,17 @@ def configure( conf ):
     # conf.recurse( 'visugl' )
     # visuglnode = conf.path.find_node( 'libs/imgui' )
     # conf.env.INCLUDES_VISUGL  = [visuglnode.abspath()+'/src']
+
+    ## Check MiniAudio
+    print( "Looking for MiniAudio" )
+    ma_node = conf.path.find_node( 'libs/miniaudio' )
+    if not ma_node :
+        from waflib.Errors import ConfigurationError
+        raise ConfigurationError( msg='MiniAudio '+conf.path.parent.abspath() )
+    conf.env.LIB_MINIAUDIO = [ "dl", "m", "pthread" ]
+    conf.env.INCLUDES_MINIAUDIO = [ma_node.abspath()]
+    print( "** MiniAudio *************************************************************" )
+    print( conf.env )
     
     # ## Require VisuGL
     # # print( "Looking for VisuGL" )

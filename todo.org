@@ -1,3 +1,4 @@
+* __CURRENT__ : test [[miniaudio]]
 * TODO [0/2] Ressources to try
 ** TODO [1/2] GUI : imgui
 https://github.com/ocornut/imgui
@@ -11,7 +12,12 @@ unit x size button
 Play/Pause
 Volume
 
-** TODO [/] Audio : miniaudio
+** TODO [1/2] Audio : miniaudio
+<<miniaudio>>
 https://github.com/mackron/miniaudio
 Engine où on peut "chaîner" des data_source
 Il semble que l'on peut aussi dire quand on joue une source (ms)
+*** DONE compile basic example (clave) with waf
+*** TODO [0/2] Load clave and play regurlarly
+**** TODO either because engine can play at given time ?
+**** TODO or by checking the time in callback loop ?

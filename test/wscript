@@ -31,4 +31,14 @@ def build(bld):
         libs =     [],#["m","rt","dl"],
         use =      ["GLFW3", "GL"]
     )
+
+    # ----------------------------------------------------------- 00-engine-play
+    bld.program(
+        source =   ["00-engine-play.cpp"],
+        target =   "00-engine-play",
+        includes = ["."],
+        libs =     [], #["-ldl -lm -lpthread
+        use =      ["MINIAUDIO"]
+    )
+
     
