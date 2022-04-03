@@ -6,6 +6,7 @@ Tentative to build a custom Metronom for my drumming practice.
 
 ### Dependencies
 - Need to clone [ImGUI](https://github.com/ocornut/imgui) in the ```lib``` directory
+- Need to clone [MiniAudio](https://github.com/mackron/miniaudio) in ```libs``` directory
 
 ### Use waf
 - to configure (clang): ```./waf configure --out=cbuild --check-cxx-compiler=clang++ --compil_db```
