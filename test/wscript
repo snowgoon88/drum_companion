@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+# wscript in ./test
+
+import os
+
+
+# ************************************************************************ build
+def build(bld):
+    print('→ build from ' + bld.path.abspath())
+
+    # -------------------------------------------------------------------- ImGUI
+    ## build list of ImGUI sources
+    imgui_dir = "../libs/imgui/"
+    imgui_files = [ "imgui.cpp",
+                    "imgui_draw.cpp",
+                    "imgui_tables.cpp",
+                    "imgui_widgets.cpp",
+    ]
+    imgui_backend = [ "backends/imgui_impl_glfw.cpp",
+                      "backends/imgui_impl_opengl3.cpp",
+    ]
+    imgui_sources = [imgui_dir+path for path in imgui_files+imgui_backend]
+
+    # ---------------------------------------------------------------- 00-button
+    bld.program(
+        source =   ["00-button.cpp"] + imgui_sources,
+        target =   "00-button",
+        includes = [".", imgui_dir, imgui_dir+"backends/"],
+        libs =     [],#["m","rt","dl"],
+        use =      ["GLFW3", "GL"]
+    )
+    

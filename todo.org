@@ -1,0 +1,17 @@
+* TODO [0/2] Ressources to try
+** TODO [1/2] GUI : imgui
+https://github.com/ocornut/imgui
+- examples_glfw_opengl2/3 work
+*** DONE Compile with WAF a basic example 
+*** TODO ESC for quitting
+*** [/] Make my own basic example
+BPM =
+size = | unit = 
+unit x size button
+Play/Pause
+Volume
+
+** TODO [/] Audio : miniaudio
+https://github.com/mackron/miniaudio
+Engine où on peut "chaîner" des data_source
+Il semble que l'on peut aussi dire quand on joue une source (ms)

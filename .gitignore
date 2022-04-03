@@ -1,0 +1,27 @@
+# ignore build object and library and depency
+*.[oad]
+*.pyc
+*~
+.waf-*
+.lock-waf*
+/build
+/wbuild
+/cbuild
+/data*
+/libs/*
+
+*.data
+*.json
+/inspiration
+
+# cache file of ccls
+/.ccls-cache
+
+# imgui
+**/imgui.ini
+
+# gtags files
+GPATH
+GRTAGS
+GTAGS
+gtags.files
