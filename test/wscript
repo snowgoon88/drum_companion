@@ -40,5 +40,13 @@ def build(bld):
         libs =     [], #["-ldl -lm -lpthread
         use =      ["MINIAUDIO"]
     )
+    # ---------------------------------------------------------- 01-sound-repeat
+    bld.program(
+        source =   ["01-sound-repeat.cpp"],
+        target =   "01-sound-repeat",
+        includes = ["."],
+        libs =     [], #["-ldl -lm -lpthread
+        use =      ["MINIAUDIO"]
+    )
 
     
