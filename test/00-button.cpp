@@ -93,14 +93,36 @@ int main(int, char**)
     // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-    //io.Fonts->AddFontDefault();
+    io.Fonts->AddFontDefault();
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
+    //ImFont* font_consolas = io.Fonts->AddFontFromFileTTF("ressources/Consolas.ttf", 16.0f);
+    
+    // Load font and merge to default
+    static const ImWchar icons_ranges[] = { 0x23f0, 0x23ff, 0 }; // static as not copied by AddFont
+    ImFontConfig config;
+    config.MergeMode = true;
+    ImFont* font_unifont = io.Fonts->AddFontFromFileTTF("ressources/unifont.ttf",
+                                                        12.0f,
+                                                        &config,
+                                                        icons_ranges
+                                                        );
+   if (font_unifont == NULL) {
+      std::cout << "Error loading ressources/unifont.ttf" << std::endl;
+      return 1;
+    }
 
+    io.Fonts->Build();
+
+    // if (font_consolas == NULL) {
+    //   std::cout << "Error loading ressources/Consolas.ttf" << std::endl;
+    //   return 1;
+    // }
+    
     
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -144,6 +166,11 @@ int main(int, char**)
             }
             ImGui::PopStyleColor(3);
             //ImGui::PopID();
+
+            
+            ImGui::Button( u8"⏵" ); // 0x23F5
+            ImGui::SameLine(); ImGui::Button( u8"⏸" ); // 0x23F8
+            ImGui::SameLine(); ImGui::Button( u8"⏹" ); // 0X23F9
             
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
