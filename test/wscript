@@ -30,6 +30,14 @@ def build(bld):
         libs =     [],#["m","rt","dl"],
         use =      ["GLFW3", "GL"]
     )
+    # ------------------------------------------------------------ 01-play-pause
+    bld.program(
+        source =   ["01-play-pause.cpp"] + imgui_sources,
+        target =   "01-play-pause",
+        includes = [".", imgui_dir, imgui_dir+"backends/"],
+        libs =     [],#["m","rt","dl"],
+        use =      ["MINIAUDIO", "GLFW3", "GL"]
+    )
 
     # ----------------------------------------------------------- 00-engine-play
     bld.program(
