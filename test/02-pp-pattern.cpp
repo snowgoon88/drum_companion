@@ -151,11 +151,12 @@ int main(int, char **) {
   bool should_pause = false;
   bool should_stop = false;
   bool should_run = false;
+  bool gui_ask_end = false;
 
   // Music state
   
   // Main loop
-  while (!glfwWindowShouldClose(window)) {
+  while (!glfwWindowShouldClose(window) && !gui_ask_end) {
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to
     // tell if dear imgui wants to use your inputs.
@@ -208,6 +209,11 @@ int main(int, char **) {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     glfwSwapBuffers(window);
 
+    // test Keyboard
+    if (ImGui::IsKeyDown(526)) { // Escape
+      gui_ask_end = true;
+    }
+    
     // MiniAudio
     if (should_run) {
       pa.start();
