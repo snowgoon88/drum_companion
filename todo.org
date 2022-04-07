@@ -1,12 +1,14 @@
-* __CURRENT__ : ESC in Gui or Play/Pause/Stop Sequence
+* __CURRENT__ : Window size in GUI or Play/Pause/Stop Sequence
 * TODO [0/2] Ressources to try
-** TODO [4/4] GUI : imgui
+** TODO [5/6] GUI : imgui
 https://github.com/ocornut/imgui
 - examples_glfw_opengl2/3 work
 *** DONE Compile with WAF a basic example 
 *** DONE Define Play/Pause/Stop button
 *** DONE Play/Pause Pattern without miniaudio engine
-*** DONE ESC for quitting
+*** DONE ESC for quitting [02-pp-pattern]
+*** DONE Set Window size [00-button]
+*** TODO Adapt Window Size
 *** [/] Make my own basic example
 BPM =
 size = | unit = 

@@ -65,7 +65,7 @@ int main(int, char**)
 #endif
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(500, 500, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window);
@@ -151,6 +151,10 @@ int main(int, char**)
 
         // Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
+          // The ImGuiCond indicate if this value is 'Always' enforced
+          // of only the FirstUseEver (no existing imgui.ini file
+          // or...
+          ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_Always);
             // Create a window with title and append into it.
             ImGui::Begin("Drum Companion (alpha button)");                          
             // Display some text (you can use a format strings too)
