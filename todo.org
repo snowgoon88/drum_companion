@@ -1,10 +1,11 @@
 * __CURRENT__ : ESC in Gui or Play/Pause/Stop Sequence
 * TODO [0/2] Ressources to try
-** TODO [2/3] GUI : imgui
+** TODO [3/4] GUI : imgui
 https://github.com/ocornut/imgui
 - examples_glfw_opengl2/3 work
 *** DONE Compile with WAF a basic example 
 *** DONE Define Play/Pause/Stop button
+*** DONE Play/Pause Pattern without miniaudio engine
 *** TODO ESC for quitting
 *** [/] Make my own basic example
 BPM =

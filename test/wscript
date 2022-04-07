@@ -38,6 +38,14 @@ def build(bld):
         libs =     [],#["m","rt","dl"],
         use =      ["MINIAUDIO", "GLFW3", "GL"]
     )
+    # ------------------------------------------------------------ 02-pp-pattern
+    bld.program(
+        source =   ["02-pp-pattern.cpp"] + imgui_sources,
+        target =   "02-pp-pattern",
+        includes = [".", "../src", imgui_dir, imgui_dir+"backends/"],
+        libs =     [],#["m","rt","dl"],
+        use =      ["MINIAUDIO", "GLFW3", "GL"]
+    )
 
     # ----------------------------------------------------------- 00-engine-play
     bld.program(

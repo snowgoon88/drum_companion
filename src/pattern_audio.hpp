@@ -76,6 +76,9 @@ public:
       std::cout << "Start at " << str_dump() << std::endl;
       _state = running;
     }
+    else if(_state == paused) {
+      _state = running;
+    }
   }
   void update()
   {
