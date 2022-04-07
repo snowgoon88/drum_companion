@@ -5,7 +5,6 @@
 
 import os
 
-
 # ************************************************************************ build
 def build(bld):
     print('→ build from ' + bld.path.abspath())
@@ -47,6 +46,14 @@ def build(bld):
         includes = ["."],
         libs =     [], #["-ldl -lm -lpthread
         use =      ["MINIAUDIO"]
+    )
+    # --------------------------------------------------------- 02-audio-pattern
+    bld.program(
+        source =   ["02-audio-pattern.cpp"],
+        target =   "02-audio-pattern",
+        includes = [".", "../src"],
+        libs =     [], #["-ldl -lm -lpthread
+        use =      []
     )
 
     
