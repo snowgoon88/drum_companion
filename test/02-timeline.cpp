@@ -62,7 +62,15 @@ void test()
              std::ostream_iterator<Note>(std::cout, " "));
   std::cout << std::endl;
 
-
+  sig = { 90, 8, 2 };
+  pa._signature = sig;
+  std::string tl_str = "0x1x1xxx1xx1xx1x";
+  std::cout << "__STRING " << tl_str << std::endl;
+  pa.init_from_string( tl_str );
+  std::copy( pa._pattern_intervale.begin(),
+             pa._pattern_intervale.end(),
+             std::ostream_iterator<Note>(std::cout, " "));
+  std::cout << std::endl;
 }
 
 int main(int argc, char *argv[])

@@ -14,6 +14,7 @@
 #include <sstream>
 #include <math.h>   // round
 #include <cmath>
+#include <string>
 
 // uncomment to disable assert()
 // #define NDEBUG
@@ -21,6 +22,12 @@
 // Use (void) to silence unused warnings.
 #define assertm(exp, msg) assert(((void)msg, exp))
 
+#include <utils.hpp>
+
+// ***************************************************************************
+// ****************************************************************** Timeline
+// ***************************************************************************
+using Timeline = std::vector<uint>;
 
 // ***************************************************************************
 // ***************************************************************** Signature
@@ -44,7 +51,24 @@ struct Signature
 //   }
 //   return *this;
 // };
-  
+
+  // ************************************************** Signature::from_string
+  // str = "90:4x1"
+  void from_string( const std::string& str)
+  {
+    // extract bpm
+    auto pos_bpm = str.find( ":" );
+    assert( pos_bpm != std::string::npos );
+
+    bpm = std::stoi( str.substr(0, pos_bpm ));
+
+    auto pos_beat = str.find( "x" );
+    assert( pos_bpm != std::string::npos );
+
+    beats = std::stoi( str.substr(pos_bpm+1, pos_beat ));
+    subdivisions = std::stoi( str.substr( pos_beat+1, str.size() ));
+    
+  }
   // ************************************************************Signature::str
   //DEL std::string str_dump () const
   // {
@@ -96,6 +120,8 @@ struct Note
     return os;
   }
 };
+
+
 
 // ***************************************************************************
 // ************************************************************** PatternAudio
@@ -183,6 +209,27 @@ public:
     _pattern_intervale.push_back(
         Note{val_note, count * _signature.division_length()});
   }
+
+  /** 
+   * str  ="0x1x1xxx1xx1xx1x"
+   */
+  void init_from_string( std::string &str )
+  {
+    Timeline tl;
+
+    for( char& c: str) {
+      if (c=='x') {
+        tl.push_back( 0 );
+      }
+      else if (std::isdigit(c)) {
+        tl.push_back( (int)(c - '0'));
+      }
+    }
+    std::cout << " TL=" << tl << std::endl;
+
+    init_from_timeline( tl );
+  }
+
  
   // ****************************************************** PatternAudio::emit
   void update()

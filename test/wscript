@@ -31,7 +31,7 @@ def build(bld):
                 target =   file[:-4],
                 includes = [".", "../src", imgui_dir, imgui_dir+"backends/"],
                 libs =     [],#["m","rt","dl"],
-                use =      ["MINIAUDIO", "GLFW3", "GL"]
+                use =      ["MINIAUDIO", "GLFW3", "GL", "BOOST"]
             )
 
     
