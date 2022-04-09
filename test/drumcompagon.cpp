@@ -17,6 +17,7 @@ namespace po = boost::program_options;
 
 // *************************************************************** App GLOBALS
 Signature _p_sig;
+std::string _p_pattern = "";
 
 // ***************************************************************************
 // ******************************************************************* options
@@ -27,6 +28,7 @@ void setup_options( int argc, char **argv )
   desc.add_options()
     ("help,h", "produce help message")
     ("sig,s", po::value<std::string>(), "signature as bpm:beatxdivision")
+    ("pattern,p", po::value<std::string>(), "pattern as 1x2x1x2x (according to Signature)")
     ;
 
   // Options on command line 
@@ -60,6 +62,9 @@ void setup_options( int argc, char **argv )
   if (vm.count("sig")) {
     _p_sig.from_string( vm["sig"].as<std::string>() );
   }
+  if (vm.count("pattern")) {
+    _p_pattern = vm["sig"].as<std::string>();
+  }
   
 }
 
@@ -70,6 +75,10 @@ int main(int argc, char *argv[])
   PatternAudio pa;
   pa._signature = _p_sig;
 
+  if (_p_pattern != "") {
+    pa.init_from_string( _p_pattern );
+  }
+  
   std::cout << "__PATTERN AUDIO" << std::endl;
   std::cout <<  pa.str_dump()  << std::endl;
   
