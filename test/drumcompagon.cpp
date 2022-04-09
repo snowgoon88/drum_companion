@@ -2,10 +2,8 @@
 
 /** 
  * CLI DrumCompagnon
- * - cli arguments
+ * - cli arguments: sig, pattern, 
  */
-
-
 
 // Parsing command line options
 #include <boost/program_options.hpp>
@@ -27,7 +25,7 @@ void setup_options( int argc, char **argv )
   po::options_description desc("Options");
   desc.add_options()
     ("help,h", "produce help message")
-    ("sig,s", po::value<std::string>(), "signature as bpm:beatxdivision")
+    ("sig,s", po::value<std::string>(), "signature as BPM:BeatxDivision")
     ("pattern,p", po::value<std::string>(), "pattern as 1x2x1x2x (according to Signature)")
     ;
 
@@ -65,9 +63,11 @@ void setup_options( int argc, char **argv )
   if (vm.count("pattern")) {
     _p_pattern = vm["sig"].as<std::string>();
   }
-  
 }
 
+// ***************************************************************************
+// ********************************************************************** MAIN
+// ***************************************************************************
 int main(int argc, char *argv[])
 {
   setup_options( argc, argv );
@@ -84,4 +84,5 @@ int main(int argc, char *argv[])
   
   return 0;
 }
+// ***************************************************************************
 

@@ -42,16 +42,6 @@ struct Signature
   Signature(uint bpm, uint beats, uint subdivisions)
       : bpm(bpm), beats(beats), subdivisions(subdivisions) {}
 
-  // Signature& operator=(const Signature& c) // copie
-// { 
-//   if(this != &c) { // protect against invalid self-assignment
-//     bpm      = c.bpm;
-//     beats      = c.beats;
-//     subdivisions = c.subdivisions;
-//   }
-//   return *this;
-// };
-
   // ************************************************** Signature::from_string
   // str = "90:4x1"
   void from_string( const std::string& str)
@@ -70,14 +60,6 @@ struct Signature
     
   }
   // ************************************************************Signature::str
-  //DEL std::string str_dump () const
-  // {
-  //   std::stringstream dump;
-  //   dump << "Signature: " << bpm << " bpm ";
-  //   dump << beats << "x" << subdivisions << " beats";
-
-  //   return dump.str();
-  // }
   friend std::ostream &operator<<(std::ostream &os, const Signature &s)
   {
     os << "Signature: " << s.bpm << " bpm ";
@@ -107,20 +89,14 @@ struct Note
   Note() {};
   Note(uint val, uint length) : val(val), length(length) {};
 
-  //DEL std::string str_dump () const
-  // {
-  //   std::stringstream dump;
-  //   dump << "N:( " << val << ", " << length << ")";
-
-  //   return dump.str();
-  // }
+  // *************************************************************** Note::str
   friend std::ostream& operator<<( std::ostream& os, const Note& n)
   {
     os << "N:( " << n.val << ", " << n.length << ")";
     return os;
   }
 };
-
+// **************************************************************** Note - END
 
 
 // ***************************************************************************
@@ -182,7 +158,7 @@ public:
   /** from timeline (array of sound for each subdivisions of Signature)
    *  to Vec of intervals
    */
-  void init_from_timeline( std::vector<uint> &timeline )
+  void init_from_timeline( Timeline &timeline )
   {
     // check proper size
     assert( timeline.size() == _signature.beats * _signature.subdivisions );
@@ -289,4 +265,6 @@ public:
   Time _last_update;
   Time _start_time;
 };
+// ******************************************************** PatternAudio - END
+
 #endif // PATTERN_AUDIO_HPP
