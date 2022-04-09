@@ -22,54 +22,16 @@ def build(bld):
     ]
     imgui_sources = [imgui_dir+path for path in imgui_files+imgui_backend]
 
-    # ---------------------------------------------------------------- 00-button
-    bld.program(
-        source =   ["00-button.cpp"] + imgui_sources,
-        target =   "00-button",
-        includes = [".", imgui_dir, imgui_dir+"backends/"],
-        libs =     [],#["m","rt","dl"],
-        use =      ["GLFW3", "GL"]
-    )
-    # ------------------------------------------------------------ 01-play-pause
-    bld.program(
-        source =   ["01-play-pause.cpp"] + imgui_sources,
-        target =   "01-play-pause",
-        includes = [".", imgui_dir, imgui_dir+"backends/"],
-        libs =     [],#["m","rt","dl"],
-        use =      ["MINIAUDIO", "GLFW3", "GL"]
-    )
-    # ------------------------------------------------------------ 02-pp-pattern
-    bld.program(
-        source =   ["02-pp-pattern.cpp"] + imgui_sources,
-        target =   "02-pp-pattern",
-        includes = [".", "../src", imgui_dir, imgui_dir+"backends/"],
-        libs =     [],#["m","rt","dl"],
-        use =      ["MINIAUDIO", "GLFW3", "GL"]
-    )
-
-    # ----------------------------------------------------------- 00-engine-play
-    bld.program(
-        source =   ["00-engine-play.cpp"],
-        target =   "00-engine-play",
-        includes = ["."],
-        libs =     [], #["-ldl -lm -lpthread
-        use =      ["MINIAUDIO"]
-    )
-    # ---------------------------------------------------------- 01-sound-repeat
-    bld.program(
-        source =   ["01-sound-repeat.cpp"],
-        target =   "01-sound-repeat",
-        includes = ["."],
-        libs =     [], #["-ldl -lm -lpthread
-        use =      ["MINIAUDIO"]
-    )
-    # --------------------------------------------------------- 02-audio-pattern
-    bld.program(
-        source =   ["02-audio-pattern.cpp"],
-        target =   "02-audio-pattern",
-        includes = [".", "../src"],
-        libs =     [], #["-ldl -lm -lpthread
-        use =      []
-    )
+    
+    # detect files that should be build
+    for file in os.listdir( bld.path.abspath() ):
+        if file.endswith(".cpp"):
+            bld.program(
+                source =   [file] + imgui_sources,
+                target =   file[:-4],
+                includes = [".", "../src", imgui_dir, imgui_dir+"backends/"],
+                libs =     [],#["m","rt","dl"],
+                use =      ["MINIAUDIO", "GLFW3", "GL"]
+            )
 
     

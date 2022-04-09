@@ -12,6 +12,90 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include <math.h>   // round
+#include <cmath>
+
+// uncomment to disable assert()
+// #define NDEBUG
+#include <cassert>
+// Use (void) to silence unused warnings.
+#define assertm(exp, msg) assert(((void)msg, exp))
+
+
+// ***************************************************************************
+// ***************************************************************** Signature
+// ***************************************************************************
+struct Signature
+{
+  uint bpm           = 120;   // beat per min
+  uint beats         = 4;     // nb of beat in a pattern
+  uint subdivisions  = 1;     // nb of sub division in a beat
+
+  Signature() {};
+  Signature(uint bpm, uint beats, uint subdivisions)
+      : bpm(bpm), beats(beats), subdivisions(subdivisions) {}
+
+  // Signature& operator=(const Signature& c) // copie
+// { 
+//   if(this != &c) { // protect against invalid self-assignment
+//     bpm      = c.bpm;
+//     beats      = c.beats;
+//     subdivisions = c.subdivisions;
+//   }
+//   return *this;
+// };
+  
+  // ************************************************************Signature::str
+  //DEL std::string str_dump () const
+  // {
+  //   std::stringstream dump;
+  //   dump << "Signature: " << bpm << " bpm ";
+  //   dump << beats << "x" << subdivisions << " beats";
+
+  //   return dump.str();
+  // }
+  friend std::ostream &operator<<(std::ostream &os, const Signature &s)
+  {
+    os << "Signature: " << s.bpm << " bpm ";
+    os << s.beats << "x" << s.subdivisions << " beats";
+      return os;
+  };
+  // *********************************************** Signature::division_length
+  // duration in ms of a subdivisions
+  uint division_length() {
+    double min_in_ms = 1000.0 * 60.0;
+    double length = min_in_ms / static_cast<double>(bpm)
+      / static_cast<double>(subdivisions);
+    return static_cast<uint>( round( length ));
+  }
+};
+// *********************************************************** Signature - END
+
+
+// ***************************************************************************
+// ********************************************************************** Note
+// ***************************************************************************
+struct Note
+{
+  uint val              = 1;
+  uint length           = 10;
+
+  Note() {};
+  Note(uint val, uint length) : val(val), length(length) {};
+
+  //DEL std::string str_dump () const
+  // {
+  //   std::stringstream dump;
+  //   dump << "N:( " << val << ", " << length << ")";
+
+  //   return dump.str();
+  // }
+  friend std::ostream& operator<<( std::ostream& os, const Note& n)
+  {
+    os << "N:( " << n.val << ", " << n.length << ")";
+    return os;
+  }
+};
 
 // ***************************************************************************
 // ************************************************************** PatternAudio
@@ -54,6 +138,7 @@ public:
   std::string str_dump () const
   {
     std::stringstream dump;
+    dump << _signature << std::endl;
     dump << "Last = ";
     DurationMS delta_time_start = std::chrono::duration_cast<DurationMS>( _last_update - _start_time );
     dump << delta_time_start.count();
@@ -65,21 +150,41 @@ public:
                           
     return dump.str();
   }
-  // ****************************************************** PatternAudio::emit
-  void start()
+
+
+  // ****************************************************** PatternAudio::init
+  /** from timeline (array of sound for each subdivisions of Signature)
+   *  to Vec of intervals
+   */
+  void init_from_timeline( std::vector<uint> &timeline )
   {
-    if (_state == ready) {
-      _id_seq = 0;
-      _start_time = std::chrono::system_clock::now();
-      _time_to_next = std::chrono::milliseconds(_pattern_intervale[_id_seq]);
-      _last_update = std::chrono::system_clock::now();
-      std::cout << "Start at " << str_dump() << std::endl;
-      _state = running;
+    // check proper size
+    assert( timeline.size() == _signature.beats * _signature.subdivisions );
+
+    auto itt = timeline.begin();    
+
+    _pattern_intervale.clear();
+    
+    // Count nb of '0' between each non '0' in timeline
+    // First Note
+    uint val_note = *itt;
+    uint count = 1;
+    while (++itt != timeline.end() ) {
+      if (*itt == 0) {
+        count += 1;
+      }
+      else {
+        _pattern_intervale.push_back(
+            Note{val_note, count * _signature.division_length()});
+        val_note = *itt;
+        count = 1;
+      }
     }
-    else if(_state == paused) {
-      _state = running;
-    }
+    _pattern_intervale.push_back(
+        Note{val_note, count * _signature.division_length()});
   }
+ 
+  // ****************************************************** PatternAudio::emit
   void update()
   {
     if (_state == running) {
@@ -92,12 +197,28 @@ public:
         // emit event
         std::cout << "====> *** Emit at " << str_dump() << " ******" << std::endl;
         _id_seq = (_id_seq + 1) % _pattern_intervale.size();
-        _time_to_next = std::chrono::milliseconds(_pattern_intervale[_id_seq]);
+        _time_to_next = std::chrono::milliseconds(_pattern_intervale[_id_seq].length);
       }
       _last_update = time_now;
     }
     else if (_state == paused) {
       _last_update = std::chrono::system_clock::now();
+    }
+  }
+
+  // ******************************************************* PatternAudio::cmd
+  void start()
+  {
+    if (_state == ready) {
+      _id_seq = 0;
+      _start_time = std::chrono::system_clock::now();
+      _time_to_next = std::chrono::milliseconds(_pattern_intervale[_id_seq].length);
+      _last_update = std::chrono::system_clock::now();
+      std::cout << "Start at " << str_dump() << std::endl;
+      _state = running;
+    }
+    else if(_state == paused) {
+      _state = running;
     }
   }
   void pause()
@@ -111,9 +232,11 @@ public:
     _state = ready;
   }
   // ************************************************* PatternAudio::attributs
+  Signature _signature;
   AudioState _state;
   // sequence of delay in ms
-  std::vector<int> _pattern_intervale = { 500, 250, 500, 500, 250 };
+  std::vector<Note> _pattern_intervale = {{1, 500}, {1, 250},
+                                          {1, 500}, {1, 500}, {1,250}};
   uint _id_seq;
   DurationMS _time_to_next;
   Time _last_update;
