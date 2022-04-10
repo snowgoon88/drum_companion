@@ -33,6 +33,8 @@ Il semble que l'on peut aussi dire quand on joue une source (ms)
 *** TODO Play/Pause/Stop Pattern (sequence of Sounds)
 * [0/2] Safe code
 ** TODO Ensure notes in PatternAudio exist in SoundEngine
-** TODO when Ctrl-C, take time to destry Objects
+** [1/2] when Ctrl-C, take time to destry Objects
+*** DONE Linux
 - https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
+*** TODO Windows
 - https://docs.microsoft.com/en-us/windows/console/registering-a-control-handler-function

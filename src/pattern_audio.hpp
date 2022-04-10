@@ -26,6 +26,16 @@
 #include <utils.hpp>
 
 // ***************************************************************************
+// ******************************************************************* Loggers
+// ***************************************************************************
+//#define LOG_PA
+#ifdef LOG_PA
+#  define LOGPA(msg) (LOG_BASE("[PaAu]", msg))
+#else
+#  define LOGPA(msg)
+#endif
+
+// ***************************************************************************
 // ****************************************************************** Timeline
 // ***************************************************************************
 using Timeline = std::vector<uint>;
@@ -205,7 +215,7 @@ public:
         tl.push_back( (int)(c - '0'));
       }
     }
-    std::cout << " TL=" << tl << std::endl;
+    LOGPA( " TL=" << tl );
 
     init_from_timeline( tl );
   }
@@ -218,11 +228,11 @@ public:
       auto time_now = std::chrono::system_clock::now();
       DurationMS delta_time = std::chrono::duration_cast<DurationMS>( time_now - _last_update );
       _time_to_next -= delta_time;
-      //std::cout << str_dump() << std::endl;
+      //LOGPA( str_dump() );
     
       if (_time_to_next < DurationMS(5)) {
         // emit event
-        std::cout << "====> *** Emit at " << str_dump() << " ******" << std::endl;
+        LOGPA( "====> *** Emit at " << str_dump() << " ******" );
         
         _id_seq = (_id_seq + 1) % _pattern_intervale.size();
         if (_pattern_intervale[_id_seq].val != 0 && _engine != nullptr ) {
@@ -245,7 +255,7 @@ public:
       _start_time = std::chrono::system_clock::now();
       _time_to_next = std::chrono::milliseconds(_pattern_intervale[_id_seq].length);
       _last_update = std::chrono::system_clock::now();
-      std::cout << "Start at " << str_dump() << std::endl;
+      LOGPA( "Start at " << str_dump() );
       if (_pattern_intervale[_id_seq].val != 0 && _engine != nullptr ) {
         _engine->play_sound( _pattern_intervale[_id_seq].val - 1 );
       }

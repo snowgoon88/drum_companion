@@ -17,6 +17,19 @@
 #include <string>
 #include <vector>
 
+#include <utils.hpp>
+
+// ***************************************************************************
+// ******************************************************************* Loggers
+// ***************************************************************************
+//#define LOG_SE
+#ifdef LOG_SE
+#  define LOGSE(msg) (LOG_BASE("[SoEn]", msg))
+#else
+#  define LOGSE(msg)
+#endif
+
+
 // ***************************************************************************
 // *************************************************************** SoundEngine
 // ***************************************************************************
@@ -30,19 +43,22 @@ public:
 
   SoundEngine()
   {
-    std::cout << "__START SoundEngine" << std::endl;
+    LOGSE( "__START SoundEngine" );
     result = ma_engine_init( NULL, &engine );
     check_error( "Failed to initialize MiniAudio engine" );
     //ma_engine_start( &engine );
 
     auto channels = ma_engine_get_channels(&engine);
-    std::cout << "  channel: " << channels << std::endl;
+    LOGSE( "  channel: " << channels );
+    USED_IN_MACRO(channels);
     auto sample_rate = ma_engine_get_sample_rate(&engine);
-    std::cout << "  s.rate: " << sample_rate << std::endl;
+    LOGSE( "  s.rate: " << sample_rate );
+    USED_IN_MACRO(sample_rate);
+    
   }
   virtual ~SoundEngine()
   {
-    std::cout << "__DESTROY SoundEngine" << std::endl;
+    LOGSE( "__DESTROY SoundEngine" );
     for( auto& s: sounds) {
       ma_sound_uninit( s );
       delete s;
@@ -67,10 +83,10 @@ public:
   // ******************************************************** SoundEngine::cmd
   void play_sound( const size_t& idx )
   {
-    std::cout << "Playing " << idx  << std::endl;
+    LOGSE( "Playing " << idx  );
     result = ma_sound_start( sounds[idx] );
     check_error( "Failed to play sound ("+std::to_string(idx)+")" );
-    std::cout << "  (running)" << std::endl;
+    LOGSE( "  (running)" );
   }
   void pause_sound( const size_t& idx )
   {

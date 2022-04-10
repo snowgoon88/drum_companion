@@ -22,16 +22,26 @@ def build(bld):
     ]
     imgui_sources = [imgui_dir+path for path in imgui_files+imgui_backend]
 
-    
-    # detect files that should be build
-    for file in os.listdir( bld.path.abspath() ):
-        if file.endswith(".cpp"):
-            bld.program(
-                source =   [file] + imgui_sources,
-                target =   file[:-4],
-                includes = [".", "../src", imgui_dir, imgui_dir+"backends/"],
-                libs =     [],#["m","rt","dl"],
-                use =      ["MINIAUDIO", "GLFW3", "GL", "BOOST"]
-            )
+    def build_file( file ):
+        print( "** Buildind "+file )
+        bld.program(
+            source =   [file] + imgui_sources,
+            target =   file[:-4],
+            includes = [".", "../src", imgui_dir, imgui_dir+"backends/"],
+            libs =     [],#["m","rt","dl"],
+            use =      ["MINIAUDIO", "GLFW3", "GL", "BOOST"]
+        )
+
+    base_files = ["drum_compagnon.cpp"]
+    for file in base_files:
+        build_file( file )
+        
+    # check test option
+    if bld.options.test:
+        # detect all *test* files that should be build
+        for file in os.listdir( bld.path.abspath() ):
+            # only .cpp files beginning with number
+            if file.endswith(".cpp") and file[:1].isdigit():
+                build_file( file )
 
     

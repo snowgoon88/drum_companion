@@ -48,6 +48,10 @@ def options( opt ):
     opt.add_option('-D', '--define', action="append", dest="defined_macro",
                    help='define preprocessing macro' )
 
+    # option debug
+    opt.add_option('--test', dest='test', action="store_true", default=False,
+                   help='compile all test programs (name begins with digits)' )
+    
 # **************************************************************** CMD configure
 def configure( conf ):
     # print( "__START__" )
@@ -162,6 +166,12 @@ def build( bld ):
         bld.env['CXXFLAGS'] += opt_flags.split(' ')
     print( bld.env['CXXFLAGS'] )
         
+    # add macro defines as -D options
+    # print( "MACRO=", bld.options.defined_macro )
+    if bld.options.defined_macro:
+        # print( "ENV=", bld.env.DEFINES )
+        bld.env.DEFINES = bld.env.DEFINES + bld.options.defined_macro
+        # print( "new ENV=", bld.env.DEFINES )
     
     bld.recurse( 'test' )
     
