@@ -45,6 +45,7 @@ public:
     std::cout << "__DESTROY SoundEngine" << std::endl;
     for( auto& s: sounds) {
       ma_sound_uninit( s );
+      delete s;
     }
     ma_engine_uninit( &engine );
   }

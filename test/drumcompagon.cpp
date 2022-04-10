@@ -10,8 +10,8 @@
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
-#include<iostream>
-
+#include <iostream>
+#include <string>
 #include <chrono>
 #include <thread>
 
@@ -93,17 +93,30 @@ int main(int argc, char *argv[])
   auto idx_clave = sound_engine.add_sound( "ressources/claves_120ms.wav" );
   auto idx_cow = sound_engine.add_sound( "ressources/cowbell.wav" );
 
-  // Dirty : loop to play sound
-  for( unsigned int i = 0; i < 5; ++i) {
-    std::cout << "Start play i=" << i << std::endl;
-    sound_engine.play_sound( idx_clave );
+  // // Dirty : loop to play sound
+  // for( unsigned int i = 0; i < 5; ++i) {
+  //   std::cout << "Start play i=" << i << std::endl;
+  //   sound_engine.play_sound( idx_clave );
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(780));
+  //   std::this_thread::sleep_for(std::chrono::milliseconds(780));
 
-    sound_engine.play_sound( idx_cow );
-    std::this_thread::sleep_for(std::chrono::milliseconds(390));
+  //   sound_engine.play_sound( idx_cow );
+  //   std::this_thread::sleep_for(std::chrono::milliseconds(390));
+  // }
+
+  // ************************************************************* PlayPattern
+  PatternAudio pa_32 { &sound_engine };
+  pa_32._signature = Signature { 94, 8, 2 };
+  auto clave_32 = std::string( "2xx1xx1xxx1x1xxx" );
+  pa_32.init_from_string( clave_32 );
+  std::cout << "__PATTERN clave 3/2"  << std::endl;
+  std::cout << pa_32.str_dump() << std::endl;
+  pa_32.start();
+  while (true) {
+    pa_32.update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
-  
+
   return 0;
 }
 // ***************************************************************************

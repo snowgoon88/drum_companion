@@ -22,6 +22,7 @@
 // Use (void) to silence unused warnings.
 #define assertm(exp, msg) assert(((void)msg, exp))
 
+#include <sound_engine.hpp>
 #include <utils.hpp>
 
 // ***************************************************************************
@@ -102,6 +103,8 @@ struct Note
 // ***************************************************************************
 // ************************************************************** PatternAudio
 // ***************************************************************************
+// TODO: check that _pattern_audio[idx].val is valid (and same as idx
+//       from SoundEngine)
 class PatternAudio
 {
 public:
@@ -110,7 +113,8 @@ public:
   enum AudioState { ready, running, paused };
   
 public:
-  PatternAudio() :
+  PatternAudio( SoundEngine* engine = nullptr ) :
+    _engine(engine),
     _state(ready),
     _start_time(std::chrono::system_clock::now())
   {
@@ -214,12 +218,16 @@ public:
       auto time_now = std::chrono::system_clock::now();
       DurationMS delta_time = std::chrono::duration_cast<DurationMS>( time_now - _last_update );
       _time_to_next -= delta_time;
-      std::cout << str_dump() << std::endl;
+      //std::cout << str_dump() << std::endl;
     
       if (_time_to_next < DurationMS(5)) {
         // emit event
         std::cout << "====> *** Emit at " << str_dump() << " ******" << std::endl;
+        
         _id_seq = (_id_seq + 1) % _pattern_intervale.size();
+        if (_pattern_intervale[_id_seq].val != 0 && _engine != nullptr ) {
+          _engine->play_sound( _pattern_intervale[_id_seq].val - 1 );
+        }
         _time_to_next = std::chrono::milliseconds(_pattern_intervale[_id_seq].length);
       }
       _last_update = time_now;
@@ -238,6 +246,9 @@ public:
       _time_to_next = std::chrono::milliseconds(_pattern_intervale[_id_seq].length);
       _last_update = std::chrono::system_clock::now();
       std::cout << "Start at " << str_dump() << std::endl;
+      if (_pattern_intervale[_id_seq].val != 0 && _engine != nullptr ) {
+        _engine->play_sound( _pattern_intervale[_id_seq].val - 1 );
+      }
       _state = running;
     }
     else if(_state == paused) {
@@ -256,6 +267,7 @@ public:
   }
   // ************************************************* PatternAudio::attributs
   Signature _signature;
+  SoundEngine *_engine;
   AudioState _state;
   // sequence of delay in ms
   std::vector<Note> _pattern_intervale = {{1, 500}, {1, 250},
