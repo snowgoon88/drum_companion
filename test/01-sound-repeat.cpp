@@ -33,7 +33,9 @@ int main(int argc, char *argv[])
   //ma_engine_play_sound( &engine, argv[1], NULL );
 
   // preload sound
-  char clave_path[] = "ressources/claves_120ms.wav";
+  //char clave_path[] = "ressources/claves_120ms.wav";
+  //char clave_path[] = "ressources/Cowbell-3.wav";
+  char clave_path[] = "ressources/cowbell.wav";
   
   std::cout << "__Loading " << std::endl;
   ma_sound clave_sound;
