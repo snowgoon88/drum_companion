@@ -2,7 +2,8 @@
 
 /** 
  * CLI DrumCompagnon
- * - cli arguments: sig, pattern, 
+ * - cli arguments: sig, pattern,
+ * - play repeated sound using sound_pattern,
  */
 
 // Parsing command line options
@@ -11,7 +12,11 @@ namespace po = boost::program_options;
 
 #include<iostream>
 
+#include <chrono>
+#include <thread>
+
 #include<pattern_audio.hpp>
+#include<sound_engine.hpp>
 
 // *************************************************************** App GLOBALS
 Signature _p_sig;
@@ -81,6 +86,23 @@ int main(int argc, char *argv[])
   
   std::cout << "__PATTERN AUDIO" << std::endl;
   std::cout <<  pa.str_dump()  << std::endl;
+
+
+  // *************************************************************** PlaySound
+  SoundEngine sound_engine;
+  auto idx_clave = sound_engine.add_sound( "ressources/claves_120ms.wav" );
+  auto idx_cow = sound_engine.add_sound( "ressources/cowbell.wav" );
+
+  // Dirty : loop to play sound
+  for( unsigned int i = 0; i < 5; ++i) {
+    std::cout << "Start play i=" << i << std::endl;
+    sound_engine.play_sound( idx_clave );
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(780));
+
+    sound_engine.play_sound( idx_cow );
+    std::this_thread::sleep_for(std::chrono::milliseconds(390));
+  }
   
   return 0;
 }
