@@ -39,8 +39,9 @@ PatternAudio *pattern_audio = nullptr;
 bool should_exit = false;
 
 // Args
-Signature _p_sig;
-std::string _p_pattern = "";
+Signature _p_sig {90, 4, 2};
+uint _p_bpm = _p_sig.bpm;
+std::string _p_pattern = "2x1x1x1x";
 
 void clear_globals()
 {
@@ -66,10 +67,13 @@ void ctrlc_cbk( int s )
 void setup_options( int argc, char **argv )
 {
   po::options_description desc("Options");
+  std::string desc_pattern = std::string( "<string> pattern as " ) + _p_pattern + std::string(" (according to Signature divisions)");
+  
   desc.add_options()
     ("help,h", "produce help message")
-    ("sig,s", po::value<std::string>(), "signature as BPM:BeatxDivision")
-    ("pattern,p", po::value<std::string>(), "pattern as 1x2x1x2x (according to Signature)")
+    ("bpm,b", po::value<uint>(&_p_bpm)->default_value(_p_bpm), "<uint> BPM ")
+    ("sig,s", po::value<std::string>()->default_value("4x2"), "<string> signature as BeatxDivision")
+    ("pattern,p", po::value<std::string>()->default_value(_p_pattern), desc_pattern.c_str() )
     ;
 
   // Options on command line 
@@ -103,8 +107,11 @@ void setup_options( int argc, char **argv )
   if (vm.count("sig")) {
     _p_sig.from_string( vm["sig"].as<std::string>() );
   }
+  if (vm.count("bpm")) {
+    _p_sig.bpm = vm["bpm"].as<uint>();
+  }
   if (vm.count("pattern")) {
-    _p_pattern = vm["sig"].as<std::string>();
+    _p_pattern = vm["pattern"].as<std::string>();
   }
 }
 
@@ -149,14 +156,19 @@ int main(int argc, char *argv[])
   // ************************************************************* PlayPattern
   LOGMAIN( "__PATTERN_AUDIO with SoundEngine" );
   pattern_audio = new PatternAudio( sound_engine );
-  pattern_audio->_signature = Signature { 94, 8, 2 };
-  auto clave_32 = std::string( "2xx1xx1xxx1x1xxx" );
-  pattern_audio->init_from_string( clave_32 );
-  LOGMAIN( "__PATTERN clave 3/2" );
+  pattern_audio->_signature = _p_sig;
+  pattern_audio->init_from_string( _p_pattern );
+  
+  // pattern_audio->_signature = Signature { 94, 8, 2 };
+  // auto clave_32 = std::string( "2xx1xx1xxx1x1xxx" );
+  // pattern_audio->init_from_string( clave_32 );
+  // std::cout << "Playing clave 3/2 pattern (" << clave_32 << ")";
+  // std::cout << " at " << pattern_audio->_signature.bpm  << " bpm..." << std::endl;
+  // LOGMAIN( "__PATTERN clave 3/2" );
+
+  std::cout << "Playing " << _p_pattern << " at " << pattern_audio->_signature.bpm  << " bpm..." << std::endl;
   LOGMAIN( pattern_audio->str_dump() );
 
-  std::cout << "Playing clave 3/2 pattern (" << clave_32 << ")";
-  std::cout << " at " << pattern_audio->_signature.bpm  << " bpm..." << std::endl;
   
   pattern_audio->start();
   while (not should_exit) {

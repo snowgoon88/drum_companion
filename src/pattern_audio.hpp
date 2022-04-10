@@ -54,19 +54,15 @@ struct Signature
       : bpm(bpm), beats(beats), subdivisions(subdivisions) {}
 
   // ************************************************** Signature::from_string
-  // str = "90:4x1"
+  // str = "4x1"
   void from_string( const std::string& str)
   {
-    // extract bpm
-    auto pos_bpm = str.find( ":" );
-    assert( pos_bpm != std::string::npos );
-
-    bpm = std::stoi( str.substr(0, pos_bpm ));
-
+    LOGPA( "__Signature BxD from " << str );
+    LOGPA( "  with " << *this );
     auto pos_beat = str.find( "x" );
-    assert( pos_bpm != std::string::npos );
+    assert( pos_beat != std::string::npos );
 
-    beats = std::stoi( str.substr(pos_bpm+1, pos_beat ));
+    beats = std::stoi( str.substr(0, pos_beat ));
     subdivisions = std::stoi( str.substr( pos_beat+1, str.size() ));
     
   }
@@ -205,6 +201,7 @@ public:
    */
   void init_from_string( std::string &str )
   {
+    LOGPA( "__PA init_from " << str );
     Timeline tl;
 
     for( char& c: str) {
