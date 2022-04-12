@@ -7,8 +7,9 @@
  */
 
 // Parsing command line options
-#include <boost/program_options.hpp>
-namespace po = boost::program_options;
+// #include <boost/program_options.hpp>
+// namespace po = boost::program_options;
+#include "docopt.h"
 
 #include <iostream>
 #include <string>
@@ -40,7 +41,7 @@ bool should_exit = false;
 
 // Args
 Signature _p_sig {90, 4, 2};
-uint _p_bpm = _p_sig.bpm;
+unsigned int _p_bpm = _p_sig.bpm;
 std::string _p_pattern = "2x1x1x1x";
 
 void clear_globals()
@@ -64,73 +65,108 @@ void ctrlc_cbk( int s )
 // ***************************************************************************
 // ******************************************************************* options
 // ***************************************************************************
+static const char _usage[] =
+R"(Drum Companion.
+
+    Usage:
+      drum_companion [-b/--bpm=<uint>] [-s/--sig=<str>] [-p/--pattern=<str>]
+      drum_companion (-h | --help)
+
+    Options:
+      -h --help       Show this screen
+      -b <uint>, --bpm <uint>    BPM [default: 90]
+      -s <str>, --sig <str>      signature [default: 4x2]
+      -p <str>, --pattern <str>  pattern as 2x1x1x1x [default: 2x1x1x1x]
+)";
+
 void setup_options( int argc, char **argv )
 {
-  po::options_description desc("Options");
-  std::string desc_pattern = std::string( "<string> pattern as " ) + _p_pattern + std::string(" (according to Signature divisions)");
-  
-  desc.add_options()
-    ("help,h", "produce help message")
-    ("bpm,b", po::value<uint>(&_p_bpm)->default_value(_p_bpm), "<uint> BPM ")
-    ("sig,s", po::value<std::string>()->default_value("4x2"), "<string> signature as BeatxDivision")
-    ("pattern,p", po::value<std::string>()->default_value(_p_pattern), desc_pattern.c_str() )
-    ;
+  std::map<std::string, docopt::value> args = docopt::docopt(_usage, 
+                                                  { argv + 1, argv + argc },
+                                                  true,               // show help if requested
+                                                  "Drum Companion 1.0");  // version string
+  // for(auto const& arg : args) {
+  //   std::cout << arg.first << ": " << arg.second << std::endl;
+  // }
 
-  // Options on command line 
-  po::options_description cmdline_options;
-  cmdline_options.add(desc);
-  
-  // Options that are 'after'
-  po::positional_options_description pod;
-  //pod.add( "data_file", 1);
+  // std::cout << "PATTERN " << args["--pattern"] << std::endl;
 
-  // Parse
-  po::variables_map vm;
-  try {
-    po::store(po::command_line_parser(argc, argv).
-	      options(desc).positional(pod).run(), vm);
-    
-    if (vm.count("help")) {
-      std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
-      std::cout << desc << std::endl;
-      exit(1);
-    }
-    
-    po::notify(vm);
-  }
-  catch(po::error& e)  { 
-    std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
-    std::cerr << desc << std::endl; 
-    exit(2);
-  }
-
-  if (vm.count("sig")) {
-    _p_sig.from_string( vm["sig"].as<std::string>() );
-  }
-  if (vm.count("bpm")) {
-    _p_sig.bpm = vm["bpm"].as<uint>();
-  }
-  if (vm.count("pattern")) {
-    _p_pattern = vm["pattern"].as<std::string>();
-  }
+  _p_sig.bpm = args["--bpm"].asLong();
+  _p_sig.from_string( args["--sig"].asString());
+  _p_pattern = args["--pattern"].asString();
 }
+    
+// {
+//   po::options_description desc("Options");
+//   std::string desc_pattern = std::string( "<string> pattern as " ) + _p_pattern + std::string(" (according to Signature divisions)");
+  
+//   desc.add_options()
+//     ("help,h", "produce help message")
+//     ("bpm,b", po::value<uint>(&_p_bpm)->default_value(_p_bpm), "<uint> BPM ")
+//     ("sig,s", po::value<std::string>()->default_value("4x2"), "<string> signature as BeatxDivision")
+//     ("pattern,p", po::value<std::string>()->default_value(_p_pattern), desc_pattern.c_str() )
+//     ;
+
+//   // Options on command line 
+//   po::options_description cmdline_options;
+//   cmdline_options.add(desc);
+  
+//   // Options that are 'after'
+//   po::positional_options_description pod;
+//   //pod.add( "data_file", 1);
+
+//   // Parse
+//   po::variables_map vm;
+//   try {
+//     po::store(po::command_line_parser(argc, argv).
+// 	      options(desc).positional(pod).run(), vm);
+    
+//     if (vm.count("help")) {
+//       std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
+//       std::cout << desc << std::endl;
+//       exit(1);
+//     }
+    
+//     po::notify(vm);
+//   }
+//   catch(po::error& e)  { 
+//     std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
+//     std::cerr << desc << std::endl; 
+//     exit(2);
+//   }
+
+//   if (vm.count("sig")) {
+//     _p_sig.from_string( vm["sig"].as<std::string>() );
+//   }
+//   if (vm.count("bpm")) {
+//     _p_sig.bpm = vm["bpm"].as<uint>();
+//   }
+//   if (vm.count("pattern")) {
+//     _p_pattern = vm["pattern"].as<std::string>();
+//   }
+// }
 
 // ***************************************************************************
 // ********************************************************************** MAIN
 // ***************************************************************************
 int main(int argc, char *argv[])
 {
-  // To deal with Ctrl-C
-  struct sigaction sig_int_handler;
+  // Specific to Linux
+  // // To deal with Ctrl-C
+  // struct sigaction sig_int_handler;
 
-  sig_int_handler.sa_handler = ctrlc_cbk;
-  sigemptyset(&sig_int_handler.sa_mask);
-  sig_int_handler.sa_flags = 0;
+  // sig_int_handler.sa_handler = ctrlc_cbk;
+  // sigemptyset(&sig_int_handler.sa_mask);
+  // sig_int_handler.sa_flags = 0;
 
-  sigaction(SIGINT, &sig_int_handler, NULL);
+  // sigaction(SIGINT, &sig_int_handler, NULL);
+
+  // Works on windows
+  signal(SIGINT, ctrlc_cbk);
 
   // Args
   setup_options( argc, argv );
+  // exit(1);
   
   // pattern_audio = new PatternAudio();
   // pattern_audio->_signature = _p_sig;
@@ -171,7 +207,7 @@ int main(int argc, char *argv[])
 
   
   pattern_audio->start();
-  while (not should_exit) {
+  while (! should_exit) {
     pattern_audio->update();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }

@@ -10,6 +10,7 @@
 #include <chrono>
 #include <thread>
 #include <vector>
+#include <cctype>    // isdigit
 #include <iostream>
 #include <sstream>
 #include <math.h>   // round

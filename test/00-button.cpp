@@ -106,7 +106,7 @@ int main(int, char**)
     static const ImWchar icons_ranges[] = { 0x23f0, 0x23ff, 0 }; // static as not copied by AddFont
     ImFontConfig config;
     config.MergeMode = true;
-    ImFont* font_unifont = io.Fonts->AddFontFromFileTTF("ressources/unifont.ttf",
+    ImFont* font_unifont = io.Fonts->AddFontFromFileTTF("ressources/unifont-win.ttf",
                                                         12.0f,
                                                         &config,
                                                         icons_ranges
@@ -115,7 +115,7 @@ int main(int, char**)
       std::cout << "Error loading ressources/unifont.ttf" << std::endl;
       return 1;
     }
-
+    IM_ASSERT(font_unifont != NULL);
     io.Fonts->Build();
 
     // if (font_consolas == NULL) {

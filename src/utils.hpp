@@ -25,6 +25,9 @@
 #define UNUSED(expr) ((void)(expr))
 #define USED_IN_MACRO(expr) ((void)(expr))
 
+// ********************************************************************* Types
+using uint = unsigned int;
+
 // **************************************************************** str_vector
 std::ostream &operator<<(std::ostream &os,
                                 const std::vector<uint> &t)
