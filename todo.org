@@ -42,7 +42,7 @@ https://github.com/docopt/docopt.cpp
 *** TODO Windows
 - https://docs.microsoft.com/en-us/windows/console/registering-a-control-handler-function
 
-* [6/8] WINDOWS
+* [8/8] WINDOWS
 ** 00-engine-play + CodeWorks/MinGW
 works fine under VSC with C:\\Program Files (x86)\\CodeBlocks\\MinGW\\bin\\g++.exe in tasks.json and proper -I
 ** DONE 00-engine-play + MinGW64
@@ -60,8 +60,8 @@ will build in Debug
 ** DONE faire GUI avec example pris dans libs/imgui/examples/example_win32_directx12
 and no more GLFW stuff
 ** DONE faire build_bat avec GLFW_OPENGL3
-** TODO pb Exception dans build avec build_bat
-** TODO pb affichage unifont sous Windows ? (=> prendre le bon fichier)
+** DONE pb Exception dans build avec build_bat
+** DONE pb affichage unifont sous Windows ? (=> prendre le bon fichier) => /utf-8
 ** DONE avoir libboost pour cl => docopt.cpp
 https://github.com/docopt/docopt.cpp
 ** DONE signal Ctrl-C for Windows

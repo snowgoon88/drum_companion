@@ -10,6 +10,11 @@
 /data*
 /libs/*
 
+# Windows
+*.exe
+/Debug
+/Win32
+
 *.data
 *.json
 /inspiration
