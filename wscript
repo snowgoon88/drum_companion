@@ -90,15 +90,26 @@ def configure( conf ):
     # conf.env.INCLUDES_VISUGL  = [visuglnode.abspath()+'/src']
 
     ## Check MiniAudio
-    print( "Looking for MiniAudio" )
+    conf.start_msg( "Looking for MiniAudio" )
     ma_node = conf.path.find_node( 'libs/miniaudio' )
     if not ma_node :
         from waflib.Errors import ConfigurationError
-        raise ConfigurationError( msg='MiniAudio '+conf.path.parent.abspath() )
+        raise ConfigurationError( msg='NO MiniAudio in libs')
     conf.env.LIB_MINIAUDIO = [ "dl", "m", "pthread" ]
     conf.env.INCLUDES_MINIAUDIO = [ma_node.abspath()]
-    print( "** MiniAudio *************************************************************" )
-    print( conf.env )
+    conf.end_msg("yes")
+    #print( "** MiniAudio *************************************************************" )
+    #print( conf.env )
+
+    ## Check docopt
+    conf.start_msg( "Looking for docopt" )
+    do_node = conf.path.find_node( 'libs/docopt.cpp' )
+    if not do_node :
+        from waflib.Errors import ConfigurationError
+        raise ConfigurationError( msg='NO docopt in libs' )
+    #conf.env.LIB_DOCOPT = [ "dl", "m", "pthread" ]
+    conf.env.INCLUDES_DOCOPT = [do_node.abspath()]
+    conf.end_msg("yes")
     
     # ## Require VisuGL
     # # print( "Looking for VisuGL" )
@@ -123,10 +134,11 @@ def configure( conf ):
     #             uselib_store='VISUGL' )
 
     ## Require/Check libboost
-    conf.env.LIB_BOOST = ['boost_program_options']
-    conf.env.LIBPATH_BOOST = ['/usr/lib/x86_64-linux-gnu','/usr/lib/i386-linux-gnu']
-    print "Checking for 'BOOST::program_options'"
-    conf.find_file( 'lib'+conf.env.LIB_BOOST[0]+'.so', conf.env.LIBPATH_BOOST )
+    # conf.start_msg("Checking for 'BOOST::program_options'")
+    # conf.env.LIB_BOOST = ['boost_program_options']
+    # conf.env.LIBPATH_BOOST = ['/usr/lib/x86_64-linux-gnu','/usr/lib/i386-linux-gnu']
+    # conf.find_file( 'lib'+conf.env.LIB_BOOST[0]+'.so', conf.env.LIBPATH_BOOST )
+    # conf.end_msg(conf.env.LIBPATH_BOOST)
 
     
     ## Require OpenGL, using wraper around pkg-onfig

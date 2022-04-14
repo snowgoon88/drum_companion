@@ -22,6 +22,18 @@ def build(bld):
     ]
     imgui_sources = [imgui_dir+path for path in imgui_files+imgui_backend]
 
+    # ------------------------------------------------------------------  docopt
+    docopt_dir = "../libs/docopt.cpp/"
+    docopt_files = [ "docopt.cpp",
+    ]
+    docopt_sources = [docopt_dir+path for path in docopt_files]
+    
+    bld.objects(
+        source = docopt_sources,
+        target = "docopt.obj",
+        use = ["DOCOPT"]
+    )
+    
     def build_file( file ):
         print( "** Buildind "+file )
         bld.program(
@@ -29,7 +41,9 @@ def build(bld):
             target =   file[:-4],
             includes = [".", "../src", imgui_dir, imgui_dir+"backends/"],
             libs =     [],#["m","rt","dl"],
-            use =      ["MINIAUDIO", "GLFW3", "GL", "BOOST"]
+            use =      ["DOCOPT", "docopt.obj",
+                        "MINIAUDIO",
+                        "GLFW3", "GL"]
         )
 
     base_files = ["drum_compagnon.cpp"]
