@@ -9,12 +9,12 @@ https://github.com/ocornut/imgui
 *** DONE ESC for quitting [02-pp-pattern]
 *** DONE Set Window size [00-button]
 *** TODO Adapt Window Size
-*** [/] Make my own basic example
-BPM =
-size = | unit = 
-unit x size button
-Play/Pause
-Volume
+*** [3/4] Make my own basic example
+**** DONE BPM =
+**** DONE size = | unit = 
+**** DONE unit x size button
+**** TODO Play/Pause
+**** Volume
 
 ** TODO [5/6] Audio : miniaudio
 <<miniaudio>>

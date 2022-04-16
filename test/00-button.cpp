@@ -106,7 +106,7 @@ int main(int, char**)
     static const ImWchar icons_ranges[] = { 0x23f0, 0x23ff, 0 }; // static as not copied by AddFont
     ImFontConfig config;
     config.MergeMode = true;
-    ImFont* font_unifont = io.Fonts->AddFontFromFileTTF("ressources/unifont-win.ttf",
+    ImFont* font_unifont = io.Fonts->AddFontFromFileTTF("ressources/unifont.ttf",
                                                         12.0f,
                                                         &config,
                                                         icons_ranges

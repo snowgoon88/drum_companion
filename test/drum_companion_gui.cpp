@@ -27,11 +27,18 @@
 
 
 #include <pattern_gui.hpp>
+ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+ImVec4 red_color = ImVec4(1.0f, 0.0f, 0.0f, 1.00f);
+ImVec4 green_color = ImVec4(0.0f, 1.0f, 0.0f, 1.00f);
+ImVec4 yellow_color = ImVec4(0.7f, 0.7f, 0.0f, 1.00f);
+ImVec4 NoteButton::colors[3] = {clear_color, green_color, red_color};
+ImVec4 NoteButton::hoover_color = yellow_color;
 
 #include <iostream>
-//DEL #include <stdio.h> // getchar();
+// DEL #include <stdio.h> // getchar();
 
-static void glfw_error_callback(int error, const char *description) {
+static void
+glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
