@@ -273,6 +273,11 @@ public:
   {
     _state = ready;
   }
+  // ************************************************ PatternAudio::properties
+  uint size()
+  {
+    return _signature.beats * _signature.subdivisions;
+  }
   // ************************************************* PatternAudio::attributs
   Signature _signature;
   SoundEngine *_engine;

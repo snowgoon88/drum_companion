@@ -11,6 +11,8 @@
 #include <iostream>                                                     // DEL
 #include "imgui.h"
 #include <algorithm>    // std::max
+#include <string>       // std::stoi
+
 // ***************************************************************************
 // **************************************************************** PatternGUI
 // ***************************************************************************
@@ -44,6 +46,28 @@ public:
     ImGui::InputInt( "BPM: ", &bpm_val );
     ImGui::InputInt( "Nb Beats: ", &beat_val );
     ImGui::InputInt( "Nb SubDiv: ", &subdiv_val );
+
+    // Example : 4 buttons
+    // Build one button for every item of pattern
+    // Beat item have a yellow color
+    for( unsigned int i = 0; i < pattern->size(); ++i) {
+      if ( i % pattern->_signature.subdivisions == 0) {
+        ImGui::PushStyleColor(ImGuiCol_Border, yellow_color );
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f );
+      }
+
+      ImGui::Button( std::to_string(i+1).c_str() );
+
+      if ( i % pattern->_signature.subdivisions == 0 ) {
+        ImGui::PopStyleVar(1);
+        ImGui::PopStyleColor(1);
+      }
+
+      if (i < (pattern->size()-1)) {
+        ImGui::SameLine();
+      }
+    }
+
 
     // Button DUMP
     if (val_changed) {
