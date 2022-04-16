@@ -111,8 +111,8 @@ class PatternGUI
 {
 public:
   // **************************************************** PatternGUI::creation
-  PatternGUI() :
-    pattern( new PatternAudio() ),
+  PatternGUI( PatternAudio* pattern_audio ) :
+    pattern( pattern_audio ),
     should_apply(false),
     should_dump(false),
     val_changed(false),
@@ -128,7 +128,7 @@ public:
   }
   virtual ~PatternGUI()
   {
-    delete pattern;
+    //DELdelete pattern;
   }
 
   // ******************************************************** PatternGUI::draw

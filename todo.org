@@ -1,5 +1,7 @@
 * __CURRENT__ : Window size in GUI or (Args | Play/Pause/Stop Sequence) w/o GUI
-* TODO [0/2] Ressources to try
+* TODO [0/1] linux
+** TODO [dc] update PatternAudio (from vector of {0,1,2}) ?
+* TODO [1/2] Ressources to try
 ** TODO [5/6] GUI : imgui
 https://github.com/ocornut/imgui
 - examples_glfw_opengl2/3 work
@@ -9,14 +11,14 @@ https://github.com/ocornut/imgui
 *** DONE ESC for quitting [02-pp-pattern]
 *** DONE Set Window size [00-button]
 *** TODO Adapt Window Size
-*** [3/4] Make my own basic example
+*** [4/4] Make my own basic example
 **** DONE BPM =
 **** DONE size = | unit = 
 **** DONE unit x size button
-**** TODO Play/Pause
+**** DONE Play/Pause
 **** Volume
 
-** TODO [5/6] Audio : miniaudio
+** DONE [6/6] Audio : miniaudio
 <<miniaudio>>
 https://github.com/mackron/miniaudio
 Engine où on peut "chaîner" des data_source
@@ -30,12 +32,14 @@ Il semble que l'on peut aussi dire quand on joue une source (ms)
 *** DONE Play/Pause SOUND !!!
 *** DONE better args for drum_compagnon (sign bpm, pattern)
 *** DONE logging with DEFINES
-*** TODO Play/Pause/Stop Pattern (sequence of Sounds)
+*** DONE Play/Pause/Stop Pattern (sequence of Sounds)
 
 ** [/] docopt.cpp
 https://github.com/docopt/docopt.cpp
-* [0/2] Safe code
+* [0/3] Safe code
 ** TODO Ensure notes in PatternAudio exist in SoundEngine
+** TODO clean up DEL
+** TODO clean up TODO
 ** [1/2] when Ctrl-C, take time to destry Objects
 *** DONE Linux
 - https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event

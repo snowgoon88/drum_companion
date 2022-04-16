@@ -1,7 +1,7 @@
 /* -*- coding: utf-8 -*- */
 
 /**
- * Test PatternGUI
+ * Test PatternGUI with PatternAudio and SoundEngine
  */
 
 #include "imgui.h"
@@ -25,6 +25,9 @@
 #pragma comment(lib, "legacy_stdio_definitions")
 #endif
 
+#include <pattern_audio.hpp>
+#include <utils.hpp>        // loggers, etc
+PatternAudio *pattern_audio = nullptr;
 
 #include <pattern_gui.hpp>
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -44,8 +47,16 @@ glfw_error_callback(int error, const char *description) {
 
 int main(int, char **) {
 
+  // Pattern Audio
+  pattern_audio = new PatternAudio();
+  Signature _p_sig {90, 4, 2};
+  //DEL unsigned int _p_bpm = _p_sig.bpm;
+  // std::string _p_pattern = "2x1x1x1x";
+  // pattern_audio->_signature = _p_sig;
+  // pattern_audio->init_from_string( _p_pattern );
+  
   // create PatternGUI
-  PatternGUI pg;
+  PatternGUI pg( pattern_audio );
   // Other GUI variables
   bool gui_ask_end = false;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -53,6 +64,7 @@ int main(int, char **) {
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
   if (!glfwInit())
+    
     return 1;
 
     // Decide GL+GLSL versions

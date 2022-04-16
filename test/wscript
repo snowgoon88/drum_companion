@@ -46,7 +46,7 @@ def build(bld):
                         "GLFW3", "GL"]
         )
 
-    base_files = ["drum_companion_gui.cpp"]
+    base_files = ["drum_companion_gui.cpp", "drum_compagnon.cpp"]
     for file in base_files:
         build_file( file )
         
