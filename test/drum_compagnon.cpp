@@ -1,9 +1,11 @@
 /* -*- coding: utf-8 -*- */
 
 /** 
- * CLI DrumCompagnon
+ * CLI and Grafik DrumCompagnon
  * - cli arguments: bpm, sig, pattern,
  * - play repeated sound using sound_pattern,
+ * - TODO grafik On/Off
+ * - play/stop/pause
  */
 
 // Parsing command line options
@@ -72,6 +74,7 @@ ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 ImVec4 red_color = ImVec4(1.0f, 0.0f, 0.0f, 1.00f);
 ImVec4 green_color = ImVec4(0.0f, 1.0f, 0.0f, 1.00f);
 ImVec4 yellow_color = ImVec4(0.7f, 0.7f, 0.0f, 1.00f);
+ImVec4 hoover_color = yellow_color;
 ImVec4 NoteButton::colors[3] = {clear_color, green_color, red_color};
 ImVec4 NoteButton::hoover_color = yellow_color;
 
@@ -114,12 +117,10 @@ void setup_options( int argc, char **argv )
 {
   std::map<std::string, docopt::value> args = docopt::docopt(_usage, 
                                                   { argv + 1, argv + argc },
-                                                  true,               // show help if requested
-                                                  "Drum Companion 1.0");  // version string
-  // for(auto const& arg : args) {
-  //   std::cout << arg.first << ": " << arg.second << std::endl;
-  // }
-
+                                                  // show help if requested
+                                                  true,
+                                                  // version string
+                                                  "Drum Companion 1.0");  
   _p_sig.bpm = args["--bpm"].asLong();
   _p_sig.from_string( args["--sig"].asString());
   _p_pattern = args["--pattern"].asString();
@@ -217,31 +218,7 @@ int main(int argc, char *argv[])
   ImGui_ImplOpenGL3_Init(glsl_version);
 
   // Load Fonts
-  // - If no fonts are loaded, dear imgui will use the default font. You can
-  // also load multiple fonts and use ImGui::PushFont()/PopFont() to select
-  // them.
-  // - AddFontFromFileTTF() will return the ImFont* so you can store it if you
-  // need to select the font among multiple.
-  // - If the file cannot be loaded, the function will return NULL. Please
-  // handle those errors in your application (e.g. use an assertion, or display
-  // an error and quit).
-  // - The fonts will be rasterized at a given size (w/ oversampling) and stored
-  // into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which
-  // ImGui_ImplXXXX_NewFrame below will call.
-  // - Read 'docs/FONTS.md' for more instructions and details.
-  // - Remember that in C/C++ if you want to include a backslash \ in a string
-  // literal you need to write a double backslash \\ !
   io.Fonts->AddFontDefault();
-  // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-  // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-  // io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-  // io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
-  // ImFont* font =
-  // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
-  // NULL, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != NULL); ImFont*
-  // font_consolas =
-  // io.Fonts->AddFontFromFileTTF("ressources/Consolas.ttf", 16.0f);
-
   // Load font and merge to default
   static const ImWchar icons_ranges[] = {0x23f0, 0x23ff,
                                          0}; // static as not copied by AddFont
@@ -259,14 +236,6 @@ int main(int argc, char *argv[])
   // ************************************************************** Gui - Loop
   while (!glfwWindowShouldClose(window) && !gui_ask_end) {
     // Poll and handle events (inputs, window resize, etc.)
-    // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to
-    // tell if dear imgui wants to use your inputs.
-    // - When io.WantCaptureMouse is true, do not dispatch mouse input data to
-    // your main application, or clear/overwrite your copy of the mouse data.
-    // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input
-    // data to your main application, or clear/overwrite your copy of the
-    // keyboard data. Generally you may always pass all inputs to dear imgui,
-    // and hide them from your application based on those two flags.
     glfwPollEvents();
 
     // Start the Dear ImGui frame
@@ -283,19 +252,49 @@ int main(int argc, char *argv[])
       pg.draw();
 
       // Play/Pause
+      if (pattern_audio->_state == PatternAudio::running) {
+        ImGui::PushStyleColor(ImGuiCol_Button, green_color);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, green_color);
+      }
+      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoover_color);
       if (ImGui::Button(u8"⏵")) { // 0x23F5       
         should_run = true;
       }
+      ImGui::PopStyleColor(1);      
+      if (pattern_audio->_state == PatternAudio::running) {
+        ImGui::PopStyleColor(2);
+      }
       
       ImGui::SameLine();
+      if (pattern_audio->_state == PatternAudio::paused) {
+        ImGui::PushStyleColor(ImGuiCol_Button, yellow_color);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, yellow_color);
+      }
+      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoover_color);
       if (ImGui::Button(u8"⏸")) { // 0x23F8
         should_pause = true;
       }
+      ImGui::PopStyleColor(1);      
+      if (pattern_audio->_state == PatternAudio::paused) {
+        ImGui::PopStyleColor(2);
+      }
+
       
       ImGui::SameLine();
+      if (pattern_audio->_state == PatternAudio::ready) {
+        ImGui::PushStyleColor(ImGuiCol_Button, red_color);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, red_color);
+      }
+      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoover_color);
+      
       if (ImGui::Button(u8"⏹")) { // 0X23F9
         should_stop = true;
       }
+      ImGui::PopStyleColor(1);
+      if (pattern_audio->_state == PatternAudio::ready) {
+        ImGui::PopStyleColor(2);
+      }
+
       
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                   1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -344,19 +343,7 @@ int main(int argc, char *argv[])
 
   glfwDestroyWindow(window);
   glfwTerminate();
-
-
   
-  
-  // std::cout << "Playing " << _p_pattern << " at " << pattern_audio->_signature.bpm  << " bpm..." << std::endl;
-  // LOGMAIN( pattern_audio->str_dump() );
-  
-  // pattern_audio->start();
-  // while (! should_exit) {
-  //   pattern_audio->update();
-  //   std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  // }
-
   // Clean up before exit
   clear_globals();
   
