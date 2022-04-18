@@ -4,7 +4,7 @@
  * CLI and Grafik DrumCompagnon
  * - cli arguments: bpm, sig, pattern,
  * - play repeated sound using sound_pattern,
- * - TODO grafik On/Off
+ * - grafik On/Off
  * - play/stop/pause
  */
 
@@ -69,6 +69,7 @@ bool should_exit = false;
 Signature _p_sig {90, 4, 2};
 unsigned int _p_bpm = _p_sig.bpm;
 std::string _p_pattern = "2x1x1x1x";
+bool _p_gui = false;
 
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 ImVec4 red_color = ImVec4(1.0f, 0.0f, 0.0f, 1.00f);
@@ -103,11 +104,12 @@ static const char _usage[] =
 R"(Drum Companion.
 
     Usage:
-      drum_companion [-b/--bpm=<uint>] [-s/--sig=<str>] [-p/--pattern=<str>]
+      drum_companion [--gui] [-b/--bpm=<uint>] [-s/--sig=<str>] [-p/--pattern=<str>]
       drum_companion (-h | --help)
 
     Options:
       -h --help       Show this screen
+      -g --gui        With GUI
       -b <uint>, --bpm <uint>    BPM [default: 90]
       -s <str>, --sig <str>      signature [default: 4x2]
       -p <str>, --pattern <str>  pattern as 2x1x1x1x [default: 2x1x1x1x]
@@ -120,37 +122,25 @@ void setup_options( int argc, char **argv )
                                                   // show help if requested
                                                   true,
                                                   // version string
-                                                  "Drum Companion 1.0");  
+                                                  "Drum Companion 1.0");
+
+  // for(auto const& arg : args) {
+  //   std::cout << arg.first << ": " << arg.second << std::endl;
+  // }
+  
   _p_sig.bpm = args["--bpm"].asLong();
   _p_sig.from_string( args["--sig"].asString());
   _p_pattern = args["--pattern"].asString();
+  if (args["--gui"].asBool()) {
+    _p_gui = true;
+  }
 }
-    
+
 // ***************************************************************************
-// ********************************************************************** MAIN
+// ******************************************************************* run_gui
 // ***************************************************************************
-int main(int argc, char *argv[])
+int run_gui()
 {
-  // // To deal with Ctrl-C (Win32 and Linux)
-  signal(SIGINT, ctrlc_cbk);
-
-  // Args
-  setup_options( argc, argv );
-
-  // ****************************************************************** Sounds
-  sound_engine = new SoundEngine();
-  // variables are not used, but show how could be used
-  auto idx_clave = sound_engine->add_sound( "ressources/claves_120ms.wav" );
-  UNUSED(idx_clave);
-  auto idx_cow = sound_engine->add_sound( "ressources/cowbell.wav" );
-  UNUSED(idx_cow);
-    
-  // ************************************************************* PlayPattern
-  LOGMAIN( "__PATTERN_AUDIO with SoundEngine" );
-  pattern_audio = new PatternAudio( sound_engine );
-  pattern_audio->_signature = _p_sig;
-  pattern_audio->init_from_string( _p_pattern );
-
   // ********************************************************** GUI - creation
   // create PatternGUI
   PatternGUI pg( pattern_audio );
@@ -162,10 +152,9 @@ int main(int argc, char *argv[])
   bool should_run = false;
   
   // ******************************************************* Grafik - creation
- // Setup window
+  // Setup window
   glfwSetErrorCallback(glfw_error_callback);
-  if (!glfwInit())
-    
+  if (!glfwInit())  
     return 1;
 
     // Decide GL+GLSL versions
@@ -343,6 +332,55 @@ int main(int argc, char *argv[])
 
   glfwDestroyWindow(window);
   glfwTerminate();
+
+  return 0;
+}
+
+// ***************************************************************************
+// *********************************************************************** run
+// ***************************************************************************
+int run()
+{
+  pattern_audio->start();
+  while (! should_exit) {
+    pattern_audio->update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  }
+
+  return 0;
+}
+    
+// ***************************************************************************
+// ********************************************************************** MAIN
+// ***************************************************************************
+int main(int argc, char *argv[])
+{
+  // // To deal with Ctrl-C (Win32 and Linux)
+  signal(SIGINT, ctrlc_cbk);
+
+  // Args
+  setup_options( argc, argv );
+
+  // ****************************************************************** Sounds
+  sound_engine = new SoundEngine();
+  // variables are not used, but show how could be used
+  auto idx_clave = sound_engine->add_sound( "ressources/claves_120ms.wav" );
+  UNUSED(idx_clave);
+  auto idx_cow = sound_engine->add_sound( "ressources/cowbell.wav" );
+  UNUSED(idx_cow);
+    
+  // ************************************************************* PlayPattern
+  LOGMAIN( "__PATTERN_AUDIO with SoundEngine" );
+  pattern_audio = new PatternAudio( sound_engine );
+  pattern_audio->_signature = _p_sig;
+  pattern_audio->init_from_string( _p_pattern );
+
+  if (_p_gui) {
+    run_gui();
+  }
+  else {
+    run();
+  }
   
   // Clean up before exit
   clear_globals();
