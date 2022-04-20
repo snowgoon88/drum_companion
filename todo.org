@@ -1,14 +1,14 @@
 * __CURRENT__ : Window size in GUI or (Args | Play/Pause/Stop Sequence) w/o GUI
-* TODO [0/0] linux
-** [0/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
+* DONE [0/0] linux
+** [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
-*** TODO changed_val : at least one val has changed => button color
-*** TODO need_notes : notes_btn not synchronized => button activable
+*** DONE changed_val : at least one val has changed => button color
+*** DONE need_notes : notes_btn not synchronized
 => with signature beats x subdiv
 if (item_disabled)
             ImGui::BeginDisabled(true);
-*** TODO apply changes to PatternAudio
+*** DONE apply changes to PatternAudio
 * TODO [1/2] Ressources to try
 ** TODO [5/6] GUI : imgui
 https://github.com/ocornut/imgui
