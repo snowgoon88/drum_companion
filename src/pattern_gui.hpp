@@ -7,18 +7,19 @@
  * TODO
  */
 
+#include <utils.hpp>
 #include <pattern_audio.hpp>
-#include <iostream>                                                     // DEL
+#include <iostream>     // std::cout
 #include "imgui.h"
-#include <algorithm>    // std::max
+#include <algorithm>    // std::max, std::transform
+#include <iterator>     // std::back_inserter, 
 #include <string>       // std::stoi
 
-#include <utils.hpp>
 // ***************************************************************************
 // ******************************************************************* Loggers
 // ***************************************************************************
 //#define LOG_PATTERNGUI
-#ifdef LOG_PATTTERNGUI
+#ifdef LOG_PATTERNGUI
 #  define LOGPG(msg) (LOG_BASE("[PAGU]", msg))
 #else
 #  define LOGPG(msg)
@@ -82,8 +83,8 @@ public:
   }
   // *************************************************** NoteButton::attributs
 public:
-  uint get_id() { return id; }
-  uint get_val() { return val; }
+  uint get_id() const { return id; }
+  uint get_val() const { return val; }
   void set_val(uint val) { this->val = (val % max_val); }
 
   void set_label( const std::string& label )
@@ -107,6 +108,11 @@ private:
 // ***************************************************************************
 // **************************************************************** PatternGUI
 // ***************************************************************************
+/**
+ * At creation, init node_btns from pattern
+ * Running : update node_btns according to displayed beats and subdivisions
+ * Apply => change underlying PatternAudio
+ */
 class PatternGUI
 {
 public:
@@ -125,7 +131,8 @@ public:
     subdiv_val = static_cast<int>(pattern->_signature.subdivisions);
     val_changed = false;
     need_notes = true;
-    _update_note_buttons();
+    //DEL_update_note_buttons();
+    _init_from_pattern();
   }
   virtual ~PatternGUI()
   {
@@ -170,7 +177,7 @@ public:
     }
 
 
-    // Button DUMP
+    // Button APPLY (DUMP)
     if (need_notes) {
       ImGui::BeginDisabled(true);
     }
@@ -179,7 +186,7 @@ public:
       ImGui::PushStyleColor(ImGuiCol_ButtonHovered, YELLOW_COL);
       ImGui::PushStyleColor(ImGuiCol_ButtonActive, RED_COL);
     }
-    if (ImGui::Button( "Dump")) {
+    if (ImGui::Button( "Apply")) {
       should_dump = true;
       should_apply = true;
     }
@@ -197,6 +204,7 @@ public:
     bpm_val = std::max(1, bpm_val);
     beat_val = std::max(1, beat_val);
     subdiv_val = std::max(1, subdiv_val);
+    LOGPG( "__APPLY bpm=" << bpm_val << ", beats=" << beat_val << ", sub=" << subdiv_val ); 
     
     if (val_changed == false ) {
       if (pattern->_signature.bpm != static_cast<uint>(bpm_val)) {
@@ -210,17 +218,25 @@ public:
       }
     }
     need_notes = ((beat_val * subdiv_val) != note_btns.size());
+    LOGPG( "  need_notes=" << need_notes );
     
     if (should_apply && !need_notes) {
       // TODO msg to tell if ok
       pattern->_signature.bpm = static_cast<uint>(bpm_val);
       pattern->_signature.beats = static_cast<uint>(beat_val);
       pattern->_signature.subdivisions = static_cast<uint>(subdiv_val);
-      // TODO update pattern intervales
+      // update pattern intervales
+      Timeline vals;
+      // create a Timeline for the note_btns
+      std::transform( note_btns.begin(), note_btns.end(),
+                      std::back_inserter( vals ),
+                      [](const NoteButton& b) -> uint {
+                        return b.get_val(); });
+      pattern->init_from_timeline( vals );
       val_changed = false;
     }
     if (need_notes) {
-      _update_note_buttons();
+      _update_note_buttons( beat_val * subdiv_val, subdiv_val);
     }
     
     if (should_dump) {
@@ -234,18 +250,18 @@ public:
     should_dump = false;
     should_apply = false;
   }
-  void _update_note_buttons()
+  void _update_note_buttons( uint size, uint subdiv )
   {
-    LOGPG( "_update need " << pattern->size() << ", have " << note_btns.size());
+    LOGPG( "_update need " << size << ", have " << note_btns.size());
     // walk NoteButtons and change or add
-    for( unsigned int id = 0; id < pattern->size(); ++id) {
+    for( unsigned int id = 0; id < size; ++id) {
       // compute label and color
       std::string label = ".";
       //DELstd::string label = std::to_string( id );
       const ImVec4* col_ref = nullptr;
       // For 'beats' note, # of beat and yellow_border
-      if (id % pattern->_signature.subdivisions == 0) {
-        label = std::to_string( (id / pattern->_signature.subdivisions) + 1 );
+      if (id % subdiv == 0) {
+        label = std::to_string( (id / subdiv) + 1 );
         col_ref = &YELLOW_COL;//DEL yellow_color;
       }
       // need to add ?
@@ -261,9 +277,36 @@ public:
       }
     }
     // remove unneeded NoteButtons
-    while (note_btns.size() > pattern->size()) {
+    while (note_btns.size() > size) {
       note_btns.pop_back();
     }
+
+    need_notes = false;
+  }
+  void _init_from_pattern()
+  {
+    LOGPG( "_init_from_pattern " << pattern->size());
+    // add 1 button for each item in pattern->_timeline
+    uint id = 0;
+    for( auto& valnote: pattern->_timeline) {
+      // compute label and color
+      std::string label = ".";
+      //DELstd::string label = std::to_string( id );
+      const ImVec4* col_ref = nullptr;
+      // For 'beats' note, # of beat and yellow_border
+      if (id % pattern->_signature.subdivisions == 0) {
+        label = std::to_string( (id / pattern->_signature.subdivisions) + 1 );
+        col_ref = &YELLOW_COL;//DEL yellow_color;
+      }
+      
+      LOGPG( "create btn " << id << " with [" << label << "]" );
+      auto newbtn = NoteButton( id, label, col_ref );
+      newbtn.set_val( valnote );
+      note_btns.push_back( newbtn );
+
+      id += 1;
+    }
+    need_notes = false;
   }
 
   // *************************************************** PatternGUI::attributs

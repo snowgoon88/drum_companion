@@ -166,15 +166,47 @@ public:
 
 
   // ****************************************************** PatternAudio::init
-  /** from timeline (array of sound for each subdivisions of Signature)
+  /** from timeline (array of sound {0,1,2} for each subdivisions of Signature)
    *  to Vec of intervals
    */
   void init_from_timeline( Timeline &timeline )
   {
+    // ensure pattern is stopped
+    stop();
     // check proper size
     assert( timeline.size() == _signature.beats * _signature.subdivisions );
+    // store timeline bu copying
+    _timeline = Timeline(timeline);
 
-    auto itt = timeline.begin();    
+    _intervale_from_timeline();
+  }
+  //   auto itt = timeline.begin();    
+
+  //   _pattern_intervale.clear();
+    
+  //   // Count nb of '0' between each non '0' in timeline
+  //   // First Note
+  //   uint val_note = *itt;
+  //   uint count = 1;
+  //   while (++itt != timeline.end() ) {
+  //     if (*itt == 0) {
+  //       count += 1;
+  //     }
+  //     else {
+  //       _pattern_intervale.push_back(
+  //           Note{val_note, count * _signature.division_length()});
+  //       val_note = *itt;
+  //       count = 1;
+  //     }
+  //   }
+  //   _pattern_intervale.push_back(
+  //       Note{val_note, count * _signature.division_length()});
+  // }
+  void _intervale_from_timeline()
+  {
+    // check proper size
+    assert( _timeline.size() == _signature.beats * _signature.subdivisions );
+    auto itt = _timeline.begin();    
 
     _pattern_intervale.clear();
     
@@ -182,7 +214,7 @@ public:
     // First Note
     uint val_note = *itt;
     uint count = 1;
-    while (++itt != timeline.end() ) {
+    while (++itt != _timeline.end() ) {
       if (*itt == 0) {
         count += 1;
       }
@@ -282,6 +314,7 @@ public:
   Signature _signature;
   SoundEngine *_engine;
   AudioState _state;
+  Timeline _timeline;   // sequence of 0,1,2...
   // sequence of delay in ms
   std::vector<Note> _pattern_intervale = {{1, 500}, {1, 250},
                                           {1, 500}, {1, 500}, {1,250}};
