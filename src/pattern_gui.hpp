@@ -47,7 +47,7 @@ public:
 public:
   // **************************************************** NoteButton::creation
   NoteButton( const uint id, const std::string& label,
-              ImVec4 *border_color=nullptr ) :
+              const ImVec4 *border_color=nullptr ) :
     id(id),
     val(0),
     label(label),
@@ -90,7 +90,7 @@ public:
   {
     this->label = label;
   }
-  void set_color( ImVec4* border_color )
+  void set_color( const ImVec4* border_color )
   {
     this->bordercol = border_color;
   }
@@ -99,7 +99,7 @@ private:
   uint id;
   uint val;
   std::string label;
-  ImVec4* bordercol;
+  const ImVec4* bordercol;
 };
 // ********************************************************** NoteButton - END
 
@@ -115,15 +115,16 @@ public:
     pattern( pattern_audio ),
     should_apply(false),
     should_dump(false),
-    val_changed(false),
-    bpm_val(0), beat_val(0), subdiv_val(0),
-    green_color(ImVec4(0.0f, 1.0f, 0.0f, 1.00f)),
-    yellow_color(ImVec4(0.7f, 0.7f, 0.0f, 1.00f))
+    val_changed(false), need_notes(false), 
+    bpm_val(0), beat_val(0), subdiv_val(0)
+    //DEL green_color(ImVec4(0.0f, 1.0f, 0.0f, 1.00f)),
+    //DEL yellow_color(ImVec4(0.7f, 0.7f, 0.0f, 1.00f))
   {
     bpm_val = static_cast<int>(pattern->_signature.bpm);
     beat_val = static_cast<int>(pattern->_signature.beats);
     subdiv_val = static_cast<int>(pattern->_signature.subdivisions);
     val_changed = false;
+    need_notes = true;
     _update_note_buttons();
   }
   virtual ~PatternGUI()
@@ -170,10 +171,13 @@ public:
 
 
     // Button DUMP
+    if (need_notes) {
+      ImGui::BeginDisabled(true);
+    }
     if (val_changed) {
-      ImGui::PushStyleColor(ImGuiCol_Button, green_color);
-      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, yellow_color);
-      ImGui::PushStyleColor(ImGuiCol_ButtonActive, green_color);
+      ImGui::PushStyleColor(ImGuiCol_Button, RED_COL);
+      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, YELLOW_COL);
+      ImGui::PushStyleColor(ImGuiCol_ButtonActive, RED_COL);
     }
     if (ImGui::Button( "Dump")) {
       should_dump = true;
@@ -181,6 +185,9 @@ public:
     }
     if (val_changed) {
       ImGui::PopStyleColor(3);
+    }
+    if (need_notes) {
+      ImGui::EndDisabled();
     }
   }
 
@@ -202,12 +209,17 @@ public:
         val_changed = true;
       }
     }
+    need_notes = ((beat_val * subdiv_val) != note_btns.size());
     
-    if (should_apply) {
+    if (should_apply && !need_notes) {
+      // TODO msg to tell if ok
       pattern->_signature.bpm = static_cast<uint>(bpm_val);
       pattern->_signature.beats = static_cast<uint>(beat_val);
       pattern->_signature.subdivisions = static_cast<uint>(subdiv_val);
+      // TODO update pattern intervales
       val_changed = false;
+    }
+    if (need_notes) {
       _update_note_buttons();
     }
     
@@ -230,11 +242,11 @@ public:
       // compute label and color
       std::string label = ".";
       //DELstd::string label = std::to_string( id );
-      ImVec4* col_ref = nullptr;
+      const ImVec4* col_ref = nullptr;
       // For 'beats' note, # of beat and yellow_border
       if (id % pattern->_signature.subdivisions == 0) {
         label = std::to_string( (id / pattern->_signature.subdivisions) + 1 );
-        col_ref = &yellow_color;
+        col_ref = &YELLOW_COL;//DEL yellow_color;
       }
       // need to add ?
       if (id >= note_btns.size()) {
@@ -261,14 +273,15 @@ public:
   bool should_apply; // some changes need to be applied ?
   bool should_dump;
   bool val_changed;
+  bool need_notes;
   int bpm_val;
   int beat_val;
   int subdiv_val;
   std::vector<NoteButton> note_btns;
 
   // Usefull
-  ImVec4 green_color;
-  ImVec4 yellow_color;
+  //DEL ImVec4 green_color;
+  //DEL ImVec4 yellow_color;
 };
 
 

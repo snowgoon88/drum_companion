@@ -8,6 +8,7 @@
  */
 
 #include <iostream>      // cout, endl
+#include <imgui.h>       // ImVec4 for colors
 
 // ******************************************************************* loggers
 // in order to define other loggers using
@@ -27,6 +28,12 @@
 
 // ********************************************************************* Types
 using uint = unsigned int;
+
+// ******************************************************************* Globals
+const ImVec4 CLEAR_COL = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+const ImVec4 RED_COL = ImVec4(1.0f, 0.0f, 0.0f, 1.00f);
+const ImVec4 GREEN_COL = ImVec4(0.0f, 1.0f, 0.0f, 1.00f);
+const ImVec4 YELLOW_COL = ImVec4(0.7f, 0.7f, 0.0f, 1.00f);
 
 // **************************************************************** str_vector
 std::ostream &operator<<(std::ostream &os,

@@ -4,7 +4,7 @@
  * CLI and Grafik DrumCompagnon
  * - cli arguments: bpm, sig, pattern,
  * - play repeated sound using sound_pattern,
- * - grafik On/Off
+ * - lsssgrafik On/Off
  * - play/stop/pause
  */
 
@@ -71,13 +71,14 @@ unsigned int _p_bpm = _p_sig.bpm;
 std::string _p_pattern = "2x1x1x1x";
 bool _p_gui = false;
 
-ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-ImVec4 red_color = ImVec4(1.0f, 0.0f, 0.0f, 1.00f);
-ImVec4 green_color = ImVec4(0.0f, 1.0f, 0.0f, 1.00f);
-ImVec4 yellow_color = ImVec4(0.7f, 0.7f, 0.0f, 1.00f);
-ImVec4 hoover_color = yellow_color;
-ImVec4 NoteButton::colors[3] = {clear_color, green_color, red_color};
-ImVec4 NoteButton::hoover_color = yellow_color;
+//DEL ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+// ImVec4 red_color = ImVec4(1.0f, 0.0f, 0.0f, 1.00f);
+// ImVec4 green_color = ImVec4(0.0f, 1.0f, 0.0f, 1.00f);
+// ImVec4 yellow_color = ImVec4(0.7f, 0.7f, 0.0f, 1.00f);
+//ImVec4 hoover_color = yellow_color;
+ImVec4 hoover_color = YELLOW_COL;
+ImVec4 NoteButton::colors[3] = {CLEAR_COL, GREEN_COL, RED_COL};
+ImVec4 NoteButton::hoover_color = YELLOW_COL;
 
 void clear_globals()
 {
@@ -146,7 +147,7 @@ int run_gui()
   PatternGUI pg( pattern_audio );
   // Other GUI variables
   bool gui_ask_end = false;
-  ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+  //DEL ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   bool should_pause = false;
   bool should_stop = false;
   bool should_run = false;
@@ -242,8 +243,8 @@ int run_gui()
 
       // Play/Pause
       if (pattern_audio->_state == PatternAudio::running) {
-        ImGui::PushStyleColor(ImGuiCol_Button, green_color);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, green_color);
+        ImGui::PushStyleColor(ImGuiCol_Button, GREEN_COL);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, GREEN_COL);
       }
       ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoover_color);
       if (ImGui::Button(u8"⏵")) { // 0x23F5       
@@ -256,8 +257,8 @@ int run_gui()
       
       ImGui::SameLine();
       if (pattern_audio->_state == PatternAudio::paused) {
-        ImGui::PushStyleColor(ImGuiCol_Button, yellow_color);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, yellow_color);
+        ImGui::PushStyleColor(ImGuiCol_Button, YELLOW_COL);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, YELLOW_COL);
       }
       ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoover_color);
       if (ImGui::Button(u8"⏸")) { // 0x23F8
@@ -271,8 +272,8 @@ int run_gui()
       
       ImGui::SameLine();
       if (pattern_audio->_state == PatternAudio::ready) {
-        ImGui::PushStyleColor(ImGuiCol_Button, red_color);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, red_color);
+        ImGui::PushStyleColor(ImGuiCol_Button, RED_COL);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, RED_COL);
       }
       ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoover_color);
       
@@ -293,8 +294,8 @@ int run_gui()
     ImGui::Render();     int display_w, display_h;
     glfwGetFramebufferSize(window, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
-    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w,
-                 clear_color.z * clear_color.w, clear_color.w);
+    glClearColor(CLEAR_COL.x * CLEAR_COL.w, CLEAR_COL.y * CLEAR_COL.w,
+                 CLEAR_COL.z * CLEAR_COL.w, CLEAR_COL.w);
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     glfwSwapBuffers(window);
