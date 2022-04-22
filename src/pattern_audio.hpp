@@ -29,7 +29,7 @@
 // ***************************************************************************
 // ******************************************************************* Loggers
 // ***************************************************************************
-//#define LOG_PA
+#define LOG_PA
 #ifdef LOG_PA
 #  define LOGPA(msg) (LOG_BASE("[PaAu]", msg))
 #else
@@ -117,12 +117,12 @@ class PatternAudio
 public:
   using Time = std::chrono::time_point<std::chrono::system_clock>;
   using DurationMS = std::chrono::milliseconds;
-  enum AudioState { ready, running, paused };
+  enum AudioState { ready, running, paused, ended, empty };
   
 public:
   PatternAudio( SoundEngine* engine = nullptr ) :
     _engine(engine),
-    _state(ready),
+    _state(empty),
     _start_time(std::chrono::system_clock::now())
   {
   }
@@ -144,6 +144,12 @@ public:
     case paused:
       status << "paused";
       break;
+    case ended:
+      status << "ended";
+      break;
+    case empty:
+      status << "empty";
+      break;
     }
     return status.str();
   }
@@ -151,7 +157,7 @@ public:
   std::string str_dump () const
   {
     std::stringstream dump;
-    dump << _signature << std::endl;
+    dump << "PAT [" << _id << "] " << _signature << std::endl;
     dump << "Last = ";
     DurationMS delta_time_start = std::chrono::duration_cast<DurationMS>( _last_update - _start_time );
     dump << delta_time_start.count();
@@ -163,7 +169,6 @@ public:
                           
     return dump.str();
   }
-
 
   // ****************************************************** PatternAudio::init
   /** from timeline (array of sound {0,1,2} for each subdivisions of Signature)
@@ -227,17 +232,19 @@ public:
     }
     _pattern_intervale.push_back(
         Note{val_note, count * _signature.division_length()});
+
+    _state = ready;
   }
 
   /** 
    * str  ="0x1x1xxx1xx1xx1x"
    */
-  void init_from_string( std::string &str )
+  void init_from_string( const std::string &str )
   {
     LOGPA( "__PA init_from " << str );
     Timeline tl;
 
-    for( char& c: str) {
+    for( const char& c: str) {
       if (c=='x') {
         tl.push_back( 0 );
       }
@@ -251,8 +258,8 @@ public:
   }
 
  
-  // ****************************************************** PatternAudio::emit
-  void update()
+  // ****************************************************** PatternAudio::next
+  bool next()
   {
     if (_state == running) {
       auto time_now = std::chrono::system_clock::now();
@@ -261,20 +268,33 @@ public:
       //LOGPA( str_dump() );
     
       if (_time_to_next < DurationMS(5)) {
-        // emit event
-        LOGPA( "====> *** Emit at " << str_dump() << " ******" );
         
-        _id_seq = (_id_seq + 1) % _pattern_intervale.size();
+        // TODO return time to next or <0 or bool or None or ...
+        //_id_seq = (_id_seq + 1) % _pattern_intervale.size();
+        _id_seq += 1;
+        if (_id_seq == _pattern_intervale.size()) {
+          LOGPA( ">> ended at " << str_dump() << " ***********" ); 
+          _state = ready;
+          return false;
+        }
         if (_pattern_intervale[_id_seq].val != 0 && _engine != nullptr ) {
+          // emit event
+          LOGPA( "====> *** Emit at " << str_dump() << " ******" );
           _engine->play_sound( _pattern_intervale[_id_seq].val - 1 );
         }
         _time_to_next = std::chrono::milliseconds(_pattern_intervale[_id_seq].length);
       }
       _last_update = time_now;
     }
+    
+    else if (_state == ended) {
+     // can and must be restarted
+     start();
+    }
     else if (_state == paused) {
       _last_update = std::chrono::system_clock::now();
     }
+    return true;
   }
 
   // ******************************************************* PatternAudio::cmd
@@ -303,7 +323,9 @@ public:
   }
   void stop()
   {
-    _state = ready;
+    if (_state != empty) {
+      _state = ready;
+    }
   }
   // ************************************************ PatternAudio::properties
   uint size()
@@ -322,6 +344,7 @@ public:
   DurationMS _time_to_next;
   Time _last_update;
   Time _start_time;
+  uint _id;            // id of this Pattern
 };
 // ******************************************************** PatternAudio - END
 

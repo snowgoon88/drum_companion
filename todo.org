@@ -1,6 +1,6 @@
-* __CURRENT__ : Window size in GUI or (Args | Play/Pause/Stop Sequence) w/o GUI
-* DONE [0/0] linux
-** [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
+* __CURRENT__ : name patterns
+* TODO [2/3] linux
+** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
 *** DONE changed_val : at least one val has changed => button color
@@ -9,6 +9,8 @@ generalize it use when sig/beats change
 if (item_disabled)
             ImGui::BeginDisabled(true);
 *** DONE apply changes to PatternAudio
+** DONE [/] name patterns
+** TODO [/] looper
 * TODO [1/2] Ressources to try
 ** TODO [5/6] GUI : imgui
 https://github.com/ocornut/imgui
@@ -44,7 +46,7 @@ Il semble que l'on peut aussi dire quand on joue une source (ms)
 
 ** [/] docopt.cpp
 https://github.com/docopt/docopt.cpp
-* [0/3] Safe code
+* [0/6] Safe code
 ** TODO Ensure notes in PatternAudio exist in SoundEngine
 ** TODO clean up DEL
 ** TODO clean up TODO
@@ -54,6 +56,9 @@ https://github.com/docopt/docopt.cpp
 *** TODO Windows
 - https://docs.microsoft.com/en-us/windows/console/registering-a-control-handler-function
 
+** TODO Check LooperState and PatternState
+** TODO Check common in Looper and Pattern
+** TODO Check all _state are still needed (ex: ended ??)
 * [6/8] WINDOWS
 ** 00-engine-play + CodeWorks/MinGW
 works fine under VSC with C:\\Program Files (x86)\\CodeBlocks\\MinGW\\bin\\g++.exe in tasks.json and proper -I

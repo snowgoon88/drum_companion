@@ -47,7 +47,7 @@
 
 static void
 glfw_error_callback(int error, const char *description) {
-  fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+2  fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
 // ***************************************************************************
@@ -105,15 +105,14 @@ static const char _usage[] =
 R"(Drum Companion.
 
     Usage:
-      drum_companion [--gui] [-b/--bpm=<uint>] [-s/--sig=<str>] [-p/--pattern=<str>]
-      drum_companion (-h | --help)
+      drum_companion [--pattern=<str>... options]
 
     Options:
       -h --help       Show this screen
       -g --gui        With GUI
-      -b <uint>, --bpm <uint>    BPM [default: 90]
-      -s <str>, --sig <str>      signature [default: 4x2]
-      -p <str>, --pattern <str>  pattern as 2x1x1x1x [default: 2x1x1x1x]
+      -b, --bpm <uint>    BPM [default: 90]
+      -s, --sig <str>      signature [default: 4x2]
+      -p, --pattern=<str>...  patterns, can be REPEATED [default: 2x1x1x1x]
 )";
 
 void setup_options( int argc, char **argv )
@@ -125,9 +124,19 @@ void setup_options( int argc, char **argv )
                                                   // version string
                                                   "Drum Companion 1.0");
 
-  // for(auto const& arg : args) {
-  //   std::cout << arg.first << ": " << arg.second << std::endl;
-  // }
+  for(auto const& arg : args) {
+    std::cout << arg.first << ": " << arg.second;
+    std::cout << " type=" << type_name<decltype(arg.second)>() << std::endl;
+  }
+  std::cout << "Patterns List=" << std::boolalpha << args["--pattern"].isStringList() << std::endl;
+  std::cout << "PATTERN " << args["--pattern"] << std::endl;
+  //std::cout << "STRING " << args["--pattern"].asString() << std::endl;
+  std::cout << "LIST   ";
+  for( auto& elem: args["--pattern"].asStringList()) {
+    std::cout << elem << ", ";
+  }
+  std::cout << std::endl;
+  exit(22);
   
   _p_sig.bpm = args["--bpm"].asLong();
   _p_sig.from_string( args["--sig"].asString());
