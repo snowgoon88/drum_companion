@@ -9,7 +9,7 @@
 #include <chrono>
 #include <thread>
 
-int main(int argc, char *argv[])
+void test_concat_pattern()
 {
   // Generate two patterns
   Signature _p_sig {90, 4, 2};
@@ -45,6 +45,55 @@ int main(int argc, char *argv[])
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
   }
 
+}
+
+void test_expr()
+{
+  std::cout << "***** TEST_EXPR ***********************************" << std::endl;
+  Expr nul_expr;
+  auto res=nul_expr.is_empty();
+  std::cout << "nul_expr.empty=" <<  std::boolalpha << res << std::endl;
+}
+
+void test_formula()
+{
+  std::cout << "***** TEST_FORMLA *********************************" << std::endl;
+  Looper lp;
+  
+  lp._formula = " 123   45 ";
+
+std::cout << "__LOOK for expr" << std::endl;
+  auto expr = lp._find_expr( lp._formula.begin(), lp._formula.end() );
+  std::cout << "  RES=" << lp._subformula( expr ) << std::endl;
+
+  std::cout << "__LOOK for expr" << std::endl;
+  expr = lp._find_expr( expr.end, lp._formula.end() );
+  std::cout << "  RES=" << lp._subformula( expr ) << std::endl;
+  
+}
+
+void test_analyze()
+{
+  std::cout << "***** TEST_ANALYZE*********************************" << std::endl;
+  Looper lp;
+
+  std::string forms[] = { " 123  + 456",
+                         "123+456",
+                          //"123 + (45+6)",
+  };
+  for( auto& f: forms) {
+    std::cout << "****************************" << std::endl;
+    std::cout << "__analyze '" << f << "'" << std::endl;
+    lp.analyze( f );
+  }
+  
+}
+
+int main(int argc, char *argv[])
+{
+  test_expr();
+  test_formula();
+  test_analyze();
 
   return 0;
 }

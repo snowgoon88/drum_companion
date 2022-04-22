@@ -1,4 +1,4 @@
-* __CURRENT__ : name patterns
+* __CURRENT__ : analyze looper sequence construction
 * TODO [2/3] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
@@ -10,7 +10,10 @@ if (item_disabled)
             ImGui::BeginDisabled(true);
 *** DONE apply changes to PatternAudio
 ** DONE [/] name patterns
-** TODO [/] looper
+** TODO [0/3] looper
+*** TODO _s + _s : concat
+*** TODO _s x NB 
+*** TODO ({[]}) : group
 * TODO [1/2] Ressources to try
 ** TODO [5/6] GUI : imgui
 https://github.com/ocornut/imgui
