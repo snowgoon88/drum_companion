@@ -8,6 +8,7 @@
  */
 
 #include <vector>
+#include <list>
 #include <iostream>      // cout, endl
 #include <imgui.h>       // ImVec4 for colors
 
@@ -58,6 +59,19 @@ std::ostream &operator<<(std::ostream &os,
   
   return os;
 }
+// ****************************************************************** str_list
+std::ostream &operator<<(std::ostream &os,
+                                const std::list<uint> &t)
+{
+  os << "{ ";
+  for( const uint& val: t) {
+    os << val << ", ";
+  }
+  os << "}";
+  
+  return os;
+}
+
 // std::copy( pa._pattern_intervale.begin(),
 //              pa._pattern_intervale.end(),
 //              std::ostream_iterator<Note>(std::cout, " "));

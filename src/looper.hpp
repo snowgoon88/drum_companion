@@ -26,22 +26,6 @@
 #endif
 
 // ***************************************************************************
-using StrIt = std::string::iterator;
-using StrPos = std::string::size_type;
-using Expr = struct expr_T
-{
-  StrIt start;
-  StrIt end;
-
-  /** constructor */
-  expr_T() {}
-  expr_T( StrIt start_, StrIt end_ ) {start=start_; end=end_;}
-
-  /** should work even with default init as start=end=0; */
-  bool is_empty() {
-    return start == end; 
-  }
-};
 
 // ***************************************************************************
 // ******************************************************************** Looper
@@ -106,100 +90,6 @@ public:
     }
   }
   // ******************************************************** Looper::sequence
-  void analyze( const std::string& formula )
-  {
-    _formula = formula;
-    Expr le = _find_expr( _formula.begin(), _formula.end() );
-    if (le.is_empty()) {
-      std::cerr << "ERROR: no l_expr found in '" << _formula << "'" << std::endl;
-      exit(1);
-    }
-    std::cout << "L_expr=" << _subformula(le) << std::endl;
-    
-    Expr op = _find_operator(le.end, _formula.end());
-    if (op.is_empty()) {
-      std::cerr << "ERROR: no operator found in '" << _subformula(le.end, _formula.end()) << "'" << std::endl;
-      exit(1);
-    }
-    std::cout << "OPE=" << _subformula(op) << std::endl;
-    
-    Expr re = _find_expr(op.end, _formula.end());
-    if (re.is_empty()) {
-      std::cerr << "ERROR: no l_expr found in '" << _subformula(op.end, _formula.end()) << "'" << std::endl;
-      exit(1);
-    }
-    std::cout << "R_expr=" << _subformula(re) << std::endl;
-    
-  }
-  /** look for left or end expression in expr */
-
-  // void _find_expr( const std::string& formula,
-  //                  StrPos& pos_start, StrPos& pos_end )
-
-  Expr _find_expr( StrIt it_start, StrIt it_end)
-  {
-    LOGLO( "_find_expr in '" <<  _subformula(it_start, it_end) << "'" );
-    // do not care for SPACE
-    it_start = _trim_space( it_start, it_end );
-
-    StrIt expr_start = it_start;
-    LOGLO( "  start (" << _pos(expr_start) << "):" << _at(expr_start) );
-    
-    // advance until no digit
-    while (_is_digit( it_start ) && it_start != it_end) {
-      it_start++;
-    }
-    StrIt expr_end = it_start;
-    LOGLO( "  end (" << _pos(expr_end) << "):" << _at(expr_end) );
-    LOGLO( "  => found " << _subformula( expr_start, expr_end ));
-
-    return Expr{ expr_start, expr_end };
-  }
-  Expr _find_operator( StrIt it_start, StrIt it_end)
-  {
-    LOGLO( "_find_operator in '" <<  _subformula(it_start, it_end) << "'" );
-    it_start = _trim_space( it_start, it_end );
-
-    // Concat
-    if (_at( it_start ) == "+") {
-      LOGLO( "  start (" << _pos(it_start) << "):" << _at(it_start) );
-      return Expr(it_start, it_start+1);
-    }
-    return Expr(it_start, it_start);
-  }
-  void _lookfor_concat( const std::string& expr )
-  {
-      
-  }
-
-  StrIt _trim_space( StrIt it_start, StrIt it_end )
-  {
-    while (*it_start == ' ' && it_start != it_end) {
-      it_start++;
-    }
-    return it_start;
-  }
-  bool _is_digit( StrIt it )
-  {
-    // need to cast as unsigned char for it to work properly
-    return std::isdigit(static_cast<unsigned char>(*it));
-  }
-  StrPos _pos( StrIt it )
-  {
-    return std::distance( _formula.begin(), it);
-  }
-  std::string _subformula( StrIt it_start, StrIt it_end)
-  {
-    return _formula.substr( _pos(it_start), _pos(it_end)-_pos(it_start) );
-  }
-  std::string _subformula( const Expr& expr )
-  {
-    return _subformula( expr.start, expr.end );
-  }
-  std::string _at( StrIt it )
-  {
-    return _subformula( it, it+1 );
-  }
   // ****************************************************** Looper::operations
   void concat( uint id_pattern )
   {

@@ -5,6 +5,7 @@
  */
 
 #include <looper.hpp>
+#include <analyzer.hpp>
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -55,36 +56,26 @@ void test_expr()
   std::cout << "nul_expr.empty=" <<  std::boolalpha << res << std::endl;
 }
 
-void test_formula()
-{
-  std::cout << "***** TEST_FORMLA *********************************" << std::endl;
-  Looper lp;
-  
-  lp._formula = " 123   45 ";
-
-std::cout << "__LOOK for expr" << std::endl;
-  auto expr = lp._find_expr( lp._formula.begin(), lp._formula.end() );
-  std::cout << "  RES=" << lp._subformula( expr ) << std::endl;
-
-  std::cout << "__LOOK for expr" << std::endl;
-  expr = lp._find_expr( expr.end, lp._formula.end() );
-  std::cout << "  RES=" << lp._subformula( expr ) << std::endl;
-  
-}
-
 void test_analyze()
 {
   std::cout << "***** TEST_ANALYZE*********************************" << std::endl;
-  Looper lp;
+  Analyzer analyzer;
 
-  std::string forms[] = { " 123  + 456",
-                         "123+456",
-                          //"123 + (45+6)",
+  std::pair<std::string, std::list<uint>> forms[] =
+    { {"p2 + p1",   {2,1}},
+      {" p2  +p1 ", {2,1}},
+      {"p3  ", {3}},
+      {"2xp1", {1,1}},
+      {" 2 x  p3", {3,3}},
+      {" p1 + 2 x p2", {1,2,2}},
+      {" 2 x p2 + p1", {2, 2, 1}},
   };
+  
   for( auto& f: forms) {
     std::cout << "****************************" << std::endl;
-    std::cout << "__analyze '" << f << "'" << std::endl;
-    lp.analyze( f );
+    std::cout << "__analyze '" << f.first << "'" << std::endl;
+    auto res = analyzer.run( f.first );
+    std::cout << "  => " << std::boolalpha << (res == f.second) << " res=" << res << std::endl;
   }
   
 }
@@ -92,7 +83,6 @@ void test_analyze()
 int main(int argc, char *argv[])
 {
   test_expr();
-  test_formula();
   test_analyze();
 
   return 0;
