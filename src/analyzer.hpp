@@ -54,7 +54,7 @@ using Expr = struct expr_T {
  * - output stack with number (for x) and pattern (for x and +)
  */
 enum TType {number, pattern, operation};
-enum OType {concat, repeat};
+enum OType {concat, repeat, paren_in, paren_out};
 using Token = struct token_T {
   TType type;
   StrIt start;     // iterator to the token string
@@ -82,7 +82,13 @@ std::ostream &operator<<(std::ostream &os, const Token &t)
       os << "+";
       break;
     case repeat:
-      os << "x";
+      os << *t.start;
+      break;
+    case paren_in:
+      os << "(";
+      break;
+    case paren_out:
+      os << ")";
       break;
     }
   }

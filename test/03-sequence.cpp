@@ -95,12 +95,12 @@ void test_parse()
                          " P1 x 2",
                          " p1 x  p2",
                          
-                         "2 x p1 + p3",
+                         "2 * p1 + p3",
                          " p1 + 2 x p2",
                          " 2xp2 + 3xp3 ",
                          " 2 x p2 x p3",
                          " 2x3xp1",
-                         "2xp1 + p3 + 2xp2",
+                         "2xp1 + p3 + 2*p2",
   };
   
   for( auto& f: forms) {
