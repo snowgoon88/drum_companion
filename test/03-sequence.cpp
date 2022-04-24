@@ -56,34 +56,70 @@ void test_expr()
   std::cout << "nul_expr.empty=" <<  std::boolalpha << res << std::endl;
 }
 
-void test_analyze()
+// void test_analyze()
+// {
+//   std::cout << "***** TEST_ANALYZE*********************************" << std::endl;
+//   Analyzer analyzer;
+
+//   std::pair<std::string, std::list<uint>> forms[] =
+//     { {"p2 + p1",   {2,1}},
+//       {" p2  +p1 ", {2,1}},
+//       {"p3  ", {3}},
+//       {"2xp1", {1,1}},
+//       {" 2 x  p3", {3,3}},
+//       {" p1 + 2 x p2", {1,2,2}},
+//       {" 2 x p2 + p1", {2, 2, 1}},
+//   };
+  
+//   for( auto& f: forms) {
+//     std::cout << "****************************" << std::endl;
+//     std::cout << "__analyze '" << f.first << "'" << std::endl;
+//     auto res = analyzer.run( f.first );
+//     std::cout << "  => " << std::boolalpha << (res == f.second) << " res=" << res << std::endl;
+//   }  
+// }
+
+void test_parse()
 {
-  std::cout << "***** TEST_ANALYZE*********************************" << std::endl;
+  std::cout << "***** TEST_PARSER *********************************" << std::endl;
   Analyzer analyzer;
 
-  std::pair<std::string, std::list<uint>> forms[] =
-    { {"p2 + p1",   {2,1}},
-      {" p2  +p1 ", {2,1}},
-      {"p3  ", {3}},
-      {"2xp1", {1,1}},
-      {" 2 x  p3", {3,3}},
-      {" p1 + 2 x p2", {1,2,2}},
-      {" 2 x p2 + p1", {2, 2, 1}},
+  std::string forms[] = {
+                         // "23",
+                         // "  12",
+                         // " p1 23 p4",
+                         " 2 x p1",
+                         " p2 + p3 ",
+                         " p3 + p2 + p1",
+                         " 2 x 3",
+                         " P1 x 2",
+                         " p1 x  p2",
+                         
+                         "2 x p1 + p3",
+                         " p1 + 2 x p2",
+                         " 2xp2 + 3xp3 ",
+                         " 2 x p2 x p3",
+                         " 2x3xp1",
+                         "2xp1 + p3 + 2xp2",
   };
   
   for( auto& f: forms) {
     std::cout << "****************************" << std::endl;
-    std::cout << "__analyze '" << f.first << "'" << std::endl;
-    auto res = analyzer.run( f.first );
-    std::cout << "  => " << std::boolalpha << (res == f.second) << " res=" << res << std::endl;
+    std::cout << "__analyze '" << f << "'" << std::endl;
+    try {
+      analyzer.parse( f );
+    }
+    catch (std::runtime_error& e) {
+      std::cout << "**WRONG** " << e.what() << std::endl;
+    }
   }
-  
 }
 
 int main(int argc, char *argv[])
 {
-  test_expr();
-  test_analyze();
-
+  // test_expr();
+  // test_analyze();
+  test_parse();
+  
   return 0;
 }
