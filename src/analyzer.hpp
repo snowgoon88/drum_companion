@@ -179,7 +179,25 @@ public:
                      {OType::concat} };
           push_auxiliary( tok );
           //auxiliary.push_back( tok );
-        } 
+        }
+        else if (*it_start == '(') {
+          LOGAN( "  is paren_in ? " );
+          StrIt begin = it_start;
+          it_start++;
+
+          Token tok{ TType::operation, begin, it_start,
+                     {OType::paren_in} };
+          push_auxiliary( tok );
+        }
+        else if (*it_start == ')') {
+          LOGAN( "  is paren_out ? " );
+          StrIt begin = it_start;
+          it_start++;
+
+          Token tok{ TType::operation, begin, it_start,
+                     {OType::paren_out} };
+          push_auxiliary( tok );
+        }
         else {
           throw std::runtime_error( "parse: unrecognized token '"+_subformula(it_start, it_end));
         }
@@ -196,14 +214,18 @@ public:
       Token& tokop = auxiliary.back();
       switch (tokop.val.op) {
       case OType::repeat:
-        _check_repeat( _subformula(tokop.start, tokop.end) );
+        //TODO check when eval _check_repeat( _subformula(tokop.start, tokop.end) );
         // TODO : maybe pop back many operators
         break;
       case OType::concat:
-        _check_concat( _subformula(tokop.start, tokop.end) );
+        //TODO check when eval _check_concat( _subformula(tokop.start, tokop.end) );
         // TODO : beware of precedence
         break;
         //throw std::runtime_error( "parse: check pop back CONCAT NOT IMPLEMENTED" );
+      case OType::paren_in:
+        throw std::runtime_error( "parse: Parenthèse ouvrante qui n'est pas fermée." );
+      case OType::paren_out:
+        throw std::runtime_error( "parse: Parenthèse fermante qui n'a rien à faire là." );
       }
 
       output.push_back( tokop );
@@ -221,7 +243,7 @@ public:
         Token& aux_op = auxiliary.back();
         if (aux_op.val.op == OType::repeat) {
           // pop back
-          _check_repeat( _subformula( aux_op.start, aux_op.end ));
+          // TODO check when eval _check_repeat( _subformula( aux_op.start, aux_op.end ));
           output.push_back( aux_op );
           auxiliary.pop_back();
           
@@ -229,7 +251,7 @@ public:
         }
         else if (aux_op.val.op == OType::concat) {
           // pop back
-          _check_concat( _subformula( aux_op.start, aux_op.end ));
+          // TODO check when eval _check_concat( _subformula( aux_op.start, aux_op.end ));
           output.push_back( aux_op );
           auxiliary.pop_back();
           
@@ -244,6 +266,34 @@ public:
     else if (tok.val.op == OType::repeat) {
       LOGAN( "  => PUSHED to auxiliary" );
       auxiliary.push_back( tok );
+    }
+    else if (tok.val.op == OType::paren_in) {
+      LOGAN( "  => PUSHED to auxiliary" );
+      auxiliary.push_back( tok );
+    }
+    else if (tok.val.op == OType::paren_out) {
+      LOGAN( "  => empty auxiliary to paren_in" );
+      while (auxiliary.back().val.op != OType::paren_in) {
+        Token& aux_op = auxiliary.back();
+        LOGAN( "  pop back " << aux_op );
+        if (aux_op.val.op == OType::repeat) {
+          // pop back
+          _check_repeat( _subformula( aux_op.start, aux_op.end ));
+          output.push_back( aux_op );
+          auxiliary.pop_back();
+        }
+        else if (aux_op.val.op == OType::concat) {
+          // pop back
+          _check_concat( _subformula( aux_op.start, aux_op.end ));
+          output.push_back( aux_op );
+          auxiliary.pop_back();
+        }
+        if (auxiliary.empty()) {
+          throw std::runtime_error( "auxiliary push: Parenthèse fermée qui n'est pas ouverte" );
+        }
+      }
+      // remove paren_in
+      auxiliary.pop_back();
     }
   }
   // ********************************************************** Analyzer::find

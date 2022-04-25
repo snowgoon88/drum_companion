@@ -102,6 +102,9 @@ void test_parse()
                          // " 2x3xp1",
                          // "2xp1 + p3 + 2*p2",
                          " 2 x (p1 + p3)",
+                         " (2 x p1) ",
+                         " ((2 x p1)) ",
+                         " ((2 x (p1))) ",                         
   };
   
   for( auto& f: forms) {
