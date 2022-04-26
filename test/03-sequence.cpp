@@ -82,9 +82,36 @@ void test_expr()
 void test_parse()
 {
   std::cout << "***** TEST_PARSER *********************************" << std::endl;
-  Analyzer analyzer;
+  Looper looper;
 
+  std::cout << "__generate 2 patterns" << std::endl;
+  Signature _p_sig {90, 4, 2};
+  PatternAudio p1;
+  p1._signature = _p_sig;
+  p1.init_from_string( "2x1x1x1x" );
+  std::cout << "__CREATED p1" << std::endl << p1.str_dump() << std::endl;
+  PatternAudio p2;
+  p2._signature = _p_sig;
+  p2.init_from_string( "211x211x" );
+  std::cout << "__CREATED p2" << std::endl << p1.str_dump() << std::endl;
+
+  uint id_p1 = looper.add( &p1 );
+  std::cout << "__Pattern P1 added as " << id_p1 << std::endl;
+  uint id_p2 = looper.add( &p2 );
+  std::cout << "__Pattern P2 added as " << id_p2 << std::endl;
+
+  Analyzer analyzer(&looper);
+
+  
   std::string forms[] = {
+                         "p0 + p1",
+                         " p1 +   p1 ",
+                         "(p0 + p0)",
+                         "p0",
+                         "(( p0 ))",
+                         "p3",
+                         " p0 + P1 + p0 ",
+                         " p0 + P1 + p0 + P1 + P1",                         
                          // "23",
                          // "  12",
                          // " p1 23 p4",
@@ -101,10 +128,11 @@ void test_parse()
                          // " 2 x p2 x p3",
                          // " 2x3xp1",
                          // "2xp1 + p3 + 2*p2",
-                         " 2 x (p1 + p3)",
-                         " (2 x p1) ",
-                         " ((2 x p1)) ",
-                         " ((2 x (p1))) ",                         
+                         // " 2 x (p1 + p3)",
+                         // " (2 x p1) ",
+                         // " ((2 x p1)) ",
+                         // " ((2 x (p1))) ",      
+                         
   };
   
   for( auto& f: forms) {

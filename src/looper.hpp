@@ -32,7 +32,9 @@
 // ***************************************************************************
 class Looper
 {
+public:
   using PatternList = std::list<PatternAudio*>;
+private:
   using PatternVec = std::vector<PatternAudio*>;
   enum LooperState { ready, running, paused, empty };
   
@@ -82,23 +84,42 @@ public:
     return dump.str();
   }
   // ******************************************************** Looper::patterns
-  void add( PatternAudio* pattern )
+  uint add( PatternAudio* pattern )
   {
     if (pattern->_state == PatternAudio::ready ) {
       pattern->_id = all_patterns.size();
       all_patterns.push_back( pattern );
+      return pattern->_id;
     }
+    throw std::runtime_error( "add: pattern is not ready" );
+    return 0;
   }
   // ******************************************************** Looper::sequence
   // ****************************************************** Looper::operations
+  void clear_sequence()
+  {
+    sequence.clear();
+  }
   void concat( uint id_pattern )
   {
     if (id_pattern < all_patterns.size()) {
       sequence.push_back( all_patterns[id_pattern] );
     }
+    else {
+      throw std::runtime_error( "concat: id_pattern not valid" );
+    }
     if (sequence.size() > 0) {
       _state = ready;
     }
+  }
+  /** Check Valid Pattern Id and create a PatterList with it */
+  PatternList into_list( const uint id_pattern )
+  {
+    if (id_pattern >= all_patterns.size()) {
+      throw std::runtime_error( "into_list: id_pattern="+std::to_string(id_pattern)+" not valid as size="+std::to_string(all_patterns.size()) );
+    }
+    PatternList res{ all_patterns[id_pattern] };
+    return res;
   }
   // ************************************************************ Looper::next
   bool next()
@@ -146,5 +167,16 @@ public:
   std::string _formula;
 };
 // ************************************************************** Looper - End
+
+//DEL std::ostream &operator<<(std::ostream &os, const Looper::PatternList &pl)
+// {
+//   os << "PatList: {";
+//   for( auto& pat: pl) {
+//     os << pat->_id << ", ";
+//   }
+//   os << "}";
+//   return os;
+// }
+
 
 #endif // LOOPER_HPP
