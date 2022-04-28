@@ -112,14 +112,10 @@ public:
       _state = ready;
     }
   }
-  /** Check Valid Pattern Id and create a PatterList with it */
-  PatternList into_list( const uint id_pattern )
+  /** Check Valid Pattern Id */
+  bool is_valid_id( const uint id_pattern )
   {
-    if (id_pattern >= all_patterns.size()) {
-      throw std::runtime_error( "into_list: id_pattern="+std::to_string(id_pattern)+" not valid as size="+std::to_string(all_patterns.size()) );
-    }
-    PatternList res{ all_patterns[id_pattern] };
-    return res;
+    return (id_pattern < all_patterns.size());
   }
   // ************************************************************ Looper::next
   bool next()
@@ -167,16 +163,5 @@ public:
   std::string _formula;
 };
 // ************************************************************** Looper - End
-
-//DEL std::ostream &operator<<(std::ostream &os, const Looper::PatternList &pl)
-// {
-//   os << "PatList: {";
-//   for( auto& pat: pl) {
-//     os << pat->_id << ", ";
-//   }
-//   os << "}";
-//   return os;
-// }
-
 
 #endif // LOOPER_HPP

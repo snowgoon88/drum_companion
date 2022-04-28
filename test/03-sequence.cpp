@@ -27,7 +27,12 @@ void test_concat_pattern()
   std::cout << "__CREATED lp" << std::endl << lp.str_dump() << std::endl;
 
   std::cout << "  concatenation with empty all_pattern should not work"  << std::endl;
-  lp.concat( 1 );
+  try {
+    lp.concat( 1 );
+  }
+  catch (std::runtime_error e) {
+    std::cout << e.what() << std::endl;
+  }
   std::cout << "__AFTER CONCAT " << std::endl << lp.str_dump() << std::endl;
 
   std::cout << "__ADDING Patterns" << std::endl;
@@ -41,43 +46,12 @@ void test_concat_pattern()
   std::cout << "__AFTER CONCAT 0" << std::endl << lp.str_dump() << std::endl;  
 
   lp.start();
-  while (true) {
+  for( unsigned int i = 0; i < 2000; ++i) {
     lp.next();
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
   }
 
 }
-
-void test_expr()
-{
-  std::cout << "***** TEST_EXPR ***********************************" << std::endl;
-  Expr nul_expr;
-  auto res=nul_expr.is_empty();
-  std::cout << "nul_expr.empty=" <<  std::boolalpha << res << std::endl;
-}
-
-// void test_analyze()
-// {
-//   std::cout << "***** TEST_ANALYZE*********************************" << std::endl;
-//   Analyzer analyzer;
-
-//   std::pair<std::string, std::list<uint>> forms[] =
-//     { {"p2 + p1",   {2,1}},
-//       {" p2  +p1 ", {2,1}},
-//       {"p3  ", {3}},
-//       {"2xp1", {1,1}},
-//       {" 2 x  p3", {3,3}},
-//       {" p1 + 2 x p2", {1,2,2}},
-//       {" 2 x p2 + p1", {2, 2, 1}},
-//   };
-  
-//   for( auto& f: forms) {
-//     std::cout << "****************************" << std::endl;
-//     std::cout << "__analyze '" << f.first << "'" << std::endl;
-//     auto res = analyzer.run( f.first );
-//     std::cout << "  => " << std::boolalpha << (res == f.second) << " res=" << res << std::endl;
-//   }  
-// }
 
 void test_parse()
 {
@@ -103,54 +77,72 @@ void test_parse()
   Analyzer analyzer(&looper);
 
   
-  std::string forms[] = {
-                         "p0 + p1",
-                         " p1 +   p1 ",
-                         "(p0 + p0)",
-                         "p0",
-                         "(( p0 ))",
-                         "p3",
-                         " p0 + P1 + p0 ",
-                         " p0 + P1 + p0 + P1 + P1",                         
-                         // "23",
-                         // "  12",
-                         // " p1 23 p4",
-                         // " 2 x p1",
-                         // " p2 + p3 ",
-                         // " p3 + p2 + p1",
-                         // " 2 x 3",
-                         // " P1 x 2",
-                         // " p1 x  p2",
-                         
-                         // "2 * p1 + p3",
-                         // " p1 + 2 x p2",
-                         // " 2xp2 + 3xp3 ",
-                         // " 2 x p2 x p3",
-                         // " 2x3xp1",
-                         // "2xp1 + p3 + 2*p2",
-                         // " 2 x (p1 + p3)",
-                         // " (2 x p1) ",
-                         // " ((2 x p1)) ",
-                         // " ((2 x (p1))) ",      
-                         
-  };
-  
+  std::pair<std::string, std::list<uint>> forms[] =
+    {
+     {"23", {}},
+     {"0  1", {}},
+     {"p0", {0}},
+     {" p1 ", {1}},
+     {"p3", {}},
+     {"a0", {}},
+     {"pa1", {}},
+     {"((p0 )) ", {0}},
+     {"p0 + p1", {0,1}},
+     {"p0 + p3", {}},
+     {" p1 +   p1 ", {1,1}},
+     {"(p0 + p0)", {0,0}},
+     {" p0 + P1 + p0 ", {0,1,0}},
+     {" 2 x p1", {1,1}},
+     {" 2 * p1", {1,1}},
+     {" 3 x p2", {}},
+     {" P1 x 2", {}},
+     {" p1 x  p0", {}},
+     {" (2 x p1) ", {1,1}},
+     {" ((2 x p1)) ", {1,1}},
+     {" ((2 x (p1))) ", {1,1}},      
+     {"p0 / p1", {}}, 
+     {"2 * p1 + p0", {1,1,0}},
+     {" p1 + 2 x p0", {1,0,0}},
+     {" 2xp1 + 3xp0 ", {1,1,0,0,0}},
+     {" 2 x p1 x p0", {}},
+     {" 2x3xp1", {1,1,1,1,1,1}},
+     {"2xp1 + p0 + 2*p1", {1,1,0,1,1}},
+     {" 2 x (p1 + p0)", {1,0,1,0}},
+    };
+
+  uint nb_fail = 0;
+  uint nb_test = 0;
   for( auto& f: forms) {
     std::cout << "****************************" << std::endl;
-    std::cout << "__analyze '" << f << "'" << std::endl;
+    std::cout << "__analyze '" << f.first << "'" << std::endl;
     try {
-      analyzer.parse( f );
+      nb_test += 1;
+      auto res = analyzer.parse( f.first );
+
+      bool success = ( f.second == res );
+      if (! success) {
+        nb_fail += 1;
+      }
+      std::cout << "  => " << std::boolalpha << success << " res=" << res << std::endl;
     }
     catch (std::runtime_error& e) {
       std::cout << "**WRONG** " << e.what() << std::endl;
+
+      bool success = (f.second == std::list<uint>{});
+      if (! success) {
+        nb_fail += 1;
+      }
+      std::cout << "  => " << std::boolalpha << success << std::endl;
     }
   }
+
+  std::cout << "------------------------------------" << std::endl;
+  std::cout << "  " << nb_fail << " failed / " << nb_test << " tests" << std::endl;
 }
 
 int main(int argc, char *argv[])
 {
-  // test_expr();
-  // test_analyze();
+  test_concat_pattern(); // for 10 seconds
   test_parse();
   
   return 0;

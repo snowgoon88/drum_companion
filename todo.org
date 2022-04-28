@@ -10,11 +10,12 @@ if (item_disabled)
             ImGui::BeginDisabled(true);
 *** DONE apply changes to PatternAudio
 ** DONE [/] name patterns
-** TODO [0/2] looper
-*** TODO using Shunting Yard algorithm
+** TODO [2/3] looper
+*** DONE using Shunting Yard algorithm
 - https://wcipeg.com/wiki/Shunting_yard_algorithm
 - https://en.wikipedia.org/wiki/Shunting_yard_algorithm
-*** TODO ({[]}) : group
+*** DONE ({[]}) : group
+*** TODO parse -> PatternList
 * TODO [1/2] Ressources to try
 ** TODO [5/6] GUI : imgui
 https://github.com/ocornut/imgui

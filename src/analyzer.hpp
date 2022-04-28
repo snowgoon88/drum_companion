@@ -7,10 +7,14 @@
  * Allowed operations:
  * repeat: nb x expr
  * concat: expr + expr
+ * parenthesis : (expr)
  *
- * Given our operations, we can scan from left to right for 'thing OP thing'
- * and evaluate first the RIGHT thing and then the LEFT thing.
- * TODO : change this
+ * We use the Shunting Yard algorithm
+ * https://en.wikipedia.org/wiki/Shunting_yard_algorithm
+ * but as our operand may be different (number, pattern and expression)
+ * we "cheat" by using here UintList for all operand,
+ * as a substitute to PatternList.
+ * After evaluation, we will map UintList to Looper::PatternList.
  */
 
 #include <utils.hpp>
@@ -21,7 +25,7 @@
 // ***************************************************************************
 // ******************************************************************* Loggers
 // ***************************************************************************
-#define LOG_AN
+//#define LOG_AN
 #ifdef LOG_AN
 #  define LOGAN(msg) (LOG_BASE("[Alyz]", msg))
 #else
@@ -31,75 +35,94 @@
 //namespace analyzer
 //{
 // ********************************************************************* Types
-using PatternList = std::list<uint>;
 using StrIt = std::string::iterator;
 using StrPos = std::string::size_type;
-using Expr = struct expr_T {
+using UintList = std::list<uint>;
+enum OType {concat, repeat, paren_in, paren_out};
+// ***************************************************************************
+// ********************************************************************* Token
+// ***************************************************************************
+class Token
+{
+public:
+  Token(StrIt start_, StrIt end_) : start(start_), end(end_) {}
+  virtual ~Token() {}
+  virtual std::string str_dump () const
+  {
+    std::stringstream dump;
+    dump << "Tok[]";
+
+    return dump.str();
+  }
+  // ******************************************************** Token::attributs
   StrIt start;
   StrIt end;
-
-  /** constructor */
-  expr_T() {}
-  expr_T( StrIt start_, StrIt end_ ) {start=start_; end=end_;}
-
-  /** should work even with default init as start=end=0; */
-  bool is_empty() {
-    return start == end; 
-  }
 };
-
-// ***************************************************************************
-// ********************************************************************* Types
-// ***************************************************************************
-/** We will be using 2 stacks
- * - output stack with number (for x) and pattern (for x and +)
- */
-enum TType {number, pattern, operation, expression};
-enum OType {concat, repeat, paren_in, paren_out};
-using Token = struct token_T {
-  TType type;
-  StrIt start;     // iterator to the token string
-  StrIt end;
-  union val_T {
-    uint nb;
-    OType op;
-  } val;
-};
-using TokenStack = std::vector<Token>;
-std::ostream &operator<<(std::ostream &os, const Token &t)
+class NbToken : public Token
 {
-  os << "Tok[";
-  switch ( t.type ) {
-  case number:
-    os << "nb=" << t.val.nb;
-    break;
-  case pattern:
-    os << "pat=" << t.val.nb;
-    break;
-  case expression:
-    os << "expr";
-    break;
-  case operation:
-    os << "op=";
-    switch (t.val.op) {
+public:
+  NbToken(StrIt start_, StrIt end_, uint nb_) : Token(start_, end_), nb(nb_) {}
+  virtual ~NbToken() {}
+  virtual std::string str_dump () const
+  {
+    std::stringstream dump;
+    dump << "Tok[nb=" << nb << "]";
+
+    return dump.str();
+  }
+  // ****************************************************** NbToken::attributs
+  uint nb;
+};
+class ExpToken : public Token
+{
+public:
+  ExpToken(StrIt start_, StrIt end_, const UintList &patlist)
+      : Token(start_, end_), exp(patlist) {}
+  virtual ~ExpToken() {}
+  virtual std::string str_dump () const
+  {
+    std::stringstream dump;
+    dump << "Tok[exp=" << exp << "]";
+
+    return dump.str();
+  }
+  // ***************************************************** ExpToken::attributs
+  UintList exp;
+};
+class OpToken : public Token
+{
+public:
+  OpToken(StrIt start_, StrIt end_, OType op_) :
+    Token(start_, end_), op(op_) {}
+  virtual ~OpToken() {}
+  virtual std::string str_dump () const
+  {
+    std::stringstream dump;
+    dump << "Tok[op=";
+    switch (op) {
     case concat:
-      os << "+";
+      dump << "+";
       break;
     case repeat:
-      os << *t.start;
+      dump << *start;
       break;
     case paren_in:
-      os << "(";
+      dump << "(";
       break;
     case paren_out:
-      os << ")";
+      dump << ")";
       break;
     }
+    dump << "]";
+    return dump.str();
   }
-  os << "]";
+  // ****************************************************** OpToken::attributs
+  OType op;
+};
 
-  return os;
-}
+using TokenStack = std::vector<Token*>;
+using OpTokenStack = std::vector<OpToken*>;
+// *************************************************************** Token - End
 
 // ***************************************************************************
 // ****************************************************************** Analyzer
@@ -119,12 +142,12 @@ public:
     dump << "_formula=" << _formula << std::endl;
     dump << "Output: ";
     for( auto& tok: output) {
-      dump << tok << ", ";
+      dump <<  tok->str_dump() << ", ";
     }
     dump << std::endl;
     dump << "Auxiliary: ";
     for( auto& tok: auxiliary) {
-      dump << tok << ", ";
+      dump << tok->str_dump() << ", ";
     }
     dump << std::endl;
     
@@ -133,35 +156,31 @@ public:
    
   // ********************************************************* Analyzer::parse
   //void parse( StrIt it_start, StrIt it_end )
-  void parse( const std::string& formula )
+  UintList parse( const std::string& formula )
   {
     _formula = formula;
     output = TokenStack{}; // create new empty stack
-    auxiliary = TokenStack{}; 
+    auxiliary = OpTokenStack{}; 
     StrIt it_start = _formula.begin();
     StrIt it_end = _formula.end();
-
-    if (_looper) {
-      _looper->clear_sequence();
-    }
-                
 
     LOGAN( "__PARSE Init\n" << str_dump() );
     while (it_start != it_end) {
       it_start = _trim_space(it_start, it_end);
       if (it_start != it_end) {
-        // TType::number
+
         if (_is_digit( it_start )) {
           LOGAN( "  is_number ? " );
           StrIt begin = it_start;
           while (_is_digit( it_start )) {
             it_start++;
           }
-        
-          Token tok_nb{ TType::number, begin, it_start,
-              {_find_uint( begin, it_start )} };
-          output.push_back( tok_nb );
+
+          NbToken *tok_ptr = new NbToken(begin, it_start,
+                                         _find_uint(begin, it_start));
+          output.push_back( tok_ptr );
         }
+
         else if (*it_start == 'p' || *it_start == 'P') {
           LOGAN( "  is_pattern ? " );
           StrIt begin = it_start;
@@ -169,52 +188,45 @@ public:
           while (_is_digit( it_start )) {
             it_start++;
           }
-          // TODO check valid pattern
+
           uint id_pattern = _find_pattern( begin, it_start );
-          Token tok{ TType::pattern, begin, it_start,
-                     {id_pattern} };
-          output.push_back( tok );          
+          ExpToken *tok_ptr = new ExpToken(begin, it_start, {id_pattern});
+          output.push_back( tok_ptr );          
         }
         else if (*it_start == 'x' || *it_start == '*' ) {
           LOGAN( "  is_repeat ? " );
           StrIt begin = it_start;
           it_start++;
 
-          Token tok{ TType::operation, begin, it_start,
-                     {OType::repeat} };
-          //auxiliary.push_back( tok );
-          push_auxiliary( tok );
+          OpToken* tok_ptr = new OpToken( begin, it_start, OType::repeat );
+          push_auxiliary( tok_ptr );
         }
         else if (*it_start == '+') {
           LOGAN( "  is_concat ? " );
           StrIt begin = it_start;
           it_start++;
 
-          Token tok{ TType::operation, begin, it_start,
-                     {OType::concat} };
-          push_auxiliary( tok );
-          //auxiliary.push_back( tok );
+          OpToken* tok_ptr = new OpToken( begin, it_start, OType::concat );
+          push_auxiliary( tok_ptr );
         }
         else if (*it_start == '(') {
           LOGAN( "  is paren_in ? " );
           StrIt begin = it_start;
           it_start++;
 
-          Token tok{ TType::operation, begin, it_start,
-                     {OType::paren_in} };
-          push_auxiliary( tok );
+          OpToken* tok_ptr = new OpToken( begin, it_start, OType::paren_in );
+          push_auxiliary( tok_ptr );
         }
         else if (*it_start == ')') {
           LOGAN( "  is paren_out ? " );
           StrIt begin = it_start;
           it_start++;
 
-          Token tok{ TType::operation, begin, it_start,
-                     {OType::paren_out} };
-          push_auxiliary( tok );
+          OpToken* tok_ptr = new OpToken( begin, it_start, OType::paren_out );
+          push_auxiliary( tok_ptr );
         }
         else {
-          throw std::runtime_error( "parse: unrecognized token '"+_subformula(it_start, it_end));
+          display_error( Token(it_start,it_end), "Expression pas reconnue" );
         }
 
         LOGAN( "=> to parse '" << _subformula( it_start, it_end) << "'\n" << str_dump());
@@ -227,76 +239,67 @@ public:
     // Now, pop back auxiliary back to output
     LOGAN( "__POP BACK auxiliary to output" );
     while (! auxiliary.empty()) {
-      Token& tokop = auxiliary.back();
-      switch (tokop.val.op) {
+      OpToken* tokop = auxiliary.back();
+      switch (tokop->op) {
       case OType::repeat:
-        //TODO check when eval _check_repeat( _subformula(tokop.start, tokop.end) );
-        // TODO : maybe pop back many operators
-        break;
       case OType::concat:
-        //TODO check when eval _check_concat( _subformula(tokop.start, tokop.end) );
-        // TODO : beware of precedence
         break;
-        //throw std::runtime_error( "parse: check pop back CONCAT NOT IMPLEMENTED" );
       case OType::paren_in:
-        throw std::runtime_error( "parse: Parenthèse ouvrante qui n'est pas fermée." );
+        display_error( *tokop, "Parenthèse ouvrante qui n'est pas fermée." );
+        break;
       case OType::paren_out:
-        throw std::runtime_error( "parse: Parenthèse fermante qui n'a rien à faire là." );
+        display_error( *tokop, "Parenthèse fermante qui n'a rien à faire là." );
+        break;
       }
 
-      output.push_back( tokop );
       auxiliary.pop_back();
       // Should be possible to evaluate aux_op
-      if (_looper) {
-        eval();
-      }
+      eval( tokop );
+      delete tokop;
     }
 
     // If one pattern left in output...
-    if (output.size() == 1 && output.back().type == TType::pattern) {
-      _check_pattern();
-    }
+    // if (output.size() == 1 && output.back().type == TType::pattern) {
+    //   _check_pattern();
+    // }
 
     // now, should be empty except one expression
-    if (!(output.size() == 1 && output.back().type == TType::expression)) {
+    if (output.size() > 1 ) {
       throw std::runtime_error( "parse: output not empty at end" );
     }
-    
-    LOGAN( "at end\n" << str_dump());
-    LOGAN( _looper->str_dump() );
+    if (output.size() == 1 ) {
+      Token* tok = output.back();
+      ExpToken* tokexp = dynamic_cast<ExpToken*>(tok);
+      if (tokexp == nullptr) {
+        display_error( *tok, "Cette Expression n'est pas valide" );
+      }
+      LOGAN( "at end\n" << str_dump());
+      return tokexp->exp;
+    }
+    return UintList{};
   }
-  void push_auxiliary( Token& tok )
+  void push_auxiliary( OpToken* tok )
   {
-    LOGAN( "push_auxiliary: " << tok );
+    LOGAN( "push_auxiliary: " << tok->str_dump() );
     // before pushing to auxiliary, pop back opertor of higher precedence
-    if (tok.val.op == OType::concat) {
+    if (tok->op == OType::concat) {
       bool keep_checking = (!auxiliary.empty());
       while( keep_checking ) {
-        Token& aux_op = auxiliary.back();
-        if (aux_op.val.op == OType::repeat) {
+        OpToken* aux_op = auxiliary.back();
+        if (aux_op->op == OType::repeat) {
           // pop back
-          // TODO check when eval _check_repeat( _subformula( aux_op.start, aux_op.end ));
-          output.push_back( aux_op );
           auxiliary.pop_back();
+          eval( aux_op );
+          delete aux_op;
 
-          // Should be possible to evaluate aux_op
-          if (_looper) {
-            eval();
-          }
-          
           keep_checking = (!auxiliary.empty());
         }
-        else if (aux_op.val.op == OType::concat) {
+        else if (aux_op->op == OType::concat) {
           // pop back
-          // TODO check when eval _check_concat( _subformula( aux_op.start, aux_op.end ));
-          output.push_back( aux_op );
           auxiliary.pop_back();
+          eval( aux_op );
+          delete aux_op;
 
-          // Should be possible to evaluate aux_op
-          if (_looper) {
-            eval();
-          }
-          
           keep_checking = (!auxiliary.empty());
         }
         else {
@@ -305,41 +308,36 @@ public:
       }
       auxiliary.push_back( tok );
     }
-    else if (tok.val.op == OType::repeat) {
+
+    else if (tok->op == OType::repeat) {
       LOGAN( "  => PUSHED to auxiliary" );
       auxiliary.push_back( tok );
     }
-    else if (tok.val.op == OType::paren_in) {
+
+    else if (tok->op == OType::paren_in) {
       LOGAN( "  => PUSHED to auxiliary" );
       auxiliary.push_back( tok );
     }
-    else if (tok.val.op == OType::paren_out) {
+
+    else if (tok->op == OType::paren_out) {
       LOGAN( "  => empty auxiliary to paren_in" );
-      while (auxiliary.back().val.op != OType::paren_in) {
-        Token& aux_op = auxiliary.back();
-        LOGAN( "  pop back " << aux_op );
-        if (aux_op.val.op == OType::repeat) {
+      while (auxiliary.back()->op != OType::paren_in) {
+        OpToken* aux_op = auxiliary.back();
+        LOGAN( "  pop back " << aux_op->str_dump() );
+        if (aux_op->op == OType::repeat) {
           // pop back
-          //_check_repeat( _subformula( aux_op.start, aux_op.end ));
-          output.push_back( aux_op );
           auxiliary.pop_back();
-          // Should be possible to evaluate aux_op
-          if (_looper) {
-            eval();
-          }
+          eval( aux_op );
+          delete aux_op;
         }
-        else if (aux_op.val.op == OType::concat) {
+        else if (aux_op->op == OType::concat) {
           // pop back
-          //_check_concat( _subformula( aux_op.start, aux_op.end ));
-          output.push_back( aux_op );
           auxiliary.pop_back();
-          // Should be possible to evaluate aux_op
-          if (_looper) {
-            eval();
-          }
+          eval( aux_op );
+          delete aux_op;
         }
         if (auxiliary.empty()) {
-          throw std::runtime_error( "auxiliary push: Parenthèse fermée qui n'est pas ouverte" );
+          display_error( *tok, "Parenthèse fermée qui n'est pas ouverte" );
         }
       }
       // remove paren_in
@@ -347,158 +345,110 @@ public:
     }
   }
   /** Apply top operator from output */
-  void eval()
+  void eval( OpToken* tokop)
   {
-    Token tokop = output.back();
-    LOGAN( " eval " << tokop );
-    if (tokop.type != TType::operation) {
-      throw std::runtime_error( "eval: tokop is not an operator" );
-    }
-    output.pop_back();
+    LOGAN( " eval " << tokop->str_dump() );
 
-    switch (tokop.val.op) {
+    switch (tokop->op) {
     case OType::concat:
-      _check_concat( _subformula( tokop.start, tokop.end ));
+      _check_concat( _subformula( tokop->start, tokop->end ));
       break;
     case OType::repeat:
-      throw std::runtime_error( "eval: op="+_subformula( tokop.start, tokop.end )+" NOT IMPLEMENTED" );
+      _check_repeat( _subformula( tokop->start, tokop->end ));
+      break;
+    default:
+      throw std::runtime_error( "eval: op="+_subformula( tokop->start, tokop->end )+" NOT IMPLEMENTED" );
     }
-    LOGAN( "__LOOPER ***********************" << std::endl << _looper->str_dump() );
   }
   // ********************************************************** Analyzer::find
-  /** look for left or end expression in expr */ 
-  Expr _find_expr( StrIt it_start, StrIt it_end)
-  {
-    LOGAN( "_find_expr in '" <<  _subformula(it_start, it_end) << "'" );
-    // do not care for SPACE
-    it_start = _trim_space( it_start, it_end );
-
-    StrIt expr_start = it_start;
-    LOGAN( "  start (" << _pos(expr_start) << "):" << _at(expr_start) );
-
-    // advance until no digit or no p/P
-    while ((_is_digit( it_start ) || (*it_start == 'p') || (*it_start == 'P')) && it_start != it_end) {
-      it_start++;
-    }
-    StrIt expr_end = it_start;
-    LOGAN( "  end (" << _pos(expr_end) << "):" << _at(expr_end) );
-    LOGAN( "  => found " << _subformula( expr_start, expr_end ));
-
-    return Expr{ expr_start, expr_end };
-  }
-  Expr _find_operator( StrIt it_start, StrIt it_end)
-  {
-    LOGAN( "_find_operator in '" <<  _subformula(it_start, it_end) << "'" );
-    it_start = _trim_space( it_start, it_end );
-
-    // Concat
-    if (_at( it_start ) == "+") {
-      LOGAN( "  start (" << _pos(it_start) << "):" << _at(it_start) );
-      return Expr(it_start, it_start+1);
-    }
-    // Repeat
-    if (_at( it_start ) == "x" || _at(it_start) == "*") {
-      LOGAN( "  start (" << _pos(it_start) << "):" << _at(it_start) );
-      return Expr(it_start, it_start+1);
-    }
-    return Expr(it_start, it_start);
-  }
-  uint _find_pattern( Expr& expr )
-  {
-    LOGAN( "_find_pattern in '" << _subformula( expr )+"'" );
-    if (*expr.start != 'p' && *expr.start != 'P') {
-      throw std::runtime_error( "'"+_subformula( expr )+"' n'est PAS un nom de Pattern.");
-    }
-    return static_cast<uint>(std::stoi(_subformula(expr.start+1, expr.end))); 
-  }
   uint _find_pattern( StrIt it_start, StrIt it_end)
   {
     LOGAN( "_find_pattern in '" << _subformula(it_start, it_end )+"'" );
     if (*it_start != 'p' && *it_start != 'P') {
-      throw std::runtime_error( "'"+_subformula(it_start, it_end)+"' n'est PAS un nom de Pattern.");
+      display_error( Token{it_start, it_end}, "N'est pas un nom de PATTERN" ); 
     }
-    return static_cast<uint>(std::stoi(_subformula(it_start+1, it_end))); 
-  }
-  uint _find_uint( Expr& expr )
-  {
-    LOGAN( "_find_uint in '" << _subformula( expr )+"'" );
-    // if (*expr.start != 'p' && *expr.start != 'P') {
-    //   throw std::runtime_error( "'"+_subformula( expr )+"' n'est PAS un nom de Pattern.");
-    // }
-    return static_cast<uint>(std::stoi(_subformula(expr.start, expr.end))); 
+
+    try {
+      uint id_pattern = static_cast<uint>(std::stoi(_subformula(it_start+1, it_end)));
+      if (_looper) {
+        if (!_looper->is_valid_id( id_pattern )) {
+          display_error(Token{it_start, it_end}, "N'est pas un PATTERN valide");
+        }
+      }
+      return id_pattern;
+    }
+    catch (std::invalid_argument e) {
+      display_error( Token{it_start, it_end}, "N'est pas un nom de PATTERN" );
+    }
+    return 0;
   }
   uint _find_uint( StrIt it_start, StrIt it_end)
   {
     LOGAN( "_find_uint in '" << _subformula( it_start, it_end )+"'" );
-    // if (*expr.start != 'p' && *expr.start != 'P') {
-    //   throw std::runtime_error( "'"+_subformula( expr )+"' n'est PAS un nom de Pattern.");
-    // }
     return static_cast<uint>(std::stoi(_subformula(it_start, it_end))); 
   }
   // ********************************************************* Analyzer::check
   void _check_repeat( const std::string& op )
   {
     // check nb, pattern are the last in output
-    Token& tok_last = output.at(output.size()-1);
-    if (tok_last.type != TType::pattern) {
-      throw std::runtime_error( _subformula( tok_last.start, tok_last.end ) + " n'est pas un PATTERN, demandé par REPEAT (" + op + ")" );
+    Token* tokright = output.at(output.size()-1);
+    ExpToken* exptok = dynamic_cast<ExpToken*>(tokright);
+    if (exptok == nullptr) {
+      display_error( *tokright, " n'est pas un PATTERN ou une EXPRESSION, demandé par REPEAT (" + op + ")" );
     }
-    Token& tok_nb = output.at(output.size()-2);
-    if (tok_nb.type != TType::number) {
-      throw std::runtime_error( _subformula( tok_nb.start, tok_nb.end ) + " n'est pas un NOMBRE, demandé par REPEAT (" + op + ")" );
+    
+    Token* tokleft = output.at(output.size()-2);
+    NbToken *nbtok = dynamic_cast<NbToken*>(tokleft);
+    if (nbtok == nullptr) {
+      display_error( *tokleft, " n'est pas un NOMBRE, demandé par REPEAT (" + op + ")" );
     }
+
+    UintList result;
+    for( unsigned int i = 0; i < nbtok->nb; ++i) {
+      std::copy(exptok->exp.begin(), exptok->exp.end(),
+                std::back_inserter(result));
+    }
+
+    ExpToken* tokres = new ExpToken( std::min( tokright->start, tokleft->start),
+                                     std::max( tokright->end, tokleft->end),
+                                     result );
+    // popout from output and clean
+    output.pop_back();
+    output.pop_back();
+    delete exptok;
+    delete nbtok;
+
+    output.push_back( tokres );
   }
   void _check_concat( const std::string& op )
   {
     // check nb, pattern are the last in output
-    Token& tokright = output.back();
-    if (tokright.type != TType::pattern && tokright.type != TType::expression) {
-      throw std::runtime_error( _subformula( tokright.start, tokright.end ) + " n'est pas un PATTERN, demandé par CONCAT (" + op + ")" );
+    Token* tokright = output.back();
+    ExpToken* expright = dynamic_cast<ExpToken*>(tokright);
+    if (expright == nullptr) {
+      display_error( *tokright, " n'est pas un PATTERN ou une EXPRESSION, demandé par REPEAT (" + op + ")" );
     }
     output.pop_back();
     
-    Token& tokleft = output.back();
-    if (tokleft.type != TType::pattern && tokleft.type != TType::expression) {
-      throw std::runtime_error( _subformula( tokleft.start, tokleft.end ) + " n'est pas un PATTERN, demandé par CONCAT (" + op + ")" );
+    Token* tokleft = output.back();
+    ExpToken* expleft = dynamic_cast<ExpToken*>(tokleft);
+    if (expleft == nullptr) {
+      display_error( *tokleft, " n'est pas un PATTERN ou une EXPRESSION, demandé par REPEAT (" + op + ")" );
     }
     output.pop_back();
-
-    if (tokleft.type == TType::pattern) {
-      _looper->concat( tokleft.val.nb );
-    }
-    if (tokright.type == TType::pattern) {
-      _looper->concat( tokright.val.nb );
-    }
-
-    // TODO add expresion to output
-    Token tok{ TType::expression,
-               std::min(tokleft.start, tokright.start),
-               std::max(tokleft.end, tokright.end),
-               {0} };
-    output.push_back( tok );
     
-  }
-  void _check_pattern()
-  {
-    Token& tok = output.back();
-    if (tok.type != TType::pattern) {
-      throw std::runtime_error( _subformula( tok.start, tok.end ) + " n'est pas un PATTERN" );
-    }
-    output.pop_back();
+    UintList result = expleft->exp;
+    std::copy( expright->exp.begin(), expright->exp.end(),
+               std::back_inserter(result));
+    ExpToken* tokres = new ExpToken( std::min( tokright->start, tokleft->start),
+                                     std::max( tokright->end, tokleft->end),
+                                     result );
+    // popout from output and clean
+    LOGAN( "  ready to clean\n" << str_dump() );
+    delete expleft;
+    delete expright;
 
-    try {
-      _looper->concat( tok.val.nb );
-    }
-    catch (std::runtime_error e) {
-      display_error( tok, "Pattern n'est pas valide");
-      throw std::runtime_error( "_check_pattern: " + std::string(e.what()));
-    }
-    // TODO add expresion to output
-    Token tokexpr{ TType::expression,
-        tok.start,
-        tok.end,
-        {0} };
-    output.push_back( tokexpr );
+    output.push_back( tokres );
   }
   // ********************************************************* Analyzer::utils
   StrIt _trim_space( StrIt it_start, StrIt it_end )
@@ -521,14 +471,6 @@ public:
   {
     return _formula.substr( _pos(it_start), _pos(it_end)-_pos(it_start) );
   }
-  std::string _subformula( const Expr& expr )
-  {
-    return _subformula( expr.start, expr.end );
-  }
-  std::string _at( StrIt it )
-  {
-    return _subformula( it, it+1 );
-  }
   // *********************************************************** Analyzer::error
   void display_error( const Token& tok, const std::string& msg )
   {
@@ -550,7 +492,7 @@ public:
 
     std::cerr <<  err.str() << std::endl;
 
-    //std::exit(1);
+    throw std::runtime_error( msg );
   }
 
   // ***************************************************** Analyzer::attributs
@@ -558,7 +500,8 @@ public:
   Looper* _looper;
   
   TokenStack output;
-  TokenStack auxiliary;
+  OpTokenStack auxiliary;
+  
 };
 // ************************************************************ Analyzer - End
 
