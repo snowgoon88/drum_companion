@@ -18,7 +18,7 @@
 // ***************************************************************************
 // ******************************************************************* Loggers
 // ***************************************************************************
-#define LOG_LO
+//#define LOG_LO
 #ifdef LOG_LO
 #  define LOGLO(msg) (LOG_BASE("[Loop]", msg))
 #else
@@ -35,6 +35,7 @@ class Looper
 public:
   using PatternList = std::list<PatternAudio*>;
 private:
+  using UintIt = std::iterator<std::input_iterator_tag, unsigned int>;
   using PatternVec = std::vector<PatternAudio*>;
   enum LooperState { ready, running, paused, empty };
   
@@ -95,10 +96,30 @@ public:
     return 0;
   }
   // ******************************************************** Looper::sequence
-  // ****************************************************** Looper::operations
-  void clear_sequence()
+  // void clear_sequence()
+  // {
+  //   sequence.clear();
+  // }
+  // void parse_string( const std::string& expression )
+  // {
+  //   Analyzer analyzer(this);
+  //   auto res = analyser.parse( expression );
+  //   set_sequence( res.begin(), res.end() );
+  // }
+  // void set_sequence( std::list<uint> uint_list)
+  // {
+  //   sequence.clear();
+  //   for( auto& var: uint_list) {
+  //     concat( var );
+  //   }
+  // }
+  template<typename Iterator>
+  void set_sequence( Iterator start, Iterator end )
   {
     sequence.clear();
+    for( auto it = start; it != end; it++ ) {
+      concat( (*it) );
+    }
   }
   void concat( uint id_pattern )
   {
@@ -137,12 +158,15 @@ public:
     return true;
   }
   // ************************************************************* Looper::cmd
-  // TODO pause with state
   void start()
   {
     if (_state == ready && sequence.size() > 0) {
       LOGLO( "START" );
       _its = sequence.begin();
+      (*_its)->start();
+      _state = running;
+    }
+    else if (_state == paused) {
       (*_its)->start();
       _state = running;
     }
@@ -152,6 +176,13 @@ public:
     if (_state != empty) {
       (*_its)->stop();
       _state = ready;
+    }
+  }
+  void pause()
+  {
+    if (_state == running) {
+      _state = paused;
+      (*_its)->pause();
     }
   }
   // ******************************************************* Looper::attributs

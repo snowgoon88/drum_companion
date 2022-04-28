@@ -140,10 +140,39 @@ void test_parse()
   std::cout << "  " << nb_fail << " failed / " << nb_test << " tests" << std::endl;
 }
 
+void test_looper_expression()
+{
+  std::cout << "***** TEST_PARSER *********************************" << std::endl;
+  Looper looper;
+
+  std::cout << "__generate 2 patterns" << std::endl;
+  Signature _p_sig {90, 4, 2};
+  PatternAudio p1;
+  p1._signature = _p_sig;
+  p1.init_from_string( "2x1x1x1x" );
+  std::cout << "__CREATED p1" << std::endl << p1.str_dump() << std::endl;
+  PatternAudio p2;
+  p2._signature = _p_sig;
+  p2.init_from_string( "211x211x" );
+  std::cout << "__CREATED p2" << std::endl << p1.str_dump() << std::endl;
+
+  uint id_p1 = looper.add( &p1 );
+  std::cout << "__Pattern P1 added as " << id_p1 << std::endl;
+  uint id_p2 = looper.add( &p2 );
+  std::cout << "__Pattern P2 added as " << id_p2 << std::endl;
+
+  std::cout << "__ parsing 2xp1 + p0" << std::endl;
+  Analyzer analyzer(&looper);
+  auto res = analyzer.parse( "2xp1 + p0" );
+  looper.set_sequence( res.begin(), res.end() );
+  std::cout << looper.str_dump() << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
-  test_concat_pattern(); // for 10 seconds
-  test_parse();
+  // test_concat_pattern(); // for 10 seconds
+  // test_parse();
+  test_looper_expression();
   
   return 0;
 }

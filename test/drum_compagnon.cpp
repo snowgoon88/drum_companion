@@ -2,9 +2,9 @@
 
 /** 
  * CLI and Grafik DrumCompagnon
- * - cli arguments: bpm, sig, pattern,
- * - play repeated sound using sound_pattern,
- * - lsssgrafik On/Off
+ * - cli arguments: bpm, sig, pattern, loop,
+ * - play repeated sound using looper with sound_pattern
+ * - grafik On/Off (if GUI, only ONE pattern)
  * - play/stop/pause
  */
 
@@ -18,9 +18,11 @@
 
 #include <signal.h>          // C std lib (signal, sigaction, etc)
 
+#include <utils.hpp>        // loggers, etc
 #include <pattern_audio.hpp>
 #include <sound_engine.hpp>
-#include <utils.hpp>        // loggers, etc
+#include <looper.hpp>
+#include <analyzer.hpp>
 #include <pattern_gui.hpp>
 
 // ***************************************************************************
@@ -47,13 +49,13 @@
 
 static void
 glfw_error_callback(int error, const char *description) {
-2  fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+  fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
 // ***************************************************************************
 // ******************************************************************* Loggers
 // ***************************************************************************
-#define LOG_MAIN
+//#define LOG_MAIN
 #ifdef LOG_MAIN
 #  define LOGMAIN(msg) (LOG_BASE("[MAIN]", msg))
 #else
@@ -61,33 +63,49 @@ glfw_error_callback(int error, const char *description) {
 #endif
 
 // *************************************************************** App GLOBALS
+
 SoundEngine *sound_engine = nullptr;
-PatternAudio *pattern_audio = nullptr;
+PatternAudio *pattern_audio = nullptr;  // GUI only
+Looper *looper = nullptr;
 bool should_exit = false;
 
 // Args
 Signature _p_sig {90, 4, 2};
 unsigned int _p_bpm = _p_sig.bpm;
-std::string _p_pattern = "2x1x1x1x";
+std::list<std::string> _p_patternlist;
+std::string _p_loop = "p0";
 bool _p_gui = false;
+bool _p_verb = false;
 
-//DEL ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-// ImVec4 red_color = ImVec4(1.0f, 0.0f, 0.0f, 1.00f);
-// ImVec4 green_color = ImVec4(0.0f, 1.0f, 0.0f, 1.00f);
-// ImVec4 yellow_color = ImVec4(0.7f, 0.7f, 0.0f, 1.00f);
-//ImVec4 hoover_color = yellow_color;
 ImVec4 hoover_color = YELLOW_COL;
 ImVec4 NoteButton::colors[3] = {CLEAR_COL, GREEN_COL, RED_COL};
 ImVec4 NoteButton::hoover_color = YELLOW_COL;
 
 void clear_globals()
 {
+  LOGMAIN( "__CLEANING" );
   if (sound_engine != nullptr ) {
+    LOGMAIN( "  will clean sound_engine" );
     delete sound_engine;
   }
-  if (pattern_audio != nullptr) {
+  LOGMAIN( "  sound_engine OK" );
+  
+  if (pattern_audio != nullptr ) {
+    LOGMAIN( "  will clean pattern_audio" );
     delete pattern_audio;
   }
+  LOGMAIN( "  pattern_audio OK" );
+  
+  if (looper != nullptr) {
+    LOGMAIN( "  will clean looper" );
+    for( auto& pat_ptr: looper->all_patterns) {
+      LOGMAIN( "    will clean pattern " << pat_ptr->_id );
+      delete pat_ptr;
+      LOGMAIN( "    pattern OK" ); 
+    }
+    delete looper;
+  }
+  LOGMAIN( "  looper OK" );
 }
 
 // *********************************************************** Ctrl-C Callback
@@ -108,11 +126,13 @@ R"(Drum Companion.
       drum_companion [--pattern=<str>... options]
 
     Options:
-      -h --help       Show this screen
-      -g --gui        With GUI
-      -b, --bpm <uint>    BPM [default: 90]
-      -s, --sig <str>      signature [default: 4x2]
+      -h --help               Show this screen
+      -v --verbose            Display some info
+      -g --gui                With GUI (but ONE pattern, NO loop)
+      -b, --bpm <uint>        BPM [default: 90]
+      -s, --sig <str>         signature [default: 4x2]
       -p, --pattern=<str>...  patterns, can be REPEATED [default: 2x1x1x1x]
+      -l, --loop=<str>        sequence of patterns (like 2x(p0+P1)) [default: p0]
 )";
 
 void setup_options( int argc, char **argv )
@@ -124,26 +144,34 @@ void setup_options( int argc, char **argv )
                                                   // version string
                                                   "Drum Companion 1.0");
 
-  for(auto const& arg : args) {
-    std::cout << arg.first << ": " << arg.second;
-    std::cout << " type=" << type_name<decltype(arg.second)>() << std::endl;
-  }
-  std::cout << "Patterns List=" << std::boolalpha << args["--pattern"].isStringList() << std::endl;
-  std::cout << "PATTERN " << args["--pattern"] << std::endl;
-  //std::cout << "STRING " << args["--pattern"].asString() << std::endl;
-  std::cout << "LIST   ";
-  for( auto& elem: args["--pattern"].asStringList()) {
-    std::cout << elem << ", ";
-  }
-  std::cout << std::endl;
-  exit(22);
+  // for(auto const& arg : args) {
+  //   std::cout << arg.first << ": " << arg.second;
+  //   std::cout << " type=" << type_name<decltype(arg.second)>() << std::endl;
+  // }
+  // std::cout << "Patterns List=" << std::boolalpha << args["--pattern"].isStringList() << std::endl;
+  // std::cout << "PATTERN " << args["--pattern"] << std::endl;
+  // //std::cout << "STRING " << args["--pattern"].asString() << std::endl;
+  // std::cout << "LIST   ";
+  // for( auto& elem: args["--pattern"].asStringList()) {
+  //   std::cout << elem << ", ";
+  // }
+  // std::cout << std::endl;
   
   _p_sig.bpm = args["--bpm"].asLong();
   _p_sig.from_string( args["--sig"].asString());
-  _p_pattern = args["--pattern"].asString();
+  // Create the various patterns
+  for( auto& pat: args["--pattern"].asStringList()) {
+    _p_patternlist.push_back( pat );
+  }
+  _p_loop = args["--loop"].asString();
   if (args["--gui"].asBool()) {
     _p_gui = true;
   }
+  if (args["--verbose"].asBool()) {
+    _p_verb = true;
+  }
+  //exit(22);
+
 }
 
 // ***************************************************************************
@@ -156,7 +184,6 @@ int run_gui()
   PatternGUI pg( pattern_audio );
   // Other GUI variables
   bool gui_ask_end = false;
-  //DEL ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   bool should_pause = false;
   bool should_stop = false;
   bool should_run = false;
@@ -332,7 +359,7 @@ int run_gui()
     }
     should_run = should_pause = should_stop = false;
 
-    pattern_audio->update();
+    pattern_audio->next();
   }
 
   // Cleanup
@@ -351,9 +378,9 @@ int run_gui()
 // ***************************************************************************
 int run()
 {
-  pattern_audio->start();
+  looper->start();
   while (! should_exit) {
-    pattern_audio->update();
+    looper->next();
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
   }
 
@@ -383,8 +410,35 @@ int main(int argc, char *argv[])
   LOGMAIN( "__PATTERN_AUDIO with SoundEngine" );
   pattern_audio = new PatternAudio( sound_engine );
   pattern_audio->_signature = _p_sig;
-  pattern_audio->init_from_string( _p_pattern );
+  pattern_audio->init_from_string( _p_patternlist.front() );
 
+  // ****************************************************************** Looper
+  LOGMAIN( "__LOOPER with SoundEngine and all PatternAudio" );
+  looper = new Looper( sound_engine );
+  // add the patterns
+  if (_p_verb) {
+    std::cout << _p_sig << " at " << _p_bpm << " BPM" << std::endl;
+    std::cout << "Using the following patterns" << std::endl;
+  }
+  for( auto& patstr: _p_patternlist) {
+    PatternAudio *pat = new PatternAudio( sound_engine );
+    pat->_signature = _p_sig;
+    pat->init_from_string( patstr );
+    auto id = looper->add( pat );
+    LOGMAIN( "  add p" << id << "=" << patstr );
+    if (_p_verb) {
+      std::cout << "  p" << id << " = " << patstr << std::endl;
+    }
+  }
+  // and the loop
+  Analyzer analyzer( looper );
+  auto res = analyzer.parse( _p_loop );
+  looper->set_sequence( res.begin(), res.end() );
+  LOGMAIN( looper->str_dump() );
+  if (_p_verb) {
+    std::cout << looper->str_dump() << std::endl;
+  }
+  
   if (_p_gui) {
     run_gui();
   }
