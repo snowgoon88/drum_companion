@@ -10,7 +10,7 @@ if (item_disabled)
             ImGui::BeginDisabled(true);
 *** DONE apply changes to PatternAudio
 ** DONE [/] name patterns
-** DONE [3/4] looper
+** DONE [3/3] looper
 *** DONE using Shunting Yard algorithm
 - https://wcipeg.com/wiki/Shunting_yard_algorithm
 - https://en.wikipedia.org/wiki/Shunting_yard_algorithm
@@ -52,11 +52,11 @@ Il semble que l'on peut aussi dire quand on joue une source (ms)
 
 ** DONE [/] docopt.cpp
 https://github.com/docopt/docopt.cpp
-* [0/6] Safe code
+* [0/7] Safe code
 ** TODO Ensure notes in PatternAudio exist in SoundEngine
 ** TODO clean up DEL
 ** TODO clean up TODO
-** [1/2] when Ctrl-C, take time to destry Objects
+** [1/2] when Ctrl-C, take time to destroy Objects
 *** DONE Linux
 - https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
 *** TODO Windows
@@ -65,6 +65,7 @@ https://github.com/docopt/docopt.cpp
 ** TODO Check LooperState and PatternState
 ** TODO Check common in Looper and Pattern
 ** TODO Check all _state are still needed (ex: ended ??)
+** TODO When reading Looper from file, might need to delete some existing patterns
 * [6/8] WINDOWS
 ** 00-engine-play + CodeWorks/MinGW
 works fine under VSC with C:\\Program Files (x86)\\CodeBlocks\\MinGW\\bin\\g++.exe in tasks.json and proper -I

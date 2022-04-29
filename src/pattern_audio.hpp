@@ -23,8 +23,10 @@
 // Use (void) to silence unused warnings.
 #define assertm(exp, msg) assert(((void)msg, exp))
 
-#include <sound_engine.hpp>
 #include <utils.hpp>
+#include <io_files.hpp>
+#include <sound_engine.hpp>
+
 
 // ***************************************************************************
 // ******************************************************************* Loggers
@@ -170,6 +172,24 @@ public:
     return dump.str();
   }
 
+  // ******************************************************** PatternAudio::io
+  void write_to( std::ofstream& os )
+  {
+    write_token( os, "bpm", _signature.bpm );
+    std::string sig_str = std::to_string(_signature.beats)+"x"+std::to_string(_signature.subdivisions); 
+    write_token( os, "sig", sig_str );
+    write_token( os, "pat", _convert_from_timeline() );
+  }
+  void read_from( std::ifstream& is )
+  {
+    auto bpm = read_uint( is, "bpm" );
+    auto sig_str = read_string( is, "sig" );
+    _signature.bpm = bpm;
+    _signature.from_string( sig_str );
+
+    auto pat_str = read_string( is, "pat" );
+    init_from_string( pat_str );
+  }
   // ****************************************************** PatternAudio::init
   /** from timeline (array of sound {0,1,2} for each subdivisions of Signature)
    *  to Vec of intervals
@@ -241,6 +261,7 @@ public:
    */
   void init_from_string( const std::string &str )
   {
+    LOGPA( str_dump() );
     LOGPA( "__PA init_from " << str );
     Timeline tl;
 
@@ -256,8 +277,15 @@ public:
 
     init_from_timeline( tl );
   }
-
- 
+  std::string _convert_from_timeline()
+  {
+    std::string target = "x12";
+    std::stringstream dump;
+    for( auto& val: _timeline) {
+      dump << target[val];
+    }
+    return dump.str();
+  }
   // ****************************************************** PatternAudio::next
   bool next()
   {

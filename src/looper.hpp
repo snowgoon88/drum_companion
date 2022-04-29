@@ -8,6 +8,7 @@
  */
 
 #include <utils.hpp>
+#include <io_files.hpp>
 #include <pattern_audio.hpp>
 #include <sound_engine.hpp>
 #include <list>
@@ -83,6 +84,42 @@ public:
     dump << "]";
 
     return dump.str();
+  }
+  // ************************************************************** Looper::io
+  void write_to( std::ofstream& os )
+  {
+    write_comment( os, "-- Looper --" );
+    write_token( os, "nb_pat", all_patterns.size() );
+    for( auto& pat: all_patterns) {
+      write_comment( os, "pattern p"+std::to_string( pat->_id ) );
+      pat->write_to( os );
+    }
+
+    write_comment( os, "sequence" );
+    write_token( os, "nb_seq", sequence.size() );
+    for( auto& pat: sequence) {
+      write_token( os, "id", pat->_id );
+    }
+  }
+  void read_from( std::ifstream& is )
+  {
+    // ensure stop
+    stop();
+    
+    auto nb_pattern = read_uint( is, "nb_pat" );
+    all_patterns.clear(); // TODO what if some undeleted patterns ?
+    for( unsigned int idp = 0; idp < nb_pattern; ++idp) {
+      PatternAudio *pat = new PatternAudio( _engine );
+      pat->read_from( is );
+      add( pat );
+    }
+    
+    sequence.clear(); // TODO what if some undeleted patterns ?
+    auto nb_seq = read_uint( is, "nb_seq" );
+    for( unsigned int ids = 0; ids < nb_seq; ++ids) {
+      auto id_pat = read_uint( is, "id" );
+      concat( id_pat );
+    }
   }
   // ******************************************************** Looper::patterns
   uint add( PatternAudio* pattern )
