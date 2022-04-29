@@ -85,6 +85,23 @@ public:
 
     return dump.str();
   }
+  std::string str_verbose () const
+  {
+    std::stringstream verbose;
+    verbose << "__Looper with " << all_patterns.size() << " patterns" << std::endl;
+    for( auto& pat: all_patterns) {
+      verbose << "  p"<<std::to_string( pat->_id );
+      verbose << "=" << pat->str_verbose() << std::endl;
+    }
+
+    verbose << "Sequence= [";
+    for( auto& pat: sequence) {
+      verbose << pat->_id <<", ";
+    }
+    verbose << "]" << std::endl;
+    
+    return verbose.str();
+  }
   // ************************************************************** Looper::io
   void write_to( std::ofstream& os )
   {
@@ -133,23 +150,6 @@ public:
     return 0;
   }
   // ******************************************************** Looper::sequence
-  // void clear_sequence()
-  // {
-  //   sequence.clear();
-  // }
-  // void parse_string( const std::string& expression )
-  // {
-  //   Analyzer analyzer(this);
-  //   auto res = analyser.parse( expression );
-  //   set_sequence( res.begin(), res.end() );
-  // }
-  // void set_sequence( std::list<uint> uint_list)
-  // {
-  //   sequence.clear();
-  //   for( auto& var: uint_list) {
-  //     concat( var );
-  //   }
-  // }
   template<typename Iterator>
   void set_sequence( Iterator start, Iterator end )
   {
@@ -168,6 +168,12 @@ public:
     }
     if (sequence.size() > 0) {
       _state = ready;
+    }
+  }
+  void set_all_bpm( unsigned int bpm )
+  {
+    for( auto& pat: all_patterns) {
+      pat->set_bpm( bpm );
     }
   }
   /** Check Valid Pattern Id */

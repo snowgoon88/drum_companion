@@ -171,6 +171,15 @@ public:
                           
     return dump.str();
   }
+  std::string str_verbose () const
+  {
+    std::stringstream verbose;
+    verbose << _convert_from_timeline();
+    verbose << " as " << _signature.beats << "x" << _signature.subdivisions;
+    verbose << " at " << _signature.bpm << " BPM." << std::endl;
+
+    return verbose.str();
+  }
 
   // ******************************************************** PatternAudio::io
   void write_to( std::ofstream& os )
@@ -189,6 +198,12 @@ public:
 
     auto pat_str = read_string( is, "pat" );
     init_from_string( pat_str );
+  }
+  // *************************************************** PatternAudio::set_bpm
+  void set_bpm( uint bpm )
+  {
+    _signature.bpm = bpm;
+    _intervale_from_timeline();
   }
   // ****************************************************** PatternAudio::init
   /** from timeline (array of sound {0,1,2} for each subdivisions of Signature)
@@ -277,7 +292,7 @@ public:
 
     init_from_timeline( tl );
   }
-  std::string _convert_from_timeline()
+  std::string _convert_from_timeline() const
   {
     std::string target = "x12";
     std::stringstream dump;

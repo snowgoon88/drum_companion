@@ -71,9 +71,12 @@ bool should_exit = false;
 
 // Args
 Signature _p_sig {90, 4, 2};
-unsigned int _p_bpm = _p_sig.bpm;
+unsigned int _p_bpm_default = _p_sig.bpm;
+unsigned int *_p_bpm = nullptr;
 std::list<std::string> _p_patternlist;
 std::string _p_loop = "p0";
+std::string* _p_infile = nullptr;
+std::string* _p_outfile = nullptr;
 bool _p_gui = false;
 bool _p_verb = false;
 
@@ -123,16 +126,19 @@ static const char _usage[] =
 R"(Drum Companion.
 
     Usage:
-      drum_companion [--pattern=<str>... options]
+      drum_companion [options --verbose --pattern=<str>...]
+      drum_companion [--help --verbose --bpm=<uint>] <infile>
+
 
     Options:
       -h --help               Show this screen
       -v --verbose            Display some info
       -g --gui                With GUI (but ONE pattern, NO loop)
-      -b, --bpm <uint>        BPM [default: 90]
-      -s, --sig <str>         signature [default: 4x2]
+      -b, --bpm=<uint>        BPM (default is 90)
+      -s, --sig=<str>         signature [default: 4x2]
       -p, --pattern=<str>...  patterns, can be REPEATED [default: 2x1x1x1x]
       -l, --loop=<str>        sequence of patterns (like 2x(p0+P1)) [default: p0]
+      -o, --outfile=<str>     file to save looper (or pattern)
 )";
 
 void setup_options( int argc, char **argv )
@@ -144,32 +150,43 @@ void setup_options( int argc, char **argv )
                                                   // version string
                                                   "Drum Companion 1.0");
 
-  // for(auto const& arg : args) {
-  //   std::cout << arg.first << ": " << arg.second;
-  //   std::cout << " type=" << type_name<decltype(arg.second)>() << std::endl;
-  // }
-  // std::cout << "Patterns List=" << std::boolalpha << args["--pattern"].isStringList() << std::endl;
-  // std::cout << "PATTERN " << args["--pattern"] << std::endl;
-  // //std::cout << "STRING " << args["--pattern"].asString() << std::endl;
-  // std::cout << "LIST   ";
-  // for( auto& elem: args["--pattern"].asStringList()) {
-  //   std::cout << elem << ", ";
-  // }
-  // std::cout << std::endl;
-  
-  _p_sig.bpm = args["--bpm"].asLong();
+  for(auto const& arg : args) {
+    std::cout << arg.first << ": " << arg.second;
+    std::cout << " type=" << type_name<decltype(arg.second)>() << std::endl;
+  }
+  std::cout << "Patterns List=" << std::boolalpha << args["--pattern"].isStringList() << std::endl;
+  std::cout << "PATTERN " << args["--pattern"] << std::endl;
+  //std::cout << "STRING " << args["--pattern"].asString() << std::endl;
+  std::cout << "LIST   ";
+  for( auto& elem: args["--pattern"].asStringList()) {
+    std::cout << elem << ", ";
+  }
+  std::cout << std::endl;
+  //exit(23);
+
+  if (args["--bpm"]) {
+    _p_bpm = new unsigned int(args["--bpm"].asLong());
+  }
+  // TODO _p_sig.bpm not set !!
   _p_sig.from_string( args["--sig"].asString());
   // Create the various patterns
   for( auto& pat: args["--pattern"].asStringList()) {
     _p_patternlist.push_back( pat );
   }
   _p_loop = args["--loop"].asString();
+  if (args["--outfile"]) {
+    _p_outfile = new std::string(args["--outfile"].asString());
+  }
+  if (args["<infile>"]) {
+    _p_infile = new std::string(args["<infile>"].asString());
+  }
   if (args["--gui"].asBool()) {
     _p_gui = true;
   }
   if (args["--verbose"].asBool()) {
     _p_verb = true;
   }
+  //std::cout << "INFILE=" << _p_infile << std::endl;
   //exit(22);
 
 }
@@ -409,34 +426,54 @@ int main(int argc, char *argv[])
   // ************************************************************* PlayPattern
   LOGMAIN( "__PATTERN_AUDIO with SoundEngine" );
   pattern_audio = new PatternAudio( sound_engine );
+  if (_p_bpm) {
+    _p_sig.bpm = *_p_bpm;
+  }
   pattern_audio->_signature = _p_sig;
   pattern_audio->init_from_string( _p_patternlist.front() );
 
   // ****************************************************************** Looper
   LOGMAIN( "__LOOPER with SoundEngine and all PatternAudio" );
   looper = new Looper( sound_engine );
-  // add the patterns
-  if (_p_verb) {
-    std::cout << _p_sig << " at " << _p_bpm << " BPM" << std::endl;
-    std::cout << "Using the following patterns" << std::endl;
-  }
-  for( auto& patstr: _p_patternlist) {
-    PatternAudio *pat = new PatternAudio( sound_engine );
-    pat->_signature = _p_sig;
-    pat->init_from_string( patstr );
-    auto id = looper->add( pat );
-    LOGMAIN( "  add p" << id << "=" << patstr );
-    if (_p_verb) {
-      std::cout << "  p" << id << " = " << patstr << std::endl;
+  // if there is an infile, it has priority
+  if (_p_infile) {
+    std::ifstream ifile( *_p_infile );
+    looper->read_from( ifile );
+    ifile.close();
+    
+    // possibly change bpm
+    if (_p_bpm) {
+      looper->set_all_bpm( *_p_bpm );
     }
   }
-  // and the loop
-  Analyzer analyzer( looper );
-  auto res = analyzer.parse( _p_loop );
-  looper->set_sequence( res.begin(), res.end() );
-  LOGMAIN( looper->str_dump() );
+  else {
+    // bpm
+    if (_p_bpm) {
+      _p_sig.bpm = *_p_bpm;
+    }
+    for( auto& patstr: _p_patternlist) {
+      PatternAudio *pat = new PatternAudio( sound_engine );
+      pat->_signature = _p_sig;
+      pat->init_from_string( patstr );
+      auto id = looper->add( pat );
+      LOGMAIN( "  add p" << id << "=" << patstr );
+    }
+    // and the loop
+    Analyzer analyzer( looper );
+    auto res = analyzer.parse( _p_loop );
+    looper->set_sequence( res.begin(), res.end() );
+    LOGMAIN( looper->str_dump() );
+
+    if (_p_outfile) {
+      LOGMAIN( "__Writing to " << (*_p_outfile) );
+      std::ofstream ofile( *_p_outfile );
+      looper->write_to( ofile );
+      ofile.close();
+    }
+  }
+
   if (_p_verb) {
-    std::cout << looper->str_dump() << std::endl;
+    std::cout << looper->str_verbose() << std::endl;
   }
   
   if (_p_gui) {
