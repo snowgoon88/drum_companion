@@ -126,19 +126,19 @@ static const char _usage[] =
 R"(Drum Companion.
 
     Usage:
-      drum_companion [options --verbose --pattern=<str>...]
-      drum_companion [--help --verbose --bpm=<uint>] <infile>
+      drum_companion [-h -v -g -b <int> -s <str>] [-p <str>]... [-l <str> -o <str>]
+      drum_companion [-h -v -g -b <uint>] <infile>
 
 
     Options:
-      -h --help               Show this screen
-      -v --verbose            Display some info
-      -g --gui                With GUI (but ONE pattern, NO loop)
-      -b, --bpm=<uint>        BPM (default is 90)
-      -s, --sig=<str>         signature [default: 4x2]
-      -p, --pattern=<str>...  patterns, can be REPEATED [default: 2x1x1x1x]
-      -l, --loop=<str>        sequence of patterns (like 2x(p0+P1)) [default: p0]
-      -o, --outfile=<str>     file to save looper (or pattern)
+      -h --help              Show this screen
+      -v --verbose           Display some info
+      -g --gui               With GUI (but ONE pattern, NO loop)
+      -b --bpm=<uint>        BPM (default is 90)
+      -s --sig=<str>         signature [default: 4x2]
+      -p --pattern=<str>     patterns, can be REPEATED [default: 2x1x1x1x]
+      -l --loop=<str>        sequence of patterns (like 2x(p0+P1)) [default: p0]
+      -o --outfile=<str>     file to save looper (or pattern)
 )";
 
 void setup_options( int argc, char **argv )
@@ -150,19 +150,20 @@ void setup_options( int argc, char **argv )
                                                   // version string
                                                   "Drum Companion 1.0");
 
-  for(auto const& arg : args) {
-    std::cout << arg.first << ": " << arg.second;
-    std::cout << " type=" << type_name<decltype(arg.second)>() << std::endl;
-  }
-  std::cout << "Patterns List=" << std::boolalpha << args["--pattern"].isStringList() << std::endl;
-  std::cout << "PATTERN " << args["--pattern"] << std::endl;
-  //std::cout << "STRING " << args["--pattern"].asString() << std::endl;
-  std::cout << "LIST   ";
-  for( auto& elem: args["--pattern"].asStringList()) {
-    std::cout << elem << ", ";
-  }
-  std::cout << std::endl;
-  //exit(23);
+  // std::cout << "******* DocOpt arguments" << std::endl;
+  // for(auto const& arg : args) {
+  //   std::cout << arg.first << ": " << arg.second;
+  //   std::cout << " type=" << type_name<decltype(arg.second)>() << std::endl;
+  // }
+  // std::cout << "Patterns List=" << std::boolalpha << args["--pattern"].isStringList() << std::endl;
+  // std::cout << "PATTERN " << args["--pattern"] << std::endl;
+  // //std::cout << "STRING " << args["--pattern"].asString() << std::endl;
+  // std::cout << "LIST   ";
+  // for( auto& elem: args["--pattern"].asStringList()) {
+  //   std::cout << elem << ", ";
+  // }
+  // std::cout << std::endl;
+  // //exit(23);
 
   if (args["--bpm"]) {
     _p_bpm = new unsigned int(args["--bpm"].asLong());
@@ -179,6 +180,7 @@ void setup_options( int argc, char **argv )
   }
   if (args["<infile>"]) {
     _p_infile = new std::string(args["<infile>"].asString());
+    // std::cout << "INFILE=" << *_p_infile << std::endl;
   }
   if (args["--gui"].asBool()) {
     _p_gui = true;
@@ -186,7 +188,6 @@ void setup_options( int argc, char **argv )
   if (args["--verbose"].asBool()) {
     _p_verb = true;
   }
-  //std::cout << "INFILE=" << _p_infile << std::endl;
   //exit(22);
 
 }

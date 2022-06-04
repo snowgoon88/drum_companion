@@ -66,7 +66,8 @@ https://github.com/docopt/docopt.cpp
 ** TODO Check common in Looper and Pattern
 ** TODO Check all _state are still needed (ex: ended ??)
 ** TODO When reading Looper from file, might need to delete some existing patterns
-* [6/8] WINDOWS
+* [6/9] WINDOWS
+** TODO Check still compiling
 ** 00-engine-play + CodeWorks/MinGW
 works fine under VSC with C:\\Program Files (x86)\\CodeBlocks\\MinGW\\bin\\g++.exe in tasks.json and proper -I
 ** DONE 00-engine-play + MinGW64
