@@ -138,51 +138,69 @@ public:
   virtual ~PatternGUI()
   {
   }
+  // ************************************************** PatternGUI::str_header
+  std::string str_header () const
+  {
+    std::stringstream header;
+    header << "P" << pattern->_id << ": ";
+    header << "[" << pattern->_signature.beats;
+    header << "x" << pattern->_signature.subdivisions << "]";
+    header << " " << pattern->_convert_from_timeline();
+    // to be sure the ImGui will not be computed from label, gives an ID
+    header << "###PAT" << pattern->_id;
+
+    return header.str();
+  }
 
   // ******************************************************** PatternGUI::draw
   void draw()
   {
-    // BPM, Signature
-    ImGui::InputInt( "BPM: ", &bpm_val );
-    ImGui::InputInt( "Nb Beats: ", &beat_val );
-    ImGui::InputInt( "Nb SubDiv: ", &subdiv_val );
+    if (ImGui::CollapsingHeader( str_header().c_str(),
+                                 ImGuiTreeNodeFlags_None)) {
+      
+    
+      // BPM, Signature
+      ImGui::InputInt( "BPM: ", &bpm_val );
+      ImGui::InputInt( "Nb Beats: ", &beat_val );
+      ImGui::InputInt( "Nb SubDiv: ", &subdiv_val );
 
-    // draw Buttons
-    for( auto it = note_btns.begin(); it != note_btns.end(); it++ ) {
-      ImGui::PushID( it->get_id() );
-      it->draw();
-      if (std::next(it) != note_btns.end()) {
-        ImGui::SameLine();
+      // draw Buttons
+      for( auto it = note_btns.begin(); it != note_btns.end(); it++ ) {
+        ImGui::PushID( it->get_id() );
+        it->draw();
+        if (std::next(it) != note_btns.end()) {
+          ImGui::SameLine();
+        }
+        ImGui::PopID();
       }
-      ImGui::PopID();
-    }
 
-    // Button RESET (+DUMP)
-    if (! val_changed) {
-      ImGui::BeginDisabled(true);
-    }
+      // Button RESET (+DUMP)
+      if (! val_changed) {
+        ImGui::BeginDisabled(true);
+      }
 
-    if (ImGui::Button( "Reset Change")) {
-      should_dump = true;
-      should_reset = true;
-    }
+      if (ImGui::Button( "Reset Change")) {
+        should_dump = true;
+        should_reset = true;
+      }
 
-    // Button APPLY (+DUMP)
-    ImGui::SameLine();
-    if (val_changed) {
-      ImGui::PushStyleColor(ImGuiCol_Button, RED_COL);
-      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, YELLOW_COL);
-      ImGui::PushStyleColor(ImGuiCol_ButtonActive, RED_COL);
-    }
-    if (ImGui::Button( "Apply")) {
-      should_dump = true;
-      should_apply = true;
-    }
-    if (val_changed) {
-      ImGui::PopStyleColor(3);
-    }
-    if (! val_changed) {
-      ImGui::EndDisabled();
+      // Button APPLY (+DUMP)
+      ImGui::SameLine();
+      if (val_changed) {
+        ImGui::PushStyleColor(ImGuiCol_Button, RED_COL);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, YELLOW_COL);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, RED_COL);
+      }
+      if (ImGui::Button( "Apply")) {
+        should_dump = true;
+        should_apply = true;
+      }
+      if (val_changed) {
+        ImGui::PopStyleColor(3);
+      }
+      if (! val_changed) {
+        ImGui::EndDisabled();
+      }
     }
   }
 
@@ -217,7 +235,7 @@ public:
     LOGPG( "  need_notes=" << need_notes );
     
     if (should_apply && !need_notes) {
-      // upade pattern signature
+      // updade pattern signature
       // TODO msg to tell it failed
       pattern->_signature.bpm = static_cast<uint>(bpm_val);
       pattern->_signature.beats = static_cast<uint>(beat_val);

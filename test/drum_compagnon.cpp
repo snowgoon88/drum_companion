@@ -150,19 +150,19 @@ void setup_options( int argc, char **argv )
                                                   // version string
                                                   "Drum Companion 1.0");
 
-  // std::cout << "******* DocOpt arguments" << std::endl;
-  // for(auto const& arg : args) {
-  //   std::cout << arg.first << ": " << arg.second;
-  //   std::cout << " type=" << type_name<decltype(arg.second)>() << std::endl;
-  // }
-  // std::cout << "Patterns List=" << std::boolalpha << args["--pattern"].isStringList() << std::endl;
-  // std::cout << "PATTERN " << args["--pattern"] << std::endl;
+  std::cout << "******* DocOpt arguments" << std::endl;
+  for(auto const& arg : args) {
+    std::cout << arg.first << ": " << arg.second;
+    std::cout << " type=" << type_name<decltype(arg.second)>() << std::endl;
+  }
+  std::cout << "Patterns List=" << std::boolalpha << args["--pattern"].isStringList() << std::endl;
+  std::cout << "PATTERN " << args["--pattern"] << std::endl;
   // //std::cout << "STRING " << args["--pattern"].asString() << std::endl;
-  // std::cout << "LIST   ";
-  // for( auto& elem: args["--pattern"].asStringList()) {
-  //   std::cout << elem << ", ";
-  // }
-  // std::cout << std::endl;
+  std::cout << "LIST   ";
+  for( auto& elem: args["--pattern"].asStringList()) {
+     std::cout << elem << ", ";
+  }
+  std::cout << std::endl;
   // //exit(23);
 
   if (args["--bpm"]) {
@@ -198,8 +198,11 @@ void setup_options( int argc, char **argv )
 int run_gui()
 {
   // ********************************************************** GUI - creation
-  // create PatternGUI
-  PatternGUI pg( pattern_audio );
+  // create all PatternGUI
+  std::list<PatternGUI> pg_list;
+  for( auto pat: looper->all_patterns) {
+    pg_list.push_back( PatternGUI(pat) );
+  }
   // Other GUI variables
   bool gui_ask_end = false;
   bool should_pause = false;
@@ -295,8 +298,10 @@ int run_gui()
       // Create a window with title and append into it.
       ImGui::Begin("Drum Companion");
 
-      // PatternGUI
-      pg.draw();
+      // PatternGUIs
+      for( auto& pg: pg_list) {
+        pg.draw();        
+      }
 
       // Play/Pause
       if (pattern_audio->_state == PatternAudio::running) {
@@ -363,24 +368,26 @@ int run_gui()
     }
 
     // Now apply logic
-    pg.apply();
+    for( auto& pg: pg_list) {
+      pg.apply();
+    }
 
     // And deal with Play/Pause
     if (should_run) {
-      pattern_audio->start();
+      looper->start();
       std::cout << "__PLAY__" << std::endl;
     }
     else if (should_stop) {
-      pattern_audio->stop();
+      looper->stop();
       std::cout << "__STOP__" << std::endl;
     }
     else if (should_pause) {
-      pattern_audio->pause();
+      looper->pause();
       std::cout << "__PAUSE__" << std::endl;
     }
     should_run = should_pause = should_stop = false;
 
-    pattern_audio->next();
+    looper->next();
   }
 
   // Cleanup
@@ -430,10 +437,12 @@ int main(int argc, char *argv[])
   // ************************************************************* PlayPattern
   LOGMAIN( "__PATTERN_AUDIO with SoundEngine" );
   pattern_audio = new PatternAudio( sound_engine );
+  pattern_audio->_id = 0;
   if (_p_bpm) {
     _p_sig.bpm = *_p_bpm;
   }
   pattern_audio->_signature = _p_sig;
+  // docopt default value ensure that _p_patternlist has at least ONE element
   pattern_audio->init_from_string( _p_patternlist.front() );
 
   // ****************************************************************** Looper

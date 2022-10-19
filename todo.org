@@ -1,5 +1,5 @@
 * __CURRENT__ : analyze looper sequence construction
-* TODO [3/4] linux
+* TODO [4/6] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -16,7 +16,9 @@ if (item_disabled)
 - https://en.wikipedia.org/wiki/Shunting_yard_algorithm
 *** DONE ({[]}) : group
 *** DONE parse -> PatternList
-** TODO [/] GUI with PatternList
+** DONE [/] GUI with PatternList
+** TODO [/] GUI for Looper
+** TODO [/] which Note is played 
 * TODO [2/3] Ressources to try
 ** TODO [6/7] GUI : imgui
 https://github.com/ocornut/imgui
