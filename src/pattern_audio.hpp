@@ -380,7 +380,7 @@ public:
   SoundEngine *_engine;
   AudioState _state;
   Timeline _timeline;   // sequence of 0,1,2...
-  // sequence of delay in ms
+  // sequence of (idx_sound x delay in ms)
   std::vector<Note> _pattern_intervale = {{1, 500}, {1, 250},
                                           {1, 500}, {1, 500}, {1,250}};
   uint _id_seq;

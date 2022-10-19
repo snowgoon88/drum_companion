@@ -18,7 +18,7 @@ if (item_disabled)
 *** DONE parse -> PatternList
 ** TODO [/] GUI with PatternList
 * TODO [2/3] Ressources to try
-** TODO [5/6] GUI : imgui
+** TODO [6/7] GUI : imgui
 https://github.com/ocornut/imgui
 - examples_glfw_opengl2/3 work
 *** DONE Compile with WAF a basic example 
@@ -27,6 +27,7 @@ https://github.com/ocornut/imgui
 *** DONE ESC for quitting [02-pp-pattern]
 *** DONE Set Window size [00-button]
 *** TODO Adapt Window Size
+*** DONE Scale things => ImGui::GetStyle().ScaleAllSizes(2.0f);
 *** [4/4] Make my own basic example
 **** DONE BPM =
 **** DONE size = | unit = 

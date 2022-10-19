@@ -277,6 +277,9 @@ int run_gui()
 
   io.Fonts->Build();
 
+  // Try Scaling up
+  ImGui::GetStyle().ScaleAllSizes(2.0f);
+
   // ************************************************************** Gui - Loop
   while (!glfwWindowShouldClose(window) && !gui_ask_end) {
     // Poll and handle events (inputs, window resize, etc.)
