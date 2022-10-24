@@ -17,7 +17,10 @@ if (item_disabled)
 *** DONE ({[]}) : group
 *** DONE parse -> PatternList
 ** DONE [/] GUI with PatternList
-** TODO [/] GUI for Looper
+** TODO [0/3] GUI for Looper
+*** TODO InputText, get text when Apply
+*** TODO make sure looper->_formula is set when properly analyzed
+*** TODO link between analyzer Exceptions and LooperGui
 ** TODO [/] which Note is played 
 * TODO [2/3] Ressources to try
 ** TODO [6/7] GUI : imgui

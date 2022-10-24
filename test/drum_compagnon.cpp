@@ -24,7 +24,7 @@
 #include <looper.hpp>
 #include <analyzer.hpp>
 #include <pattern_gui.hpp>
-
+#include <looper_gui.hpp>
 // ***************************************************************************
 // ************************************************************* Grafik - INIT
 // ***************************************************************************
@@ -203,6 +203,8 @@ int run_gui()
   for( auto pat: looper->all_patterns) {
     pg_list.push_back( PatternGUI(pat) );
   }
+  LooperGUI lg( looper );
+  
   // Other GUI variables
   bool gui_ask_end = false;
   bool should_pause = false;
@@ -298,6 +300,9 @@ int run_gui()
       // Create a window with title and append into it.
       ImGui::Begin("Drum Companion");
 
+      // LooperGUI
+      lg.draw();
+      
       // PatternGUIs
       for( auto& pg: pg_list) {
         pg.draw();        
@@ -368,6 +373,7 @@ int run_gui()
     }
 
     // Now apply logic
+    // lg.apply();
     for( auto& pg: pg_list) {
       pg.apply();
     }
@@ -474,6 +480,7 @@ int main(int argc, char *argv[])
     // and the loop
     Analyzer analyzer( looper );
     auto res = analyzer.parse( _p_loop );
+    looper->_formula = _p_loop;
     looper->set_sequence( res.begin(), res.end() );
     LOGMAIN( looper->str_dump() );
 
