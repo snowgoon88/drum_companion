@@ -373,7 +373,7 @@ int run_gui()
     }
 
     // Now apply logic
-    // lg.apply();
+    lg.apply();
     for( auto& pg: pg_list) {
       pg.apply();
     }
