@@ -10,13 +10,14 @@
  */
 #include <utils.hpp>
 #include "imgui.h"
-#include <looper.hpp>
+#include <analyzer.hpp>
 #include <string>
+#include <exception>
 
 // ***************************************************************************
 // ******************************************************************* Loggers
 // ***************************************************************************
-//#define LOG_LOOPERGUI
+#define LOG_LOOPERGUI
 #ifdef LOG_LOOPERGUI
 #  define LOGLG(msg) (LOG_BASE("[LOGU]", msg))
 #else
@@ -30,10 +31,12 @@ class LooperGUI
 {
 public:
   // ***************************************************** LooperGUI::creation
-  LooperGUI( Looper* looper ) :
-    looper( looper ),
+  LooperGUI( Analyzer* analyzer ) :
+    analyzer( analyzer ),
+    looper( analyzer->_looper ),
     should_apply(false),
-    flags(ImGuiInputTextFlags_None)
+    input_flags(ImGuiInputTextFlags_None),
+    error_flags(ImGuiInputTextFlags_ReadOnly)
   {
     _init_from_looper();
   }
@@ -57,11 +60,15 @@ public:
     if (ImGui::CollapsingHeader( str_header().c_str(),
                                  ImGuiTreeNodeFlags_None)) {
 
-      ImGui::InputTextMultiline("###LooperInput", &buffer,
-                                // take all width, 4 lines
-                                ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 4),
-                                flags, NULL /*cbk*/, NULL /*data*/);
-      
+      ImGui::InputText( "###LooperInput", &input_buffer, input_flags,
+                        NULL /*cbk*/, NULL /*data*/);
+
+      if (analyzer->has_error()) {
+        ImGui::InputTextMultiline("###LooperError", &error_buffer,
+                                  // take all width, 5 lines
+                                  ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 5),
+                                  error_flags, NULL /*cbk*/, NULL /*data*/);
+      }
       if (ImGui::Button( "Apply")) {
         should_apply = true;
       }
@@ -72,7 +79,21 @@ public:
   void apply()
   {
     if (should_apply) {
-      std::cout << "__LGUI = " << buffer << "-END BUFFER" << std::endl;
+      LOGLG( "__Analyze : " << input_buffer );
+      try {
+        LOGLG( "  parsing ok" );
+        auto res = analyzer->parse( input_buffer );
+        looper->_formula.clear();
+        looper->_formula.insert( looper->_formula.begin(),
+                                 analyzer->_formula.begin(),
+                                 analyzer->_formula.end() );
+        looper->set_sequence( res.begin(), res.end() );
+      }
+      catch( std::runtime_error& e) {
+        LOGLG( "  error in parsing" );
+        LOGLG( analyzer->str_error() );
+        error_buffer = analyzer->str_error();
+      }
     }
     should_apply = false;
   }
@@ -80,17 +101,21 @@ public:
   void _init_from_looper()
   {
     LOGLG( "_init_from_looper " );
-    buffer.clear();
-    buffer.insert( buffer.begin(),
-                   looper->_formula.begin(), looper->_formula.end() );
+    input_buffer.clear();
+    input_buffer.insert( input_buffer.begin(),
+                         looper->_formula.begin(), looper->_formula.end() );
+    
   }
   // **************************************************** LooperGUI::attributs
+  Analyzer* analyzer;
   Looper* looper;
 
   // State
   bool should_apply;   // somes changes need to be applied
-  std::string buffer;
-  ImGuiInputTextFlags flags;
+  std::string input_buffer;
+  std::string error_buffer;
+  ImGuiInputTextFlags input_flags;
+  ImGuiInputTextFlags error_flags;
   
 }; // class LooperGUI
 

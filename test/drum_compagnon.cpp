@@ -66,6 +66,7 @@ glfw_error_callback(int error, const char *description) {
 
 SoundEngine *sound_engine = nullptr;
 PatternAudio *pattern_audio = nullptr;  // GUI only
+Analyzer *analyzer = nullptr;
 Looper *looper = nullptr;
 bool should_exit = false;
 
@@ -109,6 +110,12 @@ void clear_globals()
     delete looper;
   }
   LOGMAIN( "  looper OK" );
+
+  if (analyzer != nullptr) {
+    LOGMAIN( "  will clean analyzer" );
+    delete analyzer;
+  }
+  LOGMAIN( "  analyzer OK" );
 }
 
 // *********************************************************** Ctrl-C Callback
@@ -203,7 +210,7 @@ int run_gui()
   for( auto pat: looper->all_patterns) {
     pg_list.push_back( PatternGUI(pat) );
   }
-  LooperGUI lg( looper );
+  LooperGUI lg( analyzer );
   
   // Other GUI variables
   bool gui_ask_end = false;
@@ -242,7 +249,7 @@ int run_gui()
 
   // Create window with graphics context
   GLFWwindow *window = glfwCreateWindow(
-      1280, 720, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
+      600, 500, "Drum Compagnon v0", NULL, NULL);
   if (window == NULL)
     return 1;
   glfwMakeContextCurrent(window);
@@ -454,6 +461,7 @@ int main(int argc, char *argv[])
   // ****************************************************************** Looper
   LOGMAIN( "__LOOPER with SoundEngine and all PatternAudio" );
   looper = new Looper( sound_engine );
+  analyzer = new Analyzer( looper );
   // if there is an infile, it has priority
   if (_p_infile) {
     std::ifstream ifile( *_p_infile );
@@ -478,8 +486,7 @@ int main(int argc, char *argv[])
       LOGMAIN( "  add p" << id << "=" << patstr );
     }
     // and the loop
-    Analyzer analyzer( looper );
-    auto res = analyzer.parse( _p_loop );
+    auto res = analyzer->parse( _p_loop );
     looper->_formula = _p_loop;
     looper->set_sequence( res.begin(), res.end() );
     LOGMAIN( looper->str_dump() );

@@ -15,17 +15,21 @@
  * we "cheat" by using here UintList for all operand,
  * as a substitute to PatternList.
  * After evaluation, we will map UintList to Looper::PatternList.
+ *
+ * TODO parse_error as subclass of runtime_error
+ * TODO add last error (msg + bool) ?
  */
 
 #include <utils.hpp>
 #include <vector>
 #include <iostream>
 #include <looper.hpp>
+#include <exception>
 
 // ***************************************************************************
 // ******************************************************************* Loggers
 // ***************************************************************************
-//#define LOG_AN
+#define LOG_AN
 #ifdef LOG_AN
 #  define LOGAN(msg) (LOG_BASE("[Alyz]", msg))
 #else
@@ -132,7 +136,9 @@ class Analyzer
 public:
   // ****************************************************** Analyzer::creation
   Analyzer( Looper* looper = nullptr ) :
-    _looper(looper)
+    _looper(looper),
+    _error(false),
+    _str_error("")
   {
   }
   // *********************************************************** Analyser::str
@@ -158,6 +164,8 @@ public:
   //void parse( StrIt it_start, StrIt it_end )
   UintList parse( const std::string& formula )
   {
+    _error = false;
+   
     _formula = formula;
     output = TokenStack{}; // create new empty stack
     auxiliary = OpTokenStack{}; 
@@ -481,6 +489,7 @@ public:
     std::string::size_type offset = _pos(tok.start)+header.size();
     std::string::size_type patlen = _pos(tok.end) - _pos(tok.start);
     std::stringstream err;
+    err << header << _formula << "'" << std::endl;
     err << std::string( offset, ' ' );
     err << std::string( patlen, '^');
     err << std::endl;
@@ -488,20 +497,31 @@ public:
     err << std::string("|");
     err << std::endl;
     // TODO check msg is long enough
-    err << msg << std::endl;
-
+    err << msg;
     std::cerr <<  err.str() << std::endl;
+    
+    // _str_error.clear();
+    // _str_error.insert( _str_error.begin(),
+    //                    err.str().begin(), err.str().end());
+    _str_error = err.str();
+    _error = true;
+
 
     throw std::runtime_error( msg );
   }
 
+  // *********************************************************** Analyzer::error
+  bool has_error() { return _error; }
+  std::string str_error() { return _str_error; }
   // ***************************************************** Analyzer::attributs
   std::string _formula;
   Looper* _looper;
   
   TokenStack output;
   OpTokenStack auxiliary;
-  
+
+  bool _error;
+  std::string _str_error;
 };
 // ************************************************************ Analyzer - End
 
