@@ -64,10 +64,13 @@ public:
                         NULL /*cbk*/, NULL /*data*/);
 
       if (analyzer->has_error()) {
+        // Red
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
         ImGui::InputTextMultiline("###LooperError", &error_buffer,
                                   // take all width, 5 lines
                                   ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 5),
                                   error_flags, NULL /*cbk*/, NULL /*data*/);
+        ImGui::PopStyleColor();
       }
       if (ImGui::Button( "Apply")) {
         should_apply = true;
