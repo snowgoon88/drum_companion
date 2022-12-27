@@ -22,12 +22,13 @@
 
 #include <utils.hpp>        // loggers, etc
 
-#include <led_display_widget.hpp>
+#include <bpm_widget.hpp>
 
 // ***************************************************************************
 // ************************************************************* Grafik - INIT
 // ***************************************************************************
 #include "imgui.h"
+//#define IMGUI_DISABLE_OBSOLETE_KEYIO
 #define IMGUI_DEFINE_MATH_OPERATORS // Access to math operators
 #include "imgui_internal.h"
 
@@ -65,7 +66,7 @@ glfw_error_callback(int error, const char *description) {
 #endif
 
 // *************************************************************** App GLOBALS
-LedDisplay *led_widget;
+BPMWidget *bpm_widget;
 bool should_exit = false;
 
 // Args
@@ -78,6 +79,7 @@ ImVec4 hoover_color = YELLOW_COL;
 void clear_globals()
 {
   LOGMAIN( "__CLEANING" );
+  if (bpm_widget) delete bpm_widget;
 }
 
 // *********************************************************** Ctrl-C Callback
@@ -131,8 +133,10 @@ void setup_options( int argc, char **argv )
 // ***************************************************************************
 int run_gui()
 {
+  // ******************************************************************* State
+  int tempo = 72;
   // ********************************************************** GUI - creation
-  led_widget = new LedDisplay();
+  bpm_widget = new BPMWidget( tempo );
   
   // Other GUI variables
   bool gui_ask_end = false;
@@ -200,16 +204,24 @@ int run_gui()
   ImFontConfig config;
   config.MergeMode = true;
   ImFont *font_unifont = io.Fonts->AddFontFromFileTTF(
-      "ressources/unifont.ttf", 12.0f, &config, icons_ranges);
+      "ressources/unifont.ttf", 24.0f, &config, icons_ranges);
   if (font_unifont == NULL) {
     std::cout << "Error loading ressources/unifont.ttf" << std::endl;
     return 1;
   }
+  ImFont *font_unifont36 = io.Fonts->AddFontFromFileTTF(
+      "ressources/unifont.ttf", 50.0f, &config, icons_ranges);
+  if (font_unifont36 == NULL) {
+    std::cout << "Error loading ressources/unifont.ttf for size 36" << std::endl;
+    return 1;
+  }
 
+  
   io.Fonts->Build();
+  //ImFontAtlas::Build();
 
   // Try Scaling up
-  ImGui::GetStyle().ScaleAllSizes(2.0f);
+  //ImGui::GetStyle().ScaleAllSizes(2.0f);
 
   // ************************************************************** Gui - Loop
   while (!glfwWindowShouldClose(window) && !gui_ask_end) {
@@ -226,12 +238,24 @@ int run_gui()
       // Create a window with title and append into it.
       ImGui::Begin("Skeleton");
 
-      led_widget->draw( 123 );
+      bpm_widget->draw();
+
+
+// We iterate both legacy native range and named ImGuiKey ranges, which is a little odd but this allow displaying the data for old/new backends.
+            // User code should never have to go through such hoops: old code may use native keycodes, new code may use ImGuiKey codes.
+#ifdef IMGUI_DISABLE_OBSOLETE_KEYIO
+            struct funcs { static bool IsLegacyNativeDupe(ImGuiKey) { return false; } };
+            const ImGuiKey key_first = ImGuiKey_NamedKey_BEGIN;
+#else
+            struct funcs { static bool IsLegacyNativeDupe(ImGuiKey key) { return key < 512 && ImGui::GetIO().KeyMap[key] != -1; } }; // Hide Native<>ImGuiKey duplicates when both exists in the array
+            const ImGuiKey key_first = 0;
+            //ImGui::Text("Legacy raw:");       for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (io.KeysDown[key]) { ImGui::SameLine(); ImGui::Text("\"%s\" %d", ImGui::GetKeyName(key), key); } }
+#endif
+            ImGui::Text("Keys down:");          for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (ImGui::IsKeyDown(key)) { ImGui::SameLine(); ImGui::Text("\"%s\" %d (%.02f secs)", ImGui::GetKeyName(key), key, ImGui::GetKeyData(key)->DownDuration); } }
       
-      ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                  1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
       ImGui::End();
     }
+    
     // Rendering
     ImGui::Render();     int display_w, display_h;
     glfwGetFramebufferSize(window, &display_w, &display_h);

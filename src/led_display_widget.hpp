@@ -23,10 +23,14 @@
 class LedDisplay
 {
 public:
-  void draw( int number )
+  void draw( int& number )
   {
     ImVec2 size(320.0f, 180.0f);
-    ImGui::InvisibleButton("canvas", size);
+
+    // button with Popup
+    if (ImGui::InvisibleButton("canvas", size)) {
+      ImGui::OpenPopup( "test_popup" );
+    }
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -35,6 +39,14 @@ public:
     draw( draw_list, number,
           p0, p1, size );
     draw_list->PopClipRect();
+
+    if (ImGui::BeginPopup("test_popup")) {
+      ImGui::Text( "Enter BPM" );
+      ImGui::Separator();
+      ImGui::InputInt( "##BPM", &number );
+      ImGui::EndPopup();
+    }
+            
   }
   void draw( ImDrawList *draw_list,
              int number,
