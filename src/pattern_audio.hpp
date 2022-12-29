@@ -31,7 +31,7 @@
 // ***************************************************************************
 // ******************************************************************* Loggers
 // ***************************************************************************
-//#define LOG_PA
+#define LOG_PA
 #ifdef LOG_PA
 #  define LOGPA(msg) (LOG_BASE("[PaAu]", msg))
 #else
@@ -164,9 +164,10 @@ public:
     DurationMS delta_time_start = std::chrono::duration_cast<DurationMS>( _last_update - _start_time );
     dump << delta_time_start.count();
     dump << " Next = " << _time_to_next.count();
-
     dump << " id_seq = " << _id_seq;
-
+    dump << " Next Beat = " << _time_to_beat.count();
+    dump << " id Beat = " << _id_beat;
+    
     dump << " " << str_status();
                           
     return dump.str();
@@ -308,8 +309,10 @@ public:
       auto time_now = std::chrono::system_clock::now();
       DurationMS delta_time = std::chrono::duration_cast<DurationMS>( time_now - _last_update );
       _time_to_next -= delta_time;
+      _time_to_beat -= delta_time;
       //LOGPA( str_dump() );
-    
+
+      // Check for next Sound Event
       if (_time_to_next < DurationMS(5)) {
         
         // TODO return time to next or <0 or bool or None or ...
@@ -326,6 +329,12 @@ public:
           _engine->play_sound( _pattern_intervale[_id_seq].val - 1 );
         }
         _time_to_next = std::chrono::milliseconds(_pattern_intervale[_id_seq].length);
+      }
+
+      // Check for next Beat
+      if (_time_to_beat < DurationMS(5)) {
+        _id_beat += 1;
+        _time_to_beat = std::chrono::milliseconds(beat_duration());
       }
       _last_update = time_now;
     }
@@ -344,6 +353,9 @@ public:
   void start()
   {
     if (_state == ready) {
+      _id_beat = 0;
+      _time_to_beat = std::chrono::milliseconds( beat_duration() );
+      
       _id_seq = 0;
       _start_time = std::chrono::system_clock::now();
       _time_to_next = std::chrono::milliseconds(_pattern_intervale[_id_seq].length);
@@ -375,6 +387,17 @@ public:
   {
     return _signature.beats * _signature.subdivisions;
   }
+  /** duration of a beat in ms, but as uint.
+   * use std::chrono::milliseconds( beat_duration() );
+   */
+  uint beat_duration()
+  {
+    return _signature.division_length() * _signature.subdivisions;
+  }
+  float beat_proportion()
+  {
+    return static_cast<float>( _time_to_beat.count() ) / static_cast<float>( beat_duration() );
+  }
   // ************************************************* PatternAudio::attributs
   Signature _signature;
   SoundEngine *_engine;
@@ -383,10 +406,15 @@ public:
   // sequence of (idx_sound x delay in ms)
   std::vector<Note> _pattern_intervale = {{1, 500}, {1, 250},
                                           {1, 500}, {1, 500}, {1,250}};
+
+  uint _id_beat;
+  DurationMS _time_to_beat;
+
   uint _id_seq;
   DurationMS _time_to_next;
   Time _last_update;
   Time _start_time;
+
   uint _id;            // id of this Pattern
 };
 // ******************************************************** PatternAudio - END

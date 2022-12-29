@@ -59,7 +59,7 @@ Il semble que l'on peut aussi dire quand on joue une source (ms)
 ** DONE [/] docopt.cpp
 https://github.com/docopt/docopt.cpp
 * [0/7] Safe code
-** TODO Ensure notes in PatternAudio exist in SoundEngine
+** TODO Ensure notes/sounds in PatternAudio exist in SoundEngine
 ** TODO clean up DEL
 ** TODO clean up TODO
 ** [1/2] when Ctrl-C, take time to destroy Objects

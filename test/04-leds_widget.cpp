@@ -22,7 +22,10 @@
 
 #include <utils.hpp>        // loggers, etc
 
+#include <sound_engine.hpp>
+#include <pattern_audio.hpp>
 #include <bpm_widget.hpp>
+#include <beat_slider_widget.hpp>
 
 // ***************************************************************************
 // ************************************************************* Grafik - INIT
@@ -58,7 +61,7 @@ glfw_error_callback(int error, const char *description) {
 // ***************************************************************************
 // ******************************************************************* Loggers
 // ***************************************************************************
-//#define LOG_MAIN
+#define LOG_MAIN
 #ifdef LOG_MAIN
 #  define LOGMAIN(msg) (LOG_BASE("[MAIN]", msg))
 #else
@@ -67,7 +70,15 @@ glfw_error_callback(int error, const char *description) {
 
 // *************************************************************** App GLOBALS
 BPMWidget *bpm_widget;
+BeatSlider *beat_widget;
 bool should_exit = false;
+
+// Audio
+int _tempo = 72;
+Signature _p_sig { 72, 4, 2};
+SoundEngine *sound_engine = nullptr;
+PatternAudio *pattern_audio = nullptr;  // GUI only
+
 
 // Args
 bool _p_verb = false;
@@ -80,6 +91,20 @@ void clear_globals()
 {
   LOGMAIN( "__CLEANING" );
   if (bpm_widget) delete bpm_widget;
+  if (beat_widget) delete beat_widget;
+
+  if (sound_engine != nullptr ) {
+    LOGMAIN( "  will clean sound_engine" );
+    delete sound_engine;
+  }
+  LOGMAIN( "  sound_engine OK" );
+  
+  if (pattern_audio != nullptr ) {
+    LOGMAIN( "  will clean pattern_audio" );
+    delete pattern_audio;
+  }
+  LOGMAIN( "  pattern_audio OK" );
+  
 }
 
 // *********************************************************** Ctrl-C Callback
@@ -134,9 +159,13 @@ void setup_options( int argc, char **argv )
 int run_gui()
 {
   // ******************************************************************* State
-  int tempo = 72;
+  bool should_pause = false;
+  bool should_stop = false;
+  bool should_run = false;
+
   // ********************************************************** GUI - creation
-  bpm_widget = new BPMWidget( tempo );
+  bpm_widget = new BPMWidget( _tempo );
+  beat_widget = new BeatSlider();
   
   // Other GUI variables
   bool gui_ask_end = false;
@@ -239,7 +268,21 @@ int run_gui()
       ImGui::Begin("Skeleton");
 
       bpm_widget->draw();
-
+      beat_widget->draw( pattern_audio->beat_proportion() );
+      
+      if (ImGui::Button(u8"⏵")) { // 0x23F5       
+        should_run = true;
+      }
+      
+      ImGui::SameLine();
+      if (ImGui::Button(u8"⏸")) { // 0x23F8
+        should_pause = true;
+      }
+      
+      ImGui::SameLine();
+      if (ImGui::Button(u8"⏹")) { // 0X23F9
+        should_stop = true;
+      }
 
 // We iterate both legacy native range and named ImGuiKey ranges, which is a little odd but this allow displaying the data for old/new backends.
             // User code should never have to go through such hoops: old code may use native keycodes, new code may use ImGuiKey codes.
@@ -274,6 +317,25 @@ int run_gui()
     // Now apply logic
 
     // And deal with Play/Pause
+    // MiniAudio
+    if (should_run) {
+      pattern_audio->start();
+      std::cout << "__PLAY__" << std::endl;
+    }
+    else if (should_stop) {
+      pattern_audio->stop();
+      std::cout << "__STOP__" << std::endl;
+    }
+    else if (should_pause) {
+      pattern_audio->pause();
+      std::cout << "__PAUSE__" << std::endl;
+    }
+    should_run = should_pause = should_stop = false;
+
+    bool advance = pattern_audio->next();
+    if (!advance) {
+      pattern_audio->start();
+    }
 
   }
 
@@ -301,6 +363,20 @@ int main(int argc, char *argv[])
 
   // ************************************************************ init engines
   LOGMAIN( "__Main Init engines");
+  sound_engine = new SoundEngine();
+  // variables are not used, but show how could be used
+  auto idx_clave = sound_engine->add_sound( "ressources/claves_120ms.wav" );
+  UNUSED(idx_clave);
+  auto idx_cow = sound_engine->add_sound( "ressources/cowbell.wav" );
+  UNUSED(idx_cow);
+
+  // ************************************************************* PlayPattern
+  LOGMAIN( "__PATTERN_AUDIO with SoundEngine" );
+  pattern_audio = new PatternAudio( sound_engine );
+  pattern_audio->_id = 0;
+  pattern_audio->_signature = _p_sig;
+  pattern_audio->init_from_string( "2x1x1x1x" );
+
   if (_p_verb) {
   }
   
