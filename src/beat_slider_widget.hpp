@@ -4,13 +4,14 @@
 #define BEAT_SLIDER_HPP
 
 /** 
- * TODO
+ * TODO fix padding,size
+ * TODO better detection of direction/color in looper
  */
 
 #define IMGUI_DEFINE_MATH_OPERATORS // Access to math operators
 #include "imgui_internal.h"
 
-
+#include <utils.hpp>
 // ***************************************************************************
 // **************************************************************** BeatSlider
 // ***************************************************************************
@@ -18,7 +19,7 @@ class BeatSlider
 {
   const float H_slider = 20.0f;
   float W_slider = 20.0f;
-  float PAD_UB_slider = 20.0f;
+  float PAD_UB_slider = 5.0f;
 public:
   // **************************************************** BeatSlider::creation
   BeatSlider()
@@ -30,12 +31,17 @@ public:
   {
     dir = 1.f;
   }
-  void switch_dir()
+  void set_dir_forward( bool value )
   {
-    dir = -1.f * dir;
+    if (value) {
+      dir = 1.f;
+    }
+    else {
+      dir = -1.0f;
+    }
   }
   // ******************************************************** BeatSlider::draw
-  void draw( float relative_pos_to_goal )
+  void draw( float relative_pos_to_goal, bool highlight_color=false )
   {
     ImVec2 size(320.0f, 50.0f);
 
@@ -48,6 +54,7 @@ public:
     draw_list->PushClipRect(p0, p1);
 
     draw( draw_list, relative_pos_to_goal,
+          highlight_color ? ImGui::ColorConvertFloat4ToU32(YELLOW_COL) : 0xffffffff,
           p0, p1, size );
     draw_list->PopClipRect();
 
@@ -56,6 +63,7 @@ public:
   /** Redraw the slider (padded) and the Marker */
   void draw( ImDrawList *draw_list,
              float relative_pos_to_goal,
+             ImU32 color,
              ImVec2 p_min, ImVec2 p_max, ImVec2 size )
   {
     // horizontal padding = 2% of size.x
@@ -78,7 +86,7 @@ public:
       goal_pos = slider_ul;
     }
     // Compute position of upper-left for marker
-    ImVec2 pos = ImVec2( goal_pos.x - dir * xsize_slider * relative_pos_to_goal,
+    ImVec2 pos = ImVec2( goal_pos.x - dir * (xsize_slider-marker_size.x) * relative_pos_to_goal,
                          goal_pos.y );
 
     // Erase Slider
@@ -87,7 +95,7 @@ public:
     draw_list->AddRectFilled( slider_ul, slider_br, 0x55555555 /*grey*/ );
 
     // Draw Marker (rounded Rect)
-    draw_list->AddRectFilled( pos, pos + marker_size, 0xffffffff /*color*/,
+    draw_list->AddRectFilled( pos, pos + marker_size, color /*color*/,
                         2.f /*rounding*/ );
   }
 

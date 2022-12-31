@@ -24,6 +24,8 @@
 
 #include <sound_engine.hpp>
 #include <pattern_audio.hpp>
+#include <looper.hpp>
+#include <analyzer.hpp>
 #include <bpm_widget.hpp>
 #include <beat_slider_widget.hpp>
 
@@ -74,11 +76,12 @@ BeatSlider *beat_widget;
 bool should_exit = false;
 
 // Audio
-int _tempo = 72;
-Signature _p_sig { 72, 4, 2};
+int _tempo = 30;
+Signature _p_sig { 30, 4, 2};
 SoundEngine *sound_engine = nullptr;
 PatternAudio *pattern_audio = nullptr;  // GUI only
-
+Looper *looper = nullptr;
+Analyzer *analyzer = nullptr;
 
 // Args
 bool _p_verb = false;
@@ -99,12 +102,30 @@ void clear_globals()
   }
   LOGMAIN( "  sound_engine OK" );
   
+  if (looper != nullptr) {
+    LOGMAIN( "  will clean looper" );
+    // Needed if looper patterns are created at start
+    // for( auto& pat_ptr: looper->all_patterns) {
+    //   LOGMAIN( "    will clean pattern " << pat_ptr->_id );
+    //   delete pat_ptr;
+    //   LOGMAIN( "    pattern OK" ); 
+    // }
+    delete looper;
+  }
+  LOGMAIN( "  looper OK" );
+
   if (pattern_audio != nullptr ) {
     LOGMAIN( "  will clean pattern_audio" );
     delete pattern_audio;
   }
   LOGMAIN( "  pattern_audio OK" );
-  
+
+  if (analyzer != nullptr) {
+    LOGMAIN( "  will clean analyzer" );
+    delete analyzer;
+  }
+  LOGMAIN( "  analyzer OK" );
+
 }
 
 // *********************************************************** Ctrl-C Callback
@@ -268,7 +289,9 @@ int run_gui()
       ImGui::Begin("Skeleton");
 
       bpm_widget->draw();
-      beat_widget->draw( pattern_audio->beat_proportion() );
+      // update status of BeatSlider
+      beat_widget->set_dir_forward( looper->odd_beat );
+      beat_widget->draw( looper->to_next_beat, looper->to_first_beat );
       
       if (ImGui::Button(u8"⏵")) { // 0x23F5       
         should_run = true;
@@ -319,23 +342,20 @@ int run_gui()
     // And deal with Play/Pause
     // MiniAudio
     if (should_run) {
-      pattern_audio->start();
+      looper->start();
       std::cout << "__PLAY__" << std::endl;
     }
     else if (should_stop) {
-      pattern_audio->stop();
+      looper->stop();
       std::cout << "__STOP__" << std::endl;
     }
     else if (should_pause) {
-      pattern_audio->pause();
+      looper->pause();
       std::cout << "__PAUSE__" << std::endl;
     }
     should_run = should_pause = should_stop = false;
 
-    bool advance = pattern_audio->next();
-    if (!advance) {
-      pattern_audio->start();
-    }
+    looper->next();
 
   }
 
@@ -377,6 +397,19 @@ int main(int argc, char *argv[])
   pattern_audio->_signature = _p_sig;
   pattern_audio->init_from_string( "2x1x1x1x" );
 
+    // ****************************************************************** Looper
+  LOGMAIN( "__LOOPER with SoundEngine and all PatternAudio" );
+  looper = new Looper( sound_engine );
+  analyzer = new Analyzer( looper );
+
+  auto id = looper->add( pattern_audio );
+  LOGMAIN( "  add p" << id << "=" << pattern_audio->str_verbose() );
+
+  auto res = analyzer->parse( "p0" );
+  looper->_formula = "p0";
+  looper->set_sequence( res.begin(), res.end() );
+  LOGMAIN( looper->str_dump() );
+    
   if (_p_verb) {
   }
   

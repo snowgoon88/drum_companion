@@ -167,6 +167,7 @@ public:
     dump << " id_seq = " << _id_seq;
     dump << " Next Beat = " << _time_to_beat.count();
     dump << " id Beat = " << _id_beat;
+    dump << std::endl;
     
     dump << " " << str_status();
                           
@@ -367,6 +368,8 @@ public:
       _state = running;
     }
     else if(_state == paused) {
+      LOGPA( "UNPAUSE" );
+      LOGPA( str_dump() );
       _state = running;
     }
   }
@@ -375,6 +378,8 @@ public:
     if (_state == running) {
       _state = paused;
     }
+    LOGPA( "PAUSE" );
+    LOGPA( str_dump() );
   }
   void stop()
   {

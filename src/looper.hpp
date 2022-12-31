@@ -5,6 +5,9 @@
 
 /** 
  * Chain PatternAudio till the end of time...
+ *
+ * Maintain also a "Beat count" (relative timing, start of pattern, switching)
+ * so as to help BeatSlider widget.
  */
 
 #include <utils.hpp>
@@ -15,11 +18,12 @@
 #include <vector>
 #include <string>
 #include <cctype>
+#include <ios> //boolalpha
 
 // ***************************************************************************
 // ******************************************************************* Loggers
 // ***************************************************************************
-//#define LOG_LO
+#define LOG_LO
 #ifdef LOG_LO
 #  define LOGLO(msg) (LOG_BASE("[Loop]", msg))
 #else
@@ -44,7 +48,8 @@ public:
   // ******************************************************** Looper::creation
   Looper( SoundEngine* engine = nullptr ) :
     _engine(engine),
-    _state(empty)
+    _state(empty),
+    to_first_beat(false), to_next_beat(1.0f), odd_beat(true)
   {
   }
   virtual ~Looper()
@@ -82,7 +87,13 @@ public:
       dump << pat->_id <<", ";
     }
     dump << "]";
+    dump << std::endl;
 
+    dump << "  beat: pos=" << std::boolalpha << to_next_beat;
+    dump << " odd=" << odd_beat;
+    dump << " to_first=" << std::boolalpha << to_first_beat;
+    dump << std::endl;
+    
     return dump.str();
   }
   std::string str_verbose () const
@@ -99,6 +110,11 @@ public:
       verbose << pat->_id <<", ";
     }
     verbose << "]" << std::endl;
+
+    verbose << "Beat: pos=" << to_next_beat;
+    verbose << " odd=" << odd_beat;
+    verbose << " to_first=" << to_first_beat;
+    verbose << std::endl;
     
     return verbose.str();
   }
@@ -197,6 +213,20 @@ public:
         }
         (*_its)->start();
       }
+
+      // update Beat related values
+      // if relative time left has increased, then switch
+      float new_to_beat = (*_its)->beat_proportion();
+      if (new_to_beat > to_next_beat) {
+        odd_beat = !odd_beat;
+        // also check if playing last beat, i.e. goint to first of next
+        to_first_beat = ((*_its)->_id_beat == ((*_its)->_signature.beats-1)); 
+      }
+      to_next_beat = new_to_beat;
+    }
+    else if (_state == paused) {
+      (*_its)->next();
+      // no need to check if sequence must advanced, as paused
     }
     return true;
   }
@@ -208,8 +238,14 @@ public:
       _its = sequence.begin();
       (*_its)->start();
       _state = running;
+
+      to_first_beat = false;
+      to_next_beat = 1.0f;
+      odd_beat = true;
     }
     else if (_state == paused) {
+      LOGLO( "UNPAUSE" );
+      LOGLO( str_dump() );
       (*_its)->start();
       _state = running;
     }
@@ -219,6 +255,10 @@ public:
     if (_state != empty) {
       (*_its)->stop();
       _state = ready;
+
+      to_first_beat = false;
+      to_next_beat = 1.0f;
+      odd_beat = true;
     }
   }
   void pause()
@@ -227,6 +267,9 @@ public:
       _state = paused;
       (*_its)->pause();
     }
+    LOGLO( "PAUSE" );
+    LOGLO( str_dump() );
+
   }
   // ******************************************************* Looper::attributs
   SoundEngine *_engine;
@@ -235,6 +278,10 @@ public:
   PatternList::iterator _its;
   LooperState _state;
   std::string _formula;
+
+  bool to_first_beat;
+  float to_next_beat;
+  bool odd_beat;
 };
 // ************************************************************** Looper - End
 

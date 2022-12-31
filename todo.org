@@ -1,5 +1,5 @@
 * __CURRENT__ : analyze looper sequence construction
-* TODO [4/6] linux
+* TODO [4/8] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -21,7 +21,11 @@ if (item_disabled)
 *** DONE InputText, get text when Apply => read the buffer
 *** DONE make sure looper->_formula is set when properly analyzed
 *** DONE link between analyzer Exceptions and LooperGui
-** TODO [/] which Note is played 
+** TODO [1/2] which Note is played 
+*** DONE BeatSlider widget tested
+*** TODO add to drum_compagnon
+** TODO on/off synchronize all patterns
+** TODO on/off relative bpm change
 * TODO [2/3] Ressources to try
 ** TODO [6/7] GUI : imgui
 https://github.com/ocornut/imgui
