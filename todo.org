@@ -1,5 +1,5 @@
 * __CURRENT__ : analyze looper sequence construction
-* TODO [3/4] linux
+* TODO [3/5] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -8,7 +8,8 @@ generalize it use when sig/beats change
 => with signature beats x subdiv
 if (item_disabled)
             ImGui::BeginDisabled(true);
-*** DONE apply changes to PatternAudio
+*** DONE apply changes to PatternAudiojxuàççççç _ÀÇR_RÇAQ_DCUÀ=
+
 ** DONE [/] name patterns
 ** DONE [3/3] looper
 *** DONE using Shunting Yard algorithm
@@ -17,6 +18,7 @@ if (item_disabled)
 *** DONE ({[]}) : group
 *** DONE parse -> PatternList
 ** TODO [/] GUI with PatternList
+** TODO [/] mix hh soundaiuoooeue"ç"&)é"
 * TODO [2/3] Ressources to try
 ** TODO [5/6] GUI : imgui
 https://github.com/ocornut/imgui
@@ -65,7 +67,9 @@ https://github.com/docopt/docopt.cpp
 ** TODO Check LooperState and PatternState
 ** TODO Check common in Looper and Pattern
 ** TODO Check all _state are still needed (ex: ended ??)
-** TODO When reading Looper from file, might need to delete some existing patterns
+** TODO When reading Looper from file, might need to delete some existing patternsOS)))FDO O<
+NB 744
+WCBWBDW WC WCGFGGGGGGGGGG
 * [6/9] WINDOWS
 ** TODO Check still compiling
 ** 00-engine-play + CodeWorks/MinGW
@@ -90,3 +94,5 @@ and no more GLFW stuff
 ** DONE avoir libboost pour cl => docopt.cpp
 https://github.com/docopt/docopt.cpp
 ** DONE signal Ctrl-C for Windows
+,: CH,5 140NC ::NFX
+ YYYYYYYYYYYYYG ,  ,,N
