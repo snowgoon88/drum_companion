@@ -13,6 +13,7 @@
 // Parsing command line options
 #include "docopt.h"
 
+#include <ctime>
 #include <iostream>
 #include <string>
 #include <chrono>
@@ -318,7 +319,11 @@ int run_gui()
             //ImGui::Text("Legacy raw:");       for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (io.KeysDown[key]) { ImGui::SameLine(); ImGui::Text("\"%s\" %d", ImGui::GetKeyName(key), key); } }
 #endif
             ImGui::Text("Keys down:");          for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (ImGui::IsKeyDown(key)) { ImGui::SameLine(); ImGui::Text("\"%s\" %d (%.02f secs)", ImGui::GetKeyName(key), key, ImGui::GetKeyData(key)->DownDuration); } }
-      
+
+      // local time
+      std::time_t time_now = std::time(nullptr);
+      auto time_st = std::localtime( &time_now );
+      ImGui::Text("Time: %2d:%2d", time_st->tm_hour, time_st->tm_min);
       ImGui::End();
     }
     

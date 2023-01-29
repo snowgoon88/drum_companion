@@ -42,11 +42,12 @@ def build(bld):
             includes = [".", "../src", imgui_dir, imgui_dir+"backends/"],
             libs =     [],#["m","rt","dl"],
             use =      ["DOCOPT", "docopt.obj",
+                        "IMGUI",
                         "MINIAUDIO",
                         "GLFW3", "GL"]
         )
 
-    base_files = ["04-leds_widget.cpp", "drum_companion_gui.cpp", "drum_compagnon.cpp"]
+    base_files = ["04-leds_widget.cpp", "04-date_widget.cpp", "drum_companion_gui.cpp", "drum_compagnon.cpp"]
     for file in base_files:
         build_file( file )
         

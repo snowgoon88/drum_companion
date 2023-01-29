@@ -23,6 +23,9 @@
 class LedDisplay
 {
 public:
+  LedDisplay( int max_number_of_digit = 3 )
+    : max_nb_digits( max_number_of_digit )
+  {}
   void draw( int& number )
   {
     ImVec2 size(320.0f, 180.0f);
@@ -52,7 +55,6 @@ public:
              int number,
              ImVec2 p_min, ImVec2 p_max, ImVec2 size )
   {
-    const int max_nb_digits = 3;
     // horizontal padding of digit = 2% of size.x
     float pad = 0.02 * size.x;
     // horizontal size of digit
@@ -171,6 +173,8 @@ private:
 
   // *************************************************** LedDisplay::attributs
 private:
+ int max_nb_digits;
+
   /* 
    Encoding of the segments of each digit.
    order: 0 hor_up right_up right_down hor_low lef_down left_up hor_mid
