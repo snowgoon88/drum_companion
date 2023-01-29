@@ -112,7 +112,7 @@ void setup_options( int argc, char **argv )
                                                   // show help if requested
                                                   true,
                                                   // version string
-                                                  "Skeleton");
+                                                  "Time Widget");
 
   std::cout << "******* DocOpt arguments" << std::endl;
   for(auto const& arg : args) {
@@ -173,7 +173,7 @@ int run_gui()
 
   // Create window with graphics context
   GLFWwindow *window = glfwCreateWindow(
-      600, 500, "Skeleton v1.0", NULL, NULL);
+      600, 500, "Time Widget v1.0", NULL, NULL);
   if (window == NULL)
     return 1;
   glfwMakeContextCurrent(window);
@@ -237,7 +237,7 @@ int run_gui()
     // ImGUI Frame
     {
       // Create a window with title and append into it.
-      ImGui::Begin("Skeleton");
+      ImGui::Begin("Time Widget");
 
       date_widget->draw();
 

@@ -1,4 +1,4 @@
-* __CURRENT__ : analyze looper sequence construction
+* __CURRENT__ : add time widget to drum_compagnon
 * TODO [4/8] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
