@@ -11,12 +11,15 @@
 ##      on peut utilise clang :o)
 ## l'option --color permet de coloriser la sortie du compilo
 
+from waflib.Errors import ConfigurationError
+
 APPNAME = 'DrumCompanion'
 VERSION = '0.1'
 
 # root, build dir
 top = '.'
-out = 'wbuild'
+#out = 'wbuild'
+out = 'cbuild'
 
 opt_flags = '-O3'
 debug_flags = '-O0 -g'
@@ -24,9 +27,10 @@ debug_flags = '-O0 -g'
 # ************************************************************************* help
 def help(ctx):
     print( "**** WAF for DrumCompanion, usual commands ************" )
-    print( "configuration :  ./waf configure --out=cbuild --check-cxx-compiler=clang++" )
+    print( "default       :  ./waf configure --out=cbuild --check-cxx-compiler=clang++ --compil_db" )
     print( "build :          ./waf build ")
     print( "build specific : ./waf build --targets=test/001-curve" )
+    print( "compdb :         ./waf compdb" )
     print( "clean :          ./waf clean" )
     print( "detailed help :  ./waf --help or see https://waf.io/book" )
     print( "  options :      --compil_db --debug" )
@@ -40,7 +44,7 @@ def options( opt ):
                    help='compile with debugging symbols' )
 
     # clang compilation database
-    opt.add_option('--compil_db', dest='compil_db', action="store_true", default=False,
+    opt.add_option('--compil_db', dest='compil_db', action="store_true", default=True,
                    help='use clang compilation database' )
 
     # define some macro for C++
@@ -54,9 +58,14 @@ def options( opt ):
     
 # **************************************************************** CMD configure
 def configure( conf ):
-    # print( "__START__" )
+    print( "__START CONFIGURATION *******************************************" )
+    print( "by defaul, option --compil_db is ON" )
     # print( conf.env)
     # print( "******************************************************************")
+
+    # Ensure that clang++ is used for compil_db, must be done before loading _cxx
+    if conf.options.compil_db:
+        conf.options.check_cxx_compiler = 'clang++'
     conf.load( 'compiler_cxx' )
     # print( "__CXX__" )
     # print( conf.env)
@@ -71,29 +80,36 @@ def configure( conf ):
     conf.env.SHLIB_MARKER = '' # instead of '-Wl,-Bdynamic'
     print( "**************************************************************************" )
 
-    
     if conf.options.compil_db:
         ## To generate 'compile_commands.json' at the root of buildpath
         # to be linked/copied in order to user 'cquery' in emacs through lsp-mode
         # see https://github.com/cquery-project/cquery/wiki/Emacs
         conf.load('clang_compilation_database', tooldir="ressources")
         print( "CXX=",conf.env.CXX)
-    
+        try:
+            conf.find_program('compdb', var='COMPDB')
+        except ConfigurationError as e:
+            raise ConfigurationError( msg=e.msg+"\ncomdp not found, install using 'pip install compdb'" )
+
     #conf.env['CXXFLAGS'] = ['-D_REENTRANT','-Wall','-fPIC','-std=c++11']
     conf.env['CXXFLAGS'] = ['-Wall','-std=c++11']
     ##DELconf.env.INCLUDES_JSON = conf.path.abspath()+'/include'
 
     # ## Check ImGUI is present and configured and ready to be used ...
+    conf.start_msg( "Looking for ImGui" )
     # print( "Checking SUBLIBRARY 'ImGUI' present and configured" )
     # conf.recurse( 'visugl' )
-    # visuglnode = conf.path.find_node( 'libs/imgui' )
+    imgui_node = conf.path.find_node( 'libs/imgui' )
+    if not imgui_node:
+        raise ConfigurationError( msg='No ImGui in lib' )
+    conf.env.INCLUDES_IMGUI = [imgui_node.abspath()]
+    conf.end_msg("yes")
     # conf.env.INCLUDES_VISUGL  = [visuglnode.abspath()+'/src']
 
     ## Check MiniAudio
     conf.start_msg( "Looking for MiniAudio" )
     ma_node = conf.path.find_node( 'libs/miniaudio' )
     if not ma_node :
-        from waflib.Errors import ConfigurationError
         raise ConfigurationError( msg='NO MiniAudio in libs')
     conf.env.LIB_MINIAUDIO = [ "dl", "m", "pthread" ]
     conf.env.INCLUDES_MINIAUDIO = [ma_node.abspath()]
@@ -105,7 +121,6 @@ def configure( conf ):
     conf.start_msg( "Looking for docopt" )
     do_node = conf.path.find_node( 'libs/docopt.cpp' )
     if not do_node :
-        from waflib.Errors import ConfigurationError
         raise ConfigurationError( msg='NO docopt in libs' )
     #conf.env.LIB_DOCOPT = [ "dl", "m", "pthread" ]
     conf.env.INCLUDES_DOCOPT = [do_node.abspath()]
@@ -163,9 +178,18 @@ def configure( conf ):
     # print( "__AFTER__" )
     # print( conf.env )
     # print( "******************************************************************")
-    
 
-    
+    print( "__END of CONFIGURATION *********************************" )
+    print( f"out = {out} env={conf.options.out}" )
+    # print( f"compdb={conf.env.COMPDB}" )
+
+def compdb(ctx):
+    """ Should be called after build, one compile_commands.json exists in 'out' dir"""
+    # ENV is not accessible in a custom command
+    print( "Runnin COMPDB after build" )
+    if ctx.options.compil_db:
+        # ctx.exec_command( f"{ctx.env.COMPDB[0]} -p {out} list > compile_commands.json" )
+        ctx.exec_command( f"compdb -p {out} list > compile_commands.json" )
     
 # ******************************************************************** CMD build
 def build( bld ):
@@ -184,7 +208,17 @@ def build( bld ):
         # print( "ENV=", bld.env.DEFINES )
         bld.env.DEFINES = bld.env.DEFINES + bld.options.defined_macro
         # print( "new ENV=", bld.env.DEFINES )
-    
+
+    # if comp_db flag, run compdb after successful build
+    # BUT population of out/compile_commands.json is in fact not done yet...
+    # bld.add_post_fun( run_compdb )
+
+
+    # TODO install a post_build function that generate a proper compile_commands.json
+    # with *also* the header files from the compile_commands.json generated by clang
+    # but only for the .cpp files
+    # use "compdb" for that
+    # see https://github.com/Sarcasm/compdb#generate-a-compilation-database-with-header-files
     bld.recurse( 'test' )
     
 # g++ -std=c++11 -I../libs/imgui -I../libs/imgui/backends -g -Wall -Wformat `pkg-config --cflags glfw3` -c -o imgui_draw.o ../libs/imgui/imgui_draw.cpp
