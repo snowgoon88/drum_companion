@@ -21,8 +21,10 @@ if (item_disabled)
 *** DONE InputText, get text when Apply => read the buffer
 *** DONE make sure looper->_formula is set when properly analyzed
 *** DONE link between analyzer Exceptions and LooperGui
-** TODO [1/2] which Note is played 
+** TODO [1/4] which Note is played
 *** DONE BeatSlider widget tested
+*** TODO Number of beat inside moving square
+*** TODO Bigger square
 *** TODO add to drum_compagnon
 ** TODO on/off synchronize all patterns
 ** TODO on/off relative bpm change

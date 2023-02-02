@@ -124,7 +124,7 @@ public:
 public:
   PatternAudio( SoundEngine* engine = nullptr ) :
     _engine(engine),
-    _state(empty),
+    _state(empty), _id_beat(0),
     _start_time(std::chrono::system_clock::now())
   {
   }
@@ -271,6 +271,7 @@ public:
         Note{val_note, count * _signature.division_length()});
 
     _state = ready;
+    _id_beat = 0;
   }
 
   /** 

@@ -11,14 +11,26 @@
 #define IMGUI_DEFINE_MATH_OPERATORS // Access to math operators
 #include "imgui_internal.h"
 
+#include <string>
 #include <utils.hpp>
+
+// ***************************************************************************
+// ******************************************************************* Loggers
+// ***************************************************************************
+// #define LOG_BS
+#ifdef LOG_BS
+#  define LOGBS(msg) (LOG_BASE("[BeatW]", msg))
+#else
+#  define LOGBS(msg)
+#endif
+
 // ***************************************************************************
 // **************************************************************** BeatSlider
 // ***************************************************************************
 class BeatSlider
 {
-  const float H_slider = 20.0f;
-  float W_slider = 20.0f;
+  const float H_slider = 40.0f;
+  float W_slider = 40.0f;
   float PAD_UB_slider = 5.0f;
 public:
   // **************************************************** BeatSlider::creation
@@ -41,7 +53,7 @@ public:
     }
   }
   // ******************************************************** BeatSlider::draw
-  void draw( float relative_pos_to_goal, bool highlight_color=false )
+  void draw( float relative_pos_to_goal, int beat_nb, bool highlight_color=false )
   {
     ImVec2 size(320.0f, 50.0f);
 
@@ -55,6 +67,7 @@ public:
 
     draw( draw_list, relative_pos_to_goal,
           highlight_color ? ImGui::ColorConvertFloat4ToU32(YELLOW_COL) : 0xffffffff,
+          beat_nb + 1,
           p0, p1, size );
     draw_list->PopClipRect();
 
@@ -64,8 +77,11 @@ public:
   void draw( ImDrawList *draw_list,
              float relative_pos_to_goal,
              ImU32 color,
+             int beat_number,
              ImVec2 p_min, ImVec2 p_max, ImVec2 size )
   {
+    LOGBS( "draw with " << std::to_string(beat_number) );
+
     // horizontal padding = 2% of size.x
     float pad = 0.02 * size.x;
     // horizontal size of digit
@@ -91,12 +107,16 @@ public:
 
     // Erase Slider
     // Try to infer windowbg Color
-    const ImU32 col_bg = ImGui::GetColorU32( ImGuiCol_WindowBg );
+    // const ImU32 col_bg = ImGui::GetColorU32( ImGuiCol_WindowBg );
     draw_list->AddRectFilled( slider_ul, slider_br, 0x55555555 /*grey*/ );
 
     // Draw Marker (rounded Rect)
     draw_list->AddRectFilled( pos, pos + marker_size, color /*color*/,
                         2.f /*rounding*/ );
+
+    // Number of beat in black, center of rounded rect
+    std::string beat_str = std::to_string( beat_number );
+    draw_list->AddText( pos + marker_size * 0.25, IM_COL32_BLACK, beat_str.c_str() );
   }
 
 private:

@@ -173,6 +173,10 @@ public:
     for( auto it = start; it != end; it++ ) {
       concat( (*it) );
     }
+    if (sequence.size() > 0) {
+      _state = ready;
+      _its = sequence.begin();
+    }
   }
   void concat( uint id_pattern )
   {
@@ -184,6 +188,7 @@ public:
     }
     if (sequence.size() > 0) {
       _state = ready;
+      _its = sequence.begin();
     }
   }
   void set_all_bpm( unsigned int bpm )
@@ -282,6 +287,14 @@ public:
   bool to_first_beat;
   float to_next_beat;
   bool odd_beat;
+  inline int beat_number()
+  {
+    int bn = 0;
+    if (_state != empty) {
+      bn = (*_its)->_id_beat;
+    }
+    return bn;
+  }
 };
 // ************************************************************** Looper - End
 

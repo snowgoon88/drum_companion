@@ -292,7 +292,9 @@ int run_gui()
       bpm_widget->draw();
       // update status of BeatSlider
       beat_widget->set_dir_forward( looper->odd_beat );
-      beat_widget->draw( looper->to_next_beat, looper->to_first_beat );
+      beat_widget->draw( looper->to_next_beat,
+                         looper->beat_number(),
+                         looper->to_first_beat );
       
       if (ImGui::Button(u8"⏵")) { // 0x23F5       
         should_run = true;

@@ -25,6 +25,8 @@
 #include <analyzer.hpp>
 #include <pattern_gui.hpp>
 #include <looper_gui.hpp>
+#include <date_widget.hpp>
+
 // ***************************************************************************
 // ************************************************************* Grafik - INIT
 // ***************************************************************************
@@ -68,6 +70,7 @@ SoundEngine *sound_engine = nullptr;
 PatternAudio *pattern_audio = nullptr;  // GUI only
 Analyzer *analyzer = nullptr;
 Looper *looper = nullptr;
+DateWidget *date_widget;
 bool should_exit = false;
 
 // Args
@@ -116,6 +119,8 @@ void clear_globals()
     delete analyzer;
   }
   LOGMAIN( "  analyzer OK" );
+
+  if (date_widget) delete date_widget;
 }
 
 // *********************************************************** Ctrl-C Callback
@@ -211,7 +216,9 @@ int run_gui()
     pg_list.push_back( PatternGUI(pat) );
   }
   LooperGUI lg( analyzer );
-  
+
+  date_widget = new DateWidget();
+
   // Other GUI variables
   bool gui_ask_end = false;
   bool should_pause = false;
@@ -304,6 +311,15 @@ int run_gui()
 
     // ImGUI Frame
     {
+      // Create a window with title and append into it.
+      ImGui::Begin("Time");
+
+      date_widget->draw();
+
+      // ImGui::SameLine();
+
+      ImGui::End();
+
       // Create a window with title and append into it.
       ImGui::Begin("Drum Companion");
 
