@@ -116,7 +116,11 @@ public:
 
     // Number of beat in black, center of rounded rect
     std::string beat_str = std::to_string( beat_number );
-    draw_list->AddText( pos + marker_size * 0.25, IM_COL32_BLACK, beat_str.c_str() );
+    LOGBS( "__BS fontsize " << ImGui::GetFontSize() );
+    //draw_list->AddText( pos + marker_size * 0.25, IM_COL32_BLACK, beat_str.c_str() );
+    draw_list->AddText( NULL /*default font*/, 30 /*font siz*/,
+                        pos + ImVec2( W_slider/4 ,0 ), IM_COL32_BLACK,
+                        beat_str.c_str() );
   }
 
 private:
