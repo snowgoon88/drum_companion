@@ -49,7 +49,8 @@ public:
   Looper( SoundEngine* engine = nullptr ) :
     _engine(engine),
     _state(empty),
-    to_first_beat(false), to_next_beat(1.0f), odd_beat(true)
+    to_first_beat(false), from_first_beat(true), to_next_beat(1.0f),
+    odd_beat(true)
   {
   }
   virtual ~Looper()
@@ -92,6 +93,7 @@ public:
     dump << "  beat: pos=" << std::boolalpha << to_next_beat;
     dump << " odd=" << odd_beat;
     dump << " to_first=" << std::boolalpha << to_first_beat;
+    dump << " from_first=" << std::boolalpha << from_first_beat;
     dump << std::endl;
     
     return dump.str();
@@ -114,6 +116,7 @@ public:
     verbose << "Beat: pos=" << to_next_beat;
     verbose << " odd=" << odd_beat;
     verbose << " to_first=" << to_first_beat;
+    verbose << " from_first=" << from_first_beat;
     verbose << std::endl;
     
     return verbose.str();
@@ -215,6 +218,7 @@ public:
         if (_its == sequence.end()) {
           LOGLO( " next: it was the last pattern, begin again" );
           _its = sequence.begin();
+          from_first_beat = true;
         }
         (*_its)->start();
       }
@@ -225,7 +229,9 @@ public:
       if (new_to_beat > to_next_beat) {
         odd_beat = !odd_beat;
         // also check if playing last beat, i.e. goint to first of next
-        to_first_beat = ((*_its)->_id_beat == ((*_its)->_signature.beats-1)); 
+        to_first_beat = ((*_its)->_id_beat == ((*_its)->_signature.beats-1));
+        from_first_beat = (*_its)->_id_beat == 0;
+
       }
       to_next_beat = new_to_beat;
     }
@@ -245,6 +251,7 @@ public:
       _state = running;
 
       to_first_beat = false;
+      from_first_beat = true;
       to_next_beat = 1.0f;
       odd_beat = true;
     }
@@ -261,6 +268,7 @@ public:
       (*_its)->stop();
       _state = ready;
 
+      from_first_beat = true;
       to_first_beat = false;
       to_next_beat = 1.0f;
       odd_beat = true;
@@ -285,6 +293,7 @@ public:
   std::string _formula;
 
   bool to_first_beat;
+  bool from_first_beat;
   float to_next_beat;
   bool odd_beat;
   inline int beat_number()

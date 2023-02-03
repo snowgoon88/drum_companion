@@ -294,7 +294,7 @@ int run_gui()
       beat_widget->set_dir_forward( looper->odd_beat );
       beat_widget->draw( looper->to_next_beat,
                          looper->beat_number(),
-                         looper->to_first_beat );
+                         looper->from_first_beat );
       
       if (ImGui::Button(u8"⏵")) { // 0x23F5       
         should_run = true;
