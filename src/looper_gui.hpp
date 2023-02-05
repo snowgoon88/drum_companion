@@ -19,7 +19,7 @@
 // ***************************************************************************
 #define LOG_LOOPERGUI
 #ifdef LOG_LOOPERGUI
-#  define LOGLG(msg) (LOG_BASE("[LOGU]", msg))
+#  define LOGLG(msg) (LOG_BASE("[LoGUI]", msg))
 #else
 #  define LOGLG(msg)
 #endif
@@ -71,6 +71,7 @@ public:
                                   ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 5),
                                   error_flags, NULL /*cbk*/, NULL /*data*/);
         ImGui::PopStyleColor();
+
       }
       if (ImGui::Button( "Apply")) {
         should_apply = true;

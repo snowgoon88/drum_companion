@@ -186,7 +186,7 @@ int run_gui()
   bool should_run = false;
 
   // ********************************************************** GUI - creation
-  bpm_widget = new BPMWidget( _tempo );
+  bpm_widget = new BPMWidget();
   beat_widget = new BeatSlider();
   
   // Other GUI variables
@@ -289,7 +289,7 @@ int run_gui()
       // Create a window with title and append into it.
       ImGui::Begin("Skeleton");
 
-      bpm_widget->draw();
+      bpm_widget->draw( _tempo );
       // update status of BeatSlider
       beat_widget->set_dir_forward( looper->odd_beat );
       beat_widget->draw( looper->to_next_beat,
@@ -345,6 +345,7 @@ int run_gui()
     }
 
     // Now apply logic
+    _tempo = bpm_widget->get_new_bpm();
 
     // And deal with Play/Pause
     // MiniAudio

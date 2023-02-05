@@ -6,6 +6,12 @@
  * - play repeated sound using looper with sound_pattern
  * - grafik On/Off (if GUI, only ONE pattern)
  * - play/stop/pause
+ *
+ * Has a GLOBAL bpm (_main_bpm) which is superimposed on every Pattern
+ * => disabling BPM setting in PatternGUI
+ * => _default_bpm if not passed as parameter.
+ * TODO looper should have a _main_bpm, it can inpose to its PatternAudio
+ * TODO allow PatternAudio with separate BPM
  */
 
 // Parsing command line options
@@ -26,6 +32,8 @@
 #include <pattern_gui.hpp>
 #include <looper_gui.hpp>
 #include <date_widget.hpp>
+#include <beat_slider_widget.hpp>
+#include <bpm_widget.hpp>
 
 // ***************************************************************************
 // ************************************************************* Grafik - INIT
@@ -57,7 +65,7 @@ glfw_error_callback(int error, const char *description) {
 // ***************************************************************************
 // ******************************************************************* Loggers
 // ***************************************************************************
-//#define LOG_MAIN
+#define LOG_MAIN
 #ifdef LOG_MAIN
 #  define LOGMAIN(msg) (LOG_BASE("[MAIN]", msg))
 #else
@@ -65,17 +73,19 @@ glfw_error_callback(int error, const char *description) {
 #endif
 
 // *************************************************************** App GLOBALS
-
 SoundEngine *sound_engine = nullptr;
 PatternAudio *pattern_audio = nullptr;  // GUI only
 Analyzer *analyzer = nullptr;
 Looper *looper = nullptr;
 DateWidget *date_widget;
+BeatSlider *beat_widget;
+BPMWidget * bpm_widget;
 bool should_exit = false;
 
 // Args
 Signature _p_sig {90, 4, 2};
-unsigned int _p_bpm_default = _p_sig.bpm;
+// unsigned int _main_bpm = _p_sig.bpm;
+// unsigned int _p_bpm_default = _p_sig.bpm;
 unsigned int *_p_bpm = nullptr;
 std::list<std::string> _p_patternlist;
 std::string _p_loop = "p0";
@@ -97,11 +107,11 @@ void clear_globals()
   }
   LOGMAIN( "  sound_engine OK" );
   
-  if (pattern_audio != nullptr ) {
-    LOGMAIN( "  will clean pattern_audio" );
-    delete pattern_audio;
-  }
-  LOGMAIN( "  pattern_audio OK" );
+  // if (pattern_audio != nullptr ) {
+  //   LOGMAIN( "  will clean pattern_audio" );
+  //   delete pattern_audio;
+  // }
+  // LOGMAIN( "  pattern_audio OK" );
   
   if (looper != nullptr) {
     LOGMAIN( "  will clean looper" );
@@ -121,6 +131,8 @@ void clear_globals()
   LOGMAIN( "  analyzer OK" );
 
   if (date_widget) delete date_widget;
+  if (beat_widget) delete beat_widget;
+  if (bpm_widget) delete bpm_widget;
 }
 
 // *********************************************************** Ctrl-C Callback
@@ -209,6 +221,8 @@ void setup_options( int argc, char **argv )
 // ***************************************************************************
 int run_gui()
 {
+  // ************************************************************* GUI - state
+
   // ********************************************************** GUI - creation
   // create all PatternGUI
   std::list<PatternGUI> pg_list;
@@ -217,6 +231,8 @@ int run_gui()
   }
   LooperGUI lg( analyzer );
 
+  beat_widget = new BeatSlider();
+  bpm_widget = new BPMWidget();
   date_widget = new DateWidget();
 
   // Other GUI variables
@@ -320,8 +336,60 @@ int run_gui()
 
       ImGui::End();
 
+      LOGMAIN( "__guiloop Drum Companion" );
       // Create a window with title and append into it.
       ImGui::Begin("Drum Companion");
+
+      // BeatSlider
+      beat_widget->set_dir_forward( looper->odd_beat );
+      beat_widget->draw( looper->to_next_beat,
+                         looper->beat_number(),
+                         looper->from_first_beat );
+      // BPM
+      bpm_widget->draw( looper->_main_bpm );
+
+      LOGMAIN( "  buttons" );
+      // Play/Pause
+      if (looper->_state == Looper::LooperState::running) {
+        ImGui::PushStyleColor(ImGuiCol_Button, GREEN_COL);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, GREEN_COL);
+      }
+      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoover_color);
+      if (ImGui::Button(u8"⏵")) { // 0x23F5
+        should_run = true;
+      }
+      ImGui::PopStyleColor(1);
+      if (looper->_state == Looper::LooperState::running) {
+        ImGui::PopStyleColor(2);
+      }
+
+      ImGui::SameLine();
+      if (looper->_state == Looper::LooperState::paused) {
+        ImGui::PushStyleColor(ImGuiCol_Button, YELLOW_COL);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, YELLOW_COL);
+      }
+      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoover_color);
+      if (ImGui::Button(u8"⏸")) { // 0x23F8
+        should_pause = true;
+      }
+      ImGui::PopStyleColor(1);
+      if (looper->_state == Looper::LooperState::paused) {
+        ImGui::PopStyleColor(2);
+      }
+      ImGui::SameLine();
+      if (looper->_state == Looper::LooperState::ready) {
+        ImGui::PushStyleColor(ImGuiCol_Button, RED_COL);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, RED_COL);
+      }
+      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoover_color);
+
+      if (ImGui::Button(u8"⏹")) { // 0X23F9
+        should_stop = true;
+      }
+      ImGui::PopStyleColor(1);
+      if (looper->_state == Looper::LooperState::ready) {
+        ImGui::PopStyleColor(2);
+      }
 
       // LooperGUI
       lg.draw();
@@ -331,51 +399,6 @@ int run_gui()
         pg.draw();        
       }
 
-      // Play/Pause
-      if (pattern_audio->_state == PatternAudio::running) {
-        ImGui::PushStyleColor(ImGuiCol_Button, GREEN_COL);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, GREEN_COL);
-      }
-      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoover_color);
-      if (ImGui::Button(u8"⏵")) { // 0x23F5       
-        should_run = true;
-      }
-      ImGui::PopStyleColor(1);      
-      if (pattern_audio->_state == PatternAudio::running) {
-        ImGui::PopStyleColor(2);
-      }
-      
-      ImGui::SameLine();
-      if (pattern_audio->_state == PatternAudio::paused) {
-        ImGui::PushStyleColor(ImGuiCol_Button, YELLOW_COL);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, YELLOW_COL);
-      }
-      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoover_color);
-      if (ImGui::Button(u8"⏸")) { // 0x23F8
-        should_pause = true;
-      }
-      ImGui::PopStyleColor(1);      
-      if (pattern_audio->_state == PatternAudio::paused) {
-        ImGui::PopStyleColor(2);
-      }
-
-      
-      ImGui::SameLine();
-      if (pattern_audio->_state == PatternAudio::ready) {
-        ImGui::PushStyleColor(ImGuiCol_Button, RED_COL);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, RED_COL);
-      }
-      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoover_color);
-      
-      if (ImGui::Button(u8"⏹")) { // 0X23F9
-        should_stop = true;
-      }
-      ImGui::PopStyleColor(1);
-      if (pattern_audio->_state == PatternAudio::ready) {
-        ImGui::PopStyleColor(2);
-      }
-
-      
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                   1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
       ImGui::End();
@@ -396,6 +419,12 @@ int run_gui()
     }
 
     // Now apply logic
+    LOGMAIN( "__apply logic" );
+    // update BPM of looper only when NOT runnine
+    // if (looper->_state != Looper::LooperState::running) {
+      looper->set_all_bpm( bpm_widget->get_new_bpm() );
+    // }
+
     lg.apply();
     for( auto& pg: pg_list) {
       pg.apply();
@@ -464,15 +493,16 @@ int main(int argc, char *argv[])
   UNUSED(idx_cow);
     
   // ************************************************************* PlayPattern
-  LOGMAIN( "__PATTERN_AUDIO with SoundEngine" );
-  pattern_audio = new PatternAudio( sound_engine );
-  pattern_audio->_id = 0;
-  if (_p_bpm) {
-    _p_sig.bpm = *_p_bpm;
-  }
-  pattern_audio->_signature = _p_sig;
-  // docopt default value ensure that _p_patternlist has at least ONE element
-  pattern_audio->init_from_string( _p_patternlist.front() );
+  // DEL not needed anymore
+  // LOGMAIN( "__PATTERN_AUDIO with SoundEngine" );
+  // pattern_audio = new PatternAudio( sound_engine );
+  // pattern_audio->_id = 0;
+  // if (_p_bpm) {
+  //   _p_sig.bpm = *_p_bpm;
+  // }
+  // pattern_audio->_signature = _p_sig;
+  // // docopt default value ensure that _p_patternlist has at least ONE element
+  // pattern_audio->init_from_string( _p_patternlist.front() );
 
   // ****************************************************************** Looper
   LOGMAIN( "__LOOPER with SoundEngine and all PatternAudio" );
@@ -484,13 +514,13 @@ int main(int argc, char *argv[])
     looper->read_from( ifile );
     ifile.close();
     
-    // possibly change bpm
+    // if param bpm; takes precedence
     if (_p_bpm) {
       looper->set_all_bpm( *_p_bpm );
     }
   }
   else {
-    // bpm
+    // bpm passed as param takes precedence
     if (_p_bpm) {
       _p_sig.bpm = *_p_bpm;
     }
@@ -499,6 +529,7 @@ int main(int argc, char *argv[])
       pat->_signature = _p_sig;
       pat->init_from_string( patstr );
       auto id = looper->add( pat );
+      UNUSED (id);
       LOGMAIN( "  add p" << id << "=" << patstr );
     }
     // and the loop

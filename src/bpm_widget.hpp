@@ -38,15 +38,15 @@ class BPMWidget
   
 public:
   // ***************************************************** BPMWidget::creation
-  BPMWidget( int &bpm ) :
-    _bpm(bpm)
+  BPMWidget()
   {
   }
   virtual ~BPMWidget() {}
 
   // ********************************************************* BPMWidget::draw
-  void draw()
+  void draw( unsigned int bpm )
   {
+    _bpm = bpm;
     ImVec2 size(320.0f, 180.0f);
 
     // button with Popup
@@ -120,9 +120,12 @@ public:
     }
     
   }
-private:
   // **************************************************** BPMWidget::attributs
-  int &_bpm;
+public:
+  unsigned int get_new_bpm() { return _bpm; }
+private:
+  int _bpm;
+
 
   // Widget to draw large LED display
   LedDisplay led_display;

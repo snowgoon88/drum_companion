@@ -1,5 +1,5 @@
-* __CURRENT__ : add time widget to drum_compagnon
-* TODO [4/8] linux
+* __CURRENT__ : Change BPM on the fly ?
+* TODO [7/11] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -16,17 +16,22 @@ if (item_disabled)
 - https://en.wikipedia.org/wiki/Shunting_yard_algorithm
 *** DONE ({[]}) : group
 *** DONE parse -> PatternList
-** DONE [/] GUI with PatternList
-** TODO [3/3] GUI for Looper
+** DONE [0/0] GUI with PatternList
+** DONE [2/2] Change BPM on the fly
+*** DONE store how much was left to next beat ?
+*** DONE check the running state while updating PatternAudio BPM
+** TODO on/off synchronize all patterns
+** TODO Why when STOP, beat nb in BeatSlider is not 1 but 4 ??
+** TODO Why PatternGUI is not updated when BPM is globally changed ?
+** DONE [3/3] GUI for Looper
 *** DONE InputText, get text when Apply => read the buffer
 *** DONE make sure looper->_formula is set when properly analyzed
 *** DONE link between analyzer Exceptions and LooperGui
-** TODO [1/4] which Note is played
+** DONE [4/4] which Note is played
 *** DONE BeatSlider widget tested
-*** TODO Number of beat inside moving square
-*** TODO Bigger square
-*** TODO add to drum_compagnon
-** TODO on/off synchronize all patterns
+*** DONE Number of beat inside moving square
+*** DONE Bigger square
+*** DONE add to drum_compagnon
 ** TODO on/off relative bpm change
 * TODO [2/3] Ressources to try
 ** TODO [6/7] GUI : imgui
@@ -64,7 +69,7 @@ Il semble que l'on peut aussi dire quand on joue une source (ms)
 
 ** DONE [/] docopt.cpp
 https://github.com/docopt/docopt.cpp
-* [0/7] Safe code
+* [0/8] Safe code
 ** TODO Ensure notes/sounds in PatternAudio exist in SoundEngine
 ** TODO clean up DEL
 ** TODO clean up TODO
@@ -77,9 +82,10 @@ https://github.com/docopt/docopt.cpp
 ** TODO Check LooperState and PatternState
 ** TODO Check common in Looper and Pattern
 ** TODO Check all _state are still needed (ex: ended ??)
+** TODO Remove PatternAudio object from drum_compagnon.cpp
 ** TODO When reading Looper from file, might need to delete some existing patterns
 * [6/9] WINDOWS
-** TODO Check still compiling
+** TODO Check still compiling <2023-02-05 dim.>
 ** 00-engine-play + CodeWorks/MinGW
 works fine under VSC with C:\\Program Files (x86)\\CodeBlocks\\MinGW\\bin\\g++.exe in tasks.json and proper -I
 ** DONE 00-engine-play + MinGW64

@@ -5,6 +5,56 @@
 
 /** 
  * Class that emit "audio play event" according to a sequence of intervals.
+ *
+ * TODO Explain the internals of PatternAudio
+ *
+ * Given the signature we kown the number of beats (Signature.beats) and the
+ * subdivision of beats (Signature.subdivisions). Hence, for a given BPM
+ * (PatternAudio.set_bpm() or Signature.bpm), we can compute the length of
+ * a subdivision in ms as an uint : Signature.division_length().
+ *
+ * The PatternAudio, as a sequence of {0,max_nb_different_Notes}
+ * (here {0 or 1 or 2} must be converted to PatternAudio._pattern_intervale,
+ * a sequence of Note.
+ * Note : - uint val : value (in {0,..,max_nb_of_different_Notes}) is the
+ *                     Note to play
+ *        - uint length : how long before the next Note, in ms.
+ *        - uint nb_sub : how many subdivision for this note
+ *
+ * PatternAudio._intervale_from_timeline() builds the _pattern_intervale.
+ * WARN : that means that _pattern_intervale is first ERASED !!!
+ * Reading _timeline, increment 'count' as long as 0 is seen. When a > 0
+ * val is seen, can add a Note (val, count * Signature.division_length())
+ * to the _pattern_intervale.
+ *
+ * When BPM is changed by PatternAudio.set_bpm( bpm ) :
+ * - if PatternAudio is ready (not running or paused), can rebuild
+ *   the _pattern_intervale using PatternAudio._intervale_from_timeline().
+ * - if running or paused, cannot allow to clear/erase _pattern_intervale.
+ *   Besides, its structure has not changed, so we can :
+ *   - recompute the length of every Note
+ *   - diminish the smallest of time_to_next and time_to_beat proportionnaly
+ *   - recompute the other so that they stay synchronized.
+ *
+ * PatternAudio is played through the PatternAudio.next() function.
+ * This attributes are kept updated :
+ *  - uint _id_beat : from 0 to Signature.beats
+ *  - uint _time_to_beat : time, in ms, to next beat
+ *  - uint _id_seq : index of the Note played in the _pattern_intervale
+ *      sequence
+ *  - uint _time_to_next : time, in ms, to next Note.
+ * RUNNING
+ * 1) decrease _time_to_beat and _time_to_next by delta_time
+ * 2) next Note ? IF _time_to_next IS verysmall
+ *      increase id_seq by one.
+ *      => if end of pattern, RETURN false
+ *      => else, play new Note and set _time_to_next
+ * 3) next Beat ? IF _time_to_beat IS verusmall
+ *      increase _id_beat
+ *      set _time_to_beat
+ * PAUSED
+ * update _last_update so as the next delta_time will be 0, freezing time.
+ *
  */
 
 #include <chrono>
@@ -95,14 +145,16 @@ struct Note
 {
   uint val              = 1;
   uint length           = 10;
+  uint nb_sub           = 1;
 
   Note() {};
-  Note(uint val, uint length) : val(val), length(length) {};
+  Note(uint val, uint length, uint nb_subdivisions )
+    : val(val), length(length), nb_sub(nb_subdivisions) {};
 
   // *************************************************************** Note::str
   friend std::ostream& operator<<( std::ostream& os, const Note& n)
   {
-    os << "N:( " << n.val << ", " << n.length << ")";
+    os << "N:( " << n.val << ", " << n.length << ", " << n.nb_sub << ")";
     return os;
   }
 };
@@ -204,8 +256,49 @@ public:
   // *************************************************** PatternAudio::set_bpm
   void set_bpm( uint bpm )
   {
-    _signature.bpm = bpm;
-    _intervale_from_timeline();
+    // the simple case : _pattern_intervale is rebuild
+    if (_state == ready) {
+      _signature.bpm = bpm;
+      _intervale_from_timeline();
+    }
+    // here, we recompute _time_to_next and _time_to_beat
+    else {
+      // Store previous values
+      uint old_subdiv_lenght = _signature.division_length();
+      // update new signature
+      _signature.bpm = bpm;
+      LOGPA( "__set_bpm old_div=" << old_subdiv_lenght << " div=" << _signature.division_length() );
+
+      // Every Note length is recomputed
+      for( auto& n : _pattern_intervale ) {
+        n.length = n.nb_sub * _signature.division_length();
+      }
+
+      LOGPA( "__before t_beat=" << _time_to_beat.count() << " tnext=" << _time_to_next.count() );
+      if (_time_to_beat < _time_to_next) {
+        // recompute _time_to_beat proportionnaly
+        uint new_tbeat = _time_to_beat.count() * _signature.division_length() / old_subdiv_lenght;
+
+        // nb of subs between next Beat and next Note
+        uint nb_sub_beat_next = (_time_to_next - _time_to_beat).count() / old_subdiv_lenght;
+        LOGPA( "  new_b=" << new_tbeat << " nb_sub_next=" << nb_sub_beat_next );
+
+        _time_to_beat = DurationMS(new_tbeat);
+        _time_to_next = DurationMS(new_tbeat + nb_sub_beat_next * _signature.division_length());
+      }
+      else {
+        // recompute _time_to_next proportionnaly
+        uint new_tnext = _time_to_next.count() * _signature.division_length() / old_subdiv_lenght;
+
+        // nb of subs between next Note and next Beat
+        uint nb_sub_next_beat = (_time_to_beat - _time_to_next).count() / old_subdiv_lenght;
+        LOGPA( "  new_n=" << new_tnext << " nb_sub_beat=" << nb_sub_next_beat );
+
+        _time_to_next = DurationMS(new_tnext);
+        _time_to_beat = DurationMS(new_tnext + nb_sub_next_beat * _signature.division_length());
+      }
+      LOGPA( "__next t_beat=" << _time_to_beat.count() << " tnext=" << _time_to_next.count() );
+    }
   }
   // ****************************************************** PatternAudio::init
   /** from timeline (array of sound {0,1,2} for each subdivisions of Signature)
@@ -231,7 +324,7 @@ public:
   //   uint val_note = *itt;
   //   uint count = 1;
   //   while (++itt != timeline.end() ) {
-  //     if (*itt == 0) {
+  //     if (*itt == ) {
   //       count += 1;
   //     }
   //     else {
@@ -262,13 +355,16 @@ public:
       }
       else {
         _pattern_intervale.push_back(
-            Note{val_note, count * _signature.division_length()});
+            Note{val_note, count * _signature.division_length(), count});
         val_note = *itt;
         count = 1;
       }
     }
+    // Make sure the last elements of Timeline are added
+    // i.e: if timeline ends with 1,0,0, the last 1 has not been added yet.
+    // So, adding now...
     _pattern_intervale.push_back(
-        Note{val_note, count * _signature.division_length()});
+        Note{val_note, count * _signature.division_length(), count});
 
     _state = ready;
     _id_beat = 0;
@@ -340,7 +436,8 @@ public:
       }
       _last_update = time_now;
     }
-    
+
+    // TODO ended state never reached ??
     else if (_state == ended) {
      // can and must be restarted
      start();
@@ -410,8 +507,9 @@ public:
   AudioState _state;
   Timeline _timeline;   // sequence of 0,1,2...
   // sequence of (idx_sound x delay in ms)
-  std::vector<Note> _pattern_intervale = {{1, 500}, {1, 250},
-                                          {1, 500}, {1, 500}, {1,250}};
+  // TODO check that need to be initialized ??
+  std::vector<Note> _pattern_intervale = {{1, 500, 2}, {1, 250, 1},
+                                          {1, 500, 2}, {1, 500, 2}, {1,250, 1}};
 
   uint _id_beat;
   DurationMS _time_to_beat;

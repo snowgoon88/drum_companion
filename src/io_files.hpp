@@ -10,11 +10,12 @@
 #include <string>        // getline, 
 #include <fstream>
 
-// ********************************************************************* write
+// ************************************************************ writea_comment
 void write_comment( std::ostream& os, const std::string& comment )
 {
   os << "# " << comment << std::endl;
 }
+// *************************************************************** write_token
 template<typename T>
 void write_token( std::ostream& os, const std::string& token,
                    const T& arg,
@@ -59,6 +60,16 @@ unsigned int read_uint( std::istream& is, const std::string& token )
     }
   }
   throw std::runtime_error( "read_uint: token '"+token+"' not found" );
+}
+// ***************************************************************** read_bool
+bool read_bool( std::istream& is, const std::string& token )
+{
+  std::string line;
+
+  std::string val = read_string( is, token  );
+  // TODO check, should be "1" instead
+  return (val == "true");
+  throw std::runtime_error( "read_bool: token '"+token+"' not found" );
 }
 
 #endif // IO_FILES_HPP

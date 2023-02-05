@@ -6,6 +6,10 @@
 /** 
  * Chain PatternAudio till the end of time...
  *
+ * Has a _main_bpm.
+ * TODO _main_bpm is applied to all PatternAudio
+ * @see ENSURE in code
+ *
  * Maintain also a "Beat count" (relative timing, start of pattern, switching)
  * so as to help BeatSlider widget.
  */
@@ -42,13 +46,15 @@ public:
 private:
   using UintIt = std::iterator<std::input_iterator_tag, unsigned int>;
   using PatternVec = std::vector<PatternAudio*>;
+public:
   enum LooperState { ready, running, paused, empty };
   
 public:
   // ******************************************************** Looper::creation
-  Looper( SoundEngine* engine = nullptr ) :
+  Looper( SoundEngine* engine = nullptr, unsigned int main_bpm=90 ) :
     _engine(engine),
     _state(empty),
+    _main_bpm(main_bpm), _sync_bpm(true),
     to_first_beat(false), from_first_beat(true), to_next_beat(1.0f),
     odd_beat(true)
   {
@@ -81,7 +87,8 @@ public:
   {
     std::stringstream dump;
     dump << "Looper: " << str_status() << std::endl;
-    dump << "  sequence.size=" << sequence.size();
+    dump << "  bpm=" << _main_bpm << " sync: " << std::boolalpha << _sync_bpm;
+    dump << " sequence.size=" << sequence.size();
 
     dump << " : [";
     for( auto& pat: sequence) {
@@ -101,7 +108,9 @@ public:
   std::string str_verbose () const
   {
     std::stringstream verbose;
-    verbose << "__Looper with " << all_patterns.size() << " patterns" << std::endl;
+    verbose << "__Looper at " << _main_bpm << " BPM ";
+    if (_sync_bpm) verbose << "(sync) ";
+    verbose << all_patterns.size() << " patterns" << std::endl;
     for( auto& pat: all_patterns) {
       verbose << "  p"<<std::to_string( pat->_id );
       verbose << "=" << pat->str_verbose() << std::endl;
@@ -125,6 +134,8 @@ public:
   void write_to( std::ofstream& os )
   {
     write_comment( os, "-- Looper --" );
+    write_token( os, "main_bpm", _main_bpm );
+    write_token( os, "sync_bpm", _sync_bpm );
     write_token( os, "nb_pat", all_patterns.size() );
     for( auto& pat: all_patterns) {
       write_comment( os, "pattern p"+std::to_string( pat->_id ) );
@@ -140,29 +151,37 @@ public:
   void read_from( std::ifstream& is )
   {
     // ensure stop
-    stop();
-    
-    auto nb_pattern = read_uint( is, "nb_pat" );
-    all_patterns.clear(); // TODO what if some undeleted patterns ?
-    for( unsigned int idp = 0; idp < nb_pattern; ++idp) {
-      PatternAudio *pat = new PatternAudio( _engine );
-      pat->read_from( is );
-      add( pat );
+      stop();
+
+      _main_bpm = read_uint( is, "main_bpm" );
+      _sync_bpm = read_bool( is, "sync_bpm" );
+      auto nb_pattern = read_uint( is, "nb_pat" );
+      all_patterns.clear(); // TODO what if some undeleted patterns ?
+      for( unsigned int idp = 0; idp < nb_pattern; ++idp) {
+        PatternAudio *pat = new PatternAudio( _engine );
+        pat->read_from( is );
+        add( pat );
+      }
+
+      sequence.clear(); // TODO what if some undeleted patterns ?
+      auto nb_seq = read_uint( is, "nb_seq" );
+      for( unsigned int ids = 0; ids < nb_seq; ++ids) {
+        auto id_pat = read_uint( is, "id" );
+        concat( id_pat );
+      }
     }
-    
-    sequence.clear(); // TODO what if some undeleted patterns ?
-    auto nb_seq = read_uint( is, "nb_seq" );
-    for( unsigned int ids = 0; ids < nb_seq; ++ids) {
-      auto id_pat = read_uint( is, "id" );
-      concat( id_pat );
-    }
-  }
-  // ******************************************************** Looper::patterns
-  uint add( PatternAudio* pattern )
-  {
-    if (pattern->_state == PatternAudio::ready ) {
-      pattern->_id = all_patterns.size();
-      all_patterns.push_back( pattern );
+    // ******************************************************** Looper::patterns
+    uint add( PatternAudio* pattern )
+    {
+      if (pattern->_state == PatternAudio::ready ) {
+        pattern->_id = all_patterns.size();
+        all_patterns.push_back( pattern );
+
+        // ENSURE same BPM
+        if (_sync_bpm) {
+          set_all_bpm( _main_bpm );
+        }
+
       return pattern->_id;
     }
     throw std::runtime_error( "add: pattern is not ready" );
@@ -179,6 +198,11 @@ public:
     if (sequence.size() > 0) {
       _state = ready;
       _its = sequence.begin();
+
+      // ENSURE same BPM
+      if (_sync_bpm) {
+        set_all_bpm( _main_bpm );
+      }
     }
   }
   void concat( uint id_pattern )
@@ -192,12 +216,20 @@ public:
     if (sequence.size() > 0) {
       _state = ready;
       _its = sequence.begin();
+
+      // ENSURE same BPM
+      if (_sync_bpm) {
+        set_all_bpm( _main_bpm );
+      }
     }
   }
   void set_all_bpm( unsigned int bpm )
   {
-    for( auto& pat: all_patterns) {
-      pat->set_bpm( bpm );
+    if ( bpm != _main_bpm ) {
+      _main_bpm = bpm;
+      for( auto& pat: all_patterns) {
+        pat->set_bpm( bpm );
+      }
     }
   }
   /** Check Valid Pattern Id */
@@ -292,6 +324,8 @@ public:
   LooperState _state;
   std::string _formula;
 
+  unsigned int _main_bpm;
+  bool _sync_bpm;
   bool to_first_beat;
   bool from_first_beat;
   float to_next_beat;
