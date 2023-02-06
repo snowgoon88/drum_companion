@@ -6,7 +6,7 @@
 /** 
  * PatternGui( *PatternAudio ) display the current pattern
  * pattern can be changed with APPLY
- * resynchronize with patter using RESET
+ * resynchronize with pattern using RESET
  * 
  * TODO better compute when the set of NoteButtons must be on SameLine
  */
@@ -158,7 +158,9 @@ public:
     if (ImGui::CollapsingHeader( str_header().c_str(),
                                  ImGuiTreeNodeFlags_None)) {
       
-    
+
+      // read info from PatternAudio
+      bpm_val = pattern->get_bpm();
       // BPM, Signature
       ImGui::InputInt( "BPM: ", &bpm_val );
       ImGui::InputInt( "Nb Beats: ", &beat_val );

@@ -1,5 +1,5 @@
 * __CURRENT__ : Change BPM on the fly ?
-* TODO [7/11] linux
+* TODO [8/11] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -22,7 +22,7 @@ if (item_disabled)
 *** DONE check the running state while updating PatternAudio BPM
 ** TODO on/off synchronize all patterns
 ** TODO Why when STOP, beat nb in BeatSlider is not 1 but 4 ??
-** TODO Why PatternGUI is not updated when BPM is globally changed ?
+** DONE Why PatternGUI is not updated when BPM is globally changed ?
 ** DONE [3/3] GUI for Looper
 *** DONE InputText, get text when Apply => read the buffer
 *** DONE make sure looper->_formula is set when properly analyzed
@@ -84,7 +84,7 @@ https://github.com/docopt/docopt.cpp
 ** TODO Check all _state are still needed (ex: ended ??)
 ** TODO Remove PatternAudio object from drum_compagnon.cpp
 ** TODO When reading Looper from file, might need to delete some existing patterns
-* [6/9] WINDOWS
+* TODO [0/0] WINDOWS
 ** TODO Check still compiling <2023-02-05 dim.>
 ** 00-engine-play + CodeWorks/MinGW
 works fine under VSC with C:\\Program Files (x86)\\CodeBlocks\\MinGW\\bin\\g++.exe in tasks.json and proper -I

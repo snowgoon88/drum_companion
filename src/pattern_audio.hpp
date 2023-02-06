@@ -501,6 +501,7 @@ public:
   {
     return static_cast<float>( _time_to_beat.count() ) / static_cast<float>( beat_duration() );
   }
+  uint get_bpm() { return _signature.bpm; }
   // ************************************************* PatternAudio::attributs
   Signature _signature;
   SoundEngine *_engine;

@@ -171,11 +171,16 @@ int run_gui()
   // only glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
 #endif
 
+  // Transparency only works with a Compositing WindowManager
+  // as WindowMaker does not allows that, use "picom"
+  // but slower ??
+  glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
   // Create window with graphics context
   GLFWwindow *window = glfwCreateWindow(
       600, 500, "Time Widget v1.0", NULL, NULL);
   if (window == NULL)
     return 1;
+
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1); // Enable vsync
 
@@ -250,9 +255,13 @@ int run_gui()
     ImGui::Render();     int display_w, display_h;
     glfwGetFramebufferSize(window, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
+
     glClearColor(CLEAR_COL.x * CLEAR_COL.w, CLEAR_COL.y * CLEAR_COL.w,
                  CLEAR_COL.z * CLEAR_COL.w, CLEAR_COL.w);
     glClear(GL_COLOR_BUFFER_BIT);
+    // // When using a transparent Window
+    // glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     glfwSwapBuffers(window);
 
