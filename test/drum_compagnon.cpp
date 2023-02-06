@@ -92,6 +92,7 @@ std::string _p_loop = "p0";
 std::string* _p_infile = nullptr;
 std::string* _p_outfile = nullptr;
 bool _p_gui = false;
+bool _p_time = false;
 bool _p_verb = false;
 
 ImVec4 hoover_color = YELLOW_COL;
@@ -150,18 +151,19 @@ static const char _usage[] =
 R"(Drum Companion.
 
     Usage:
-      drum_companion [-h -v -g -b <int> -s <str>] [-p <str>]... [-l <str> -o <str>]
-      drum_companion [-h -v -g -b <uint>] <infile>
+      drum_companion [-h -v -g -t -b <int> -s <str>] [-p <str>]... [-l <str> -o <str>]
+      drum_companion [-h -v -g -t -b <uint>] <infile>
 
 
     Options:
       -h --help              Show this screen
       -v --verbose           Display some info
-      -g --gui               With GUI (but ONE pattern, NO loop)
+      -g --gui               With GUI
       -b --bpm=<uint>        BPM (default is 90)
       -s --sig=<str>         signature [default: 4x2]
       -p --pattern=<str>     patterns, can be REPEATED [default: 2x1x1x1x]
       -l --loop=<str>        sequence of patterns (like 2x(p0+P1)) [default: p0]
+      -t --time              Display time as HH:MM (only in GUI mode)
       -o --outfile=<str>     file to save looper (or pattern)
 )";
 
@@ -208,6 +210,9 @@ void setup_options( int argc, char **argv )
   }
   if (args["--gui"].asBool()) {
     _p_gui = true;
+  }
+  if (args["--time"].asBool()) {
+    _p_time = true;
   }
   if (args["--verbose"].asBool()) {
     _p_verb = true;
@@ -327,16 +332,17 @@ int run_gui()
 
     // ImGUI Frame
     {
-      // Create a window with title and append into it.
-      ImGui::Begin("Time");
+      if (_p_time) {
+        // Create a window with title and append into it.
+        ImGui::Begin("Time");
 
-      date_widget->draw();
+        date_widget->draw();
 
-      // ImGui::SameLine();
+        // ImGui::SameLine();
 
-      ImGui::End();
-
-      LOGMAIN( "__guiloop Drum Companion" );
+        ImGui::End();
+      }
+      LOGMAIN("__guiloop Drum Companion");
       // Create a window with title and append into it.
       ImGui::Begin("Drum Companion");
 
