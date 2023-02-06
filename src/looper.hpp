@@ -300,6 +300,7 @@ public:
       (*_its)->stop();
       _state = ready;
 
+      _its = sequence.begin();
       from_first_beat = true;
       to_first_beat = false;
       to_next_beat = 1.0f;

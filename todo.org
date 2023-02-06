@@ -1,5 +1,5 @@
 * __CURRENT__ : Change BPM on the fly ?
-* TODO [8/11] linux
+* TODO [9/12] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -20,8 +20,8 @@ if (item_disabled)
 ** DONE [2/2] Change BPM on the fly
 *** DONE store how much was left to next beat ?
 *** DONE check the running state while updating PatternAudio BPM
-** TODO on/off synchronize all patterns
-** TODO Why when STOP, beat nb in BeatSlider is not 1 but 4 ??
+** DONE Why when STOP, beat nb in BeatSlider is not 1 but 4 ??
+=> start() was reseting attributs, not stop()
 ** DONE Why PatternGUI is not updated when BPM is globally changed ?
 ** DONE [3/3] GUI for Looper
 *** DONE InputText, get text when Apply => read the buffer
@@ -32,6 +32,8 @@ if (item_disabled)
 *** DONE Number of beat inside moving square
 *** DONE Bigger square
 *** DONE add to drum_compagnon
+** TODO option with time ?
+** TODO on/off synchronize all patterns
 ** TODO on/off relative bpm change
 * TODO [2/3] Ressources to try
 ** TODO [6/7] GUI : imgui

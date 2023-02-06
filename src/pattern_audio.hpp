@@ -483,6 +483,12 @@ public:
   {
     if (_state != empty) {
       _state = ready;
+
+      _id_beat = 0;
+      _time_to_beat = std::chrono::milliseconds( beat_duration() );
+
+      _id_seq = 0;
+      _time_to_next = std::chrono::milliseconds(_pattern_intervale[_id_seq].length);
     }
   }
   // ************************************************ PatternAudio::properties
