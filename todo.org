@@ -1,5 +1,5 @@
-* __CURRENT__ : option for displaying time
-* TODO [10/13] linux
+* __CURRENT__ : ADD/DEL Pattern to GUI
+* TODO [13/18] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -33,6 +33,12 @@ if (item_disabled)
 *** DONE Bigger square
 *** DONE add to drum_compagnon
 ** DONE option with time ?
+** DONE Check PatternGUI Apply => stay RED, why ?
+=> Pb with ImGui ID
+** DONE Apply Pattern => should change title also
+** TODO ADD line after last PatternGUI, before Buttons
+** DONE ADD a Pattern to gui
+** TODO DEL a Pattern to gui
 ** TODO more reactive to keybord for changing BPM
 ** TODO on/off synchronize all patterns
 ** TODO on/off relative bpm change

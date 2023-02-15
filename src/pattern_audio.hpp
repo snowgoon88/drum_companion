@@ -8,6 +8,24 @@
  *
  * TODO Explain the internals of PatternAudio
  *
+ * Creation/initialization of PatternAudio
+ * =======================================
+ *
+ * Creation with a SoundEngine, but nothing else (No Signature, No sequence
+ * of Notes).
+ *
+ * Set _signature, then init_from_string. BUT the string must match the signature.
+ * ```
+ *    PatternAudio *pat = new PatternAudio( sound_engine );
+ *    pat->_signature = _p_sig;
+ *    pat->init_from_string( patstr );
+ * ```
+ *
+ * Set _signature, then init_as_empty : all notes set to 0.
+ *
+ * Building/setting the internals : _pattern_intervale
+ * ===================================================
+ *
  * Given the signature we kown the number of beats (Signature.beats) and the
  * subdivision of beats (Signature.subdivisions). Hence, for a given BPM
  * (PatternAudio.set_bpm() or Signature.bpm), we can compute the length of
@@ -391,6 +409,20 @@ public:
 
     init_from_timeline( tl );
   }
+  void init_as_empty()
+  {
+    LOGPA( "__PA init_as_empty" );
+    Timeline tl;
+
+    for( unsigned int i = 0; i < _signature.beats * _signature.subdivisions; ++i ) {
+      tl.push_back( 0 );
+    }
+
+    LOGPA( " TL=" << tl );
+
+    init_from_timeline( tl );
+  }
+
   std::string _convert_from_timeline() const
   {
     std::string target = "x12";

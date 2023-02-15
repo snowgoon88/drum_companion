@@ -157,7 +157,10 @@ public:
   {
     if (ImGui::CollapsingHeader( str_header().c_str(),
                                  ImGuiTreeNodeFlags_None)) {
-      
+
+      // To ensure unique ID for ImGui
+      std::string pat_id = "P"+std::to_string( pattern->_id);
+      ImGui::PushID( pat_id.c_str() );
 
       // read info from PatternAudio
       bpm_val = pattern->get_bpm();
@@ -203,6 +206,8 @@ public:
       if (! val_changed) {
         ImGui::EndDisabled();
       }
+
+      ImGui::PopID();
     }
   }
 

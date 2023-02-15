@@ -82,6 +82,11 @@ BeatSlider *beat_widget;
 BPMWidget * bpm_widget;
 bool should_exit = false;
 
+// *********************************************************************** GUI
+
+std::list<PatternGUI> pg_list;
+LooperGUI *lg = nullptr;
+
 // Args
 Signature _p_sig {90, 4, 2};
 // unsigned int _main_bpm = _p_sig.bpm;
@@ -94,6 +99,7 @@ std::string* _p_outfile = nullptr;
 bool _p_gui = false;
 bool _p_time = false;
 bool _p_verb = false;
+bool _p_debug = false;
 
 ImVec4 hoover_color = YELLOW_COL;
 ImVec4 NoteButton::colors[3] = {CLEAR_COL, GREEN_COL, RED_COL};
@@ -131,6 +137,8 @@ void clear_globals()
   }
   LOGMAIN( "  analyzer OK" );
 
+  if (lg) delete lg;
+
   if (date_widget) delete date_widget;
   if (beat_widget) delete beat_widget;
   if (bpm_widget) delete bpm_widget;
@@ -151,13 +159,14 @@ static const char _usage[] =
 R"(Drum Companion.
 
     Usage:
-      drum_companion [-h -v -g -t -b <int> -s <str>] [-p <str>]... [-l <str> -o <str>]
-      drum_companion [-h -v -g -t -b <uint>] <infile>
+      drum_companion [-h -v -d -g -t -b <int> -s <str>] [-p <str>]... [-l <str> -o <str>]
+      drum_companion [-h -v -d -g -t -b <uint>] <infile>
 
 
     Options:
       -h --help              Show this screen
       -v --verbose           Display some info
+      -d --debug             Debug Mode (ImGui::ShowStackToolWindow())
       -g --gui               With GUI
       -b --bpm=<uint>        BPM (default is 90)
       -s --sig=<str>         signature [default: 4x2]
@@ -217,8 +226,28 @@ void setup_options( int argc, char **argv )
   if (args["--verbose"].asBool()) {
     _p_verb = true;
   }
+  if (args["--debug"].asBool()) {
+    _p_debug = true;
+  }
+
   //exit(22);
 
+}
+// ***************************************************************************
+// ********************************************************** ADD/DEL Patterns
+// ***************************************************************************
+void add_pattern()
+{
+  PatternAudio *pat = new PatternAudio( sound_engine );
+  pat->_signature = _p_sig;
+  pat->init_as_empty();
+  auto id = looper->add( pat );
+  UNUSED( id );
+  LOGMAIN( "  add new empty pat" << id );
+
+ if (_p_gui) {
+   pg_list.push_back( PatternGUI(pat) );
+ }
 }
 
 // ***************************************************************************
@@ -230,11 +259,11 @@ int run_gui()
 
   // ********************************************************** GUI - creation
   // create all PatternGUI
-  std::list<PatternGUI> pg_list;
   for( auto pat: looper->all_patterns) {
     pg_list.push_back( PatternGUI(pat) );
   }
-  LooperGUI lg( analyzer );
+
+  lg = new LooperGUI( analyzer );
 
   beat_widget = new BeatSlider();
   bpm_widget = new BPMWidget();
@@ -245,6 +274,8 @@ int run_gui()
   bool should_pause = false;
   bool should_stop = false;
   bool should_run = false;
+
+  bool ask_add_pa = false;
   
   // ******************************************************* Grafik - creation
   // Setup window
@@ -398,16 +429,26 @@ int run_gui()
       }
 
       // LooperGUI
-      lg.draw();
+      lg->draw();
       
       // PatternGUIs
       for( auto& pg: pg_list) {
         pg.draw();        
       }
 
+      LOGMAIN( "ADD/DEL PatternAudio" );
+
+      if (ImGui::Button("ADD pattern")) {
+        ask_add_pa = true;
+      }
+
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                   1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
       ImGui::End();
+
+      if (_p_debug) {
+        ImGui::ShowStackToolWindow(&_p_debug);
+      }
     }
     // Rendering
     ImGui::Render();     int display_w, display_h;
@@ -431,7 +472,13 @@ int run_gui()
       looper->set_all_bpm( bpm_widget->get_new_bpm() );
     // }
 
-    lg.apply();
+    // ADD/DEL PatternAudio
+    if (ask_add_pa) {
+      add_pattern();
+      ask_add_pa = false;
+    }
+
+    lg->apply();
     for( auto& pg: pg_list) {
       pg.apply();
     }
