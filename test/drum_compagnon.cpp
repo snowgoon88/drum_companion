@@ -249,6 +249,13 @@ void add_pattern()
    pg_list.push_back( PatternGUI(pat) );
  }
 }
+void del_pattern( int id )
+{
+  // TODO check it is not in Looper
+  // 1) could remove pattern from Looper Sequence, but how to ensure valid formula ?
+  // remove patterns from Looper
+  looper->remove( id );
+}
 
 // ***************************************************************************
 // ******************************************************************* run_gui
@@ -276,6 +283,7 @@ int run_gui()
   bool should_run = false;
 
   bool ask_add_pa = false;
+  int ask_del_pa = -1;      // if >= 0, ask to delete indicated PatternAudio
   
   // ******************************************************* Grafik - creation
   // Setup window
@@ -436,10 +444,20 @@ int run_gui()
         pg.draw();        
       }
 
+      ImGui::Separator();
       LOGMAIN( "ADD/DEL PatternAudio" );
 
       if (ImGui::Button("ADD pattern")) {
         ask_add_pa = true;
+      }
+      for( auto& pg: pg_list ) {
+        ImGui::SameLine();
+        ImGui::PushStyleColor(ImGuiCol_Button, RED_COL);
+        std::string del_str = "Del P"+std::to_string( pg.pattern->_id );
+        if (ImGui::Button( del_str.c_str() )) {
+            ask_del_pa = pg.pattern->_id;
+        }
+        ImGui::PopStyleColor(1);
       }
 
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
@@ -476,6 +494,10 @@ int run_gui()
     if (ask_add_pa) {
       add_pattern();
       ask_add_pa = false;
+    }
+    if (ask_del_pa >= 0) {
+      del_pattern( ask_del_pa );
+      ask_del_pa = -1;
     }
 
     lg->apply();
