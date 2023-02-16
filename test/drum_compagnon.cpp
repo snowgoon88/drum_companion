@@ -251,10 +251,38 @@ void add_pattern()
 }
 void del_pattern( int id )
 {
-  // TODO check it is not in Looper
-  // 1) could remove pattern from Looper Sequence, but how to ensure valid formula ?
+  if (_p_gui) {
+    // need the PatternAudio to remove it from pg_list, if needed
+    auto pat_gui = std::find_if( pg_list.begin(), pg_list.end(),
+                                 [id] (PatternGUI pg) { return pg.pattern->_id == id; } );
+    if (pat_gui != pg_list.end()) {
+      pg_list.erase( pat_gui );
+    }
+  }
   // remove patterns from Looper
-  looper->remove( id );
+  auto removed = looper->remove( id );
+  // if removed, must revalidate Looper formula
+  if (removed) {
+    LOGMAIN( "  pat " << id << " removed" );
+    try {
+      LOGMAIN( "  analyze " << looper->_formula );
+      auto res = analyzer->parse(looper->_formula);
+
+      looper->_formula.clear();
+      looper->_formula.insert(looper->_formula.begin(),
+                              analyzer->_formula.begin(),
+                              analyzer->_formula.end());
+      looper->set_sequence(res.begin(), res.end());
+    } catch (std::runtime_error &e) {
+      LOGMAIN( "  ERROR in parsing " << e.what() );
+      LOGMAIN( analyzer->str_error() );
+      if (analyzer->has_error()) LOGMAIN( "  analyzer HAS ERROR" );
+      // formula is invalid, make sure Looper cannot run.
+      looper->_state = Looper::LooperState::empty;
+      // TODO accessing lg->error_buffer is bad practice
+      lg->error_buffer = analyzer->str_error();
+    }
+  }
 }
 
 // ***************************************************************************

@@ -1,5 +1,5 @@
 * __CURRENT__ :
-* TODO [15/21] linux
+* TODO [16/21] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -36,16 +36,16 @@ if (item_disabled)
 ** DONE Check PatternGUI Apply => stay RED, why ?
 => Pb with ImGui ID
 ** DONE Apply Pattern => should change title also
-** TODO ADD line after last PatternGUI, before Buttons
+** DONE ADD line after last PatternGUI, before Buttons
 ** DONE ADD a Pattern to gui
 ** DONE Doc/Help for Looper
 ** DONE Change Looper->all_pattern, to allow removal/adding patterns
 => now a list
 ** TODO clean up and renumber/id of Looper->all_pattern (must be called by HAND)
-** TODO [0/4] DEL a Pattern to gui
-*** TODO ADD "Del Px" for every Pattern
+** TODO [2/3] DEL a Pattern to gui
+*** DONE ADD "Del Px" for every Pattern
 *** TODO ADD "x" add end of PatternGUI Title to trigger del
-*** TODO IF deleted Pattern is used in Looper ? POPUP ? Make it invalid ?
+*** DONE IF deleted Pattern is used in Looper ? POPUP ? Make it invalid ?
 **** ask analyzer to validate formula
 **** if formula NOT valid, change status of Looper to "empty" until valid again ?
 ** TODO more reactive to keybord for changing BPM

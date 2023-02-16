@@ -241,6 +241,11 @@ public:
       return nullptr;
     }
   }
+  /** Check Valid Pattern Id */
+  bool is_valid_id( const uint id_pattern )
+  {
+    return (get_pattern( id_pattern ) != nullptr);
+  }
   // ******************************************************** Looper::sequence
   /** Given Iterator to a sequence of uint (index to Patterns)
    *  builds 'sequence' by concatenating Patterns
@@ -289,11 +294,6 @@ public:
         pat->set_bpm( bpm );
       }
     }
-  }
-  /** Check Valid Pattern Id */
-  bool is_valid_id( const uint id_pattern )
-  {
-    return (id_pattern < all_patterns.size());
   }
   // ************************************************************ Looper::next
   bool next()
