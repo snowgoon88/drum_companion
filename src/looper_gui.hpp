@@ -13,6 +13,7 @@
 #include <analyzer.hpp>
 #include <string>
 #include <exception>
+#include <memory>
 
 // ***************************************************************************
 // ******************************************************************* Loggers
@@ -31,7 +32,7 @@ class LooperGUI
 {
 public:
   // ***************************************************** LooperGUI::creation
-  LooperGUI( Analyzer* analyzer ) :
+  LooperGUI( std::shared_ptr<Analyzer> analyzer ) :
     analyzer( analyzer ),
     looper( analyzer->_looper ),
     should_apply(false),
@@ -42,6 +43,7 @@ public:
   }
   virtual ~LooperGUI()
   {
+    LOGLG( "__DESTROY LooperGUI" );
   }
   // **************************************************** LooperGUI::str_header
   std::string str_header () const
@@ -111,8 +113,8 @@ public:
     
   }
   // **************************************************** LooperGUI::attributs
-  Analyzer* analyzer;
-  Looper* looper;
+  std::shared_ptr<Analyzer> analyzer;
+  std::shared_ptr<Looper> looper;
 
   // State
   bool should_apply;   // somes changes need to be applied

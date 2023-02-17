@@ -21,6 +21,8 @@
 #include <string>
 #include <chrono>
 #include <thread>
+#include <memory>            // unique_ptr, shared_ptr, etc
+#include <optional>
 
 #include <signal.h>          // C std lib (signal, sigaction, etc)
 
@@ -73,29 +75,29 @@ glfw_error_callback(int error, const char *description) {
 #endif
 
 // *************************************************************** App GLOBALS
-SoundEngine *sound_engine = nullptr;
+std::shared_ptr<SoundEngine> sound_engine = nullptr;
 PatternAudio *pattern_audio = nullptr;  // GUI only
-Analyzer *analyzer = nullptr;
-Looper *looper = nullptr;
-DateWidget *date_widget;
-BeatSlider *beat_widget;
-BPMWidget * bpm_widget;
+std::shared_ptr<Analyzer> analyzer = nullptr;
+std::shared_ptr<Looper> looper = nullptr;
 bool should_exit = false;
 
 // *********************************************************************** GUI
 
 std::list<PatternGUI> pg_list;
-LooperGUI *lg = nullptr;
+std::unique_ptr<LooperGUI> lg = nullptr;
+std::unique_ptr<DateWidget> date_widget;
+std::unique_ptr<BeatSlider> beat_widget;
+std::unique_ptr<BPMWidget> bpm_widget;
 
 // Args
 Signature _p_sig {90, 4, 2};
 // unsigned int _main_bpm = _p_sig.bpm;
 // unsigned int _p_bpm_default = _p_sig.bpm;
-unsigned int *_p_bpm = nullptr;
+std::optional<unsigned int> _p_bpm;
 std::list<std::string> _p_patternlist;
 std::string _p_loop = "p0";
-std::string* _p_infile = nullptr;
-std::string* _p_outfile = nullptr;
+std::optional<std::string> _p_infile;
+std::optional<std::string> _p_outfile;
 bool _p_gui = false;
 bool _p_time = false;
 bool _p_verb = false;
@@ -108,11 +110,11 @@ ImVec4 NoteButton::hoover_color = YELLOW_COL;
 void clear_globals()
 {
   LOGMAIN( "__CLEANING" );
-  if (sound_engine != nullptr ) {
-    LOGMAIN( "  will clean sound_engine" );
-    delete sound_engine;
-  }
-  LOGMAIN( "  sound_engine OK" );
+  // if (sound_engine)
+  //   LOGMAIN( "  will clean sound_engine" );
+  //   delete sound_engine;
+  // }
+  // LOGMAIN( "  sound_engine OK" );
   
   // if (pattern_audio != nullptr ) {
   //   LOGMAIN( "  will clean pattern_audio" );
@@ -120,28 +122,28 @@ void clear_globals()
   // }
   // LOGMAIN( "  pattern_audio OK" );
   
-  if (looper != nullptr) {
-    LOGMAIN( "  will clean looper" );
-    for( auto& pat_ptr: looper->all_patterns) {
-      LOGMAIN( "    will clean pattern " << pat_ptr->_id );
-      delete pat_ptr;
-      LOGMAIN( "    pattern OK" ); 
-    }
-    delete looper;
-  }
-  LOGMAIN( "  looper OK" );
+  // if (looper != nullptr) {
+  //   LOGMAIN( "  will clean looper" );
+  //   for( auto& pat_ptr: looper->all_patterns) {
+  //     LOGMAIN( "    will clean pattern " << pat_ptr->_id );
+  //     delete pat_ptr;
+  //     LOGMAIN( "    pattern OK" );
+  //   }
+  //   delete looper;
+  // }
+  // LOGMAIN( "  looper OK" );
 
-  if (analyzer != nullptr) {
-    LOGMAIN( "  will clean analyzer" );
-    delete analyzer;
-  }
-  LOGMAIN( "  analyzer OK" );
+  // if (analyzer != nullptr) {
+  //   LOGMAIN( "  will clean analyzer" );
+  //   delete analyzer;
+  // }
+  // LOGMAIN( "  analyzer OK" );
 
-  if (lg) delete lg;
+  // if (lg) delete lg;
 
-  if (date_widget) delete date_widget;
-  if (beat_widget) delete beat_widget;
-  if (bpm_widget) delete bpm_widget;
+  //DEL if (date_widget) delete date_widget;
+  //DEL if (beat_widget) delete beat_widget;
+  //DEL if (bpm_widget-> delete bpm_widget;
 }
 
 // *********************************************************** Ctrl-C Callback
@@ -201,7 +203,7 @@ void setup_options( int argc, char **argv )
   // //exit(23);
 
   if (args["--bpm"]) {
-    _p_bpm = new unsigned int(args["--bpm"].asLong());
+    _p_bpm = args["--bpm"].asLong();
   }
   // TODO _p_sig.bpm not set !!
   _p_sig.from_string( args["--sig"].asString());
@@ -211,10 +213,10 @@ void setup_options( int argc, char **argv )
   }
   _p_loop = args["--loop"].asString();
   if (args["--outfile"]) {
-    _p_outfile = new std::string(args["--outfile"].asString());
+    _p_outfile = args["--outfile"].asString();
   }
   if (args["<infile>"]) {
-    _p_infile = new std::string(args["<infile>"].asString());
+    _p_infile = args["<infile>"].asString();
     // std::cout << "INFILE=" << *_p_infile << std::endl;
   }
   if (args["--gui"].asBool()) {
@@ -298,11 +300,11 @@ int run_gui()
     pg_list.push_back( PatternGUI(pat) );
   }
 
-  lg = new LooperGUI( analyzer );
+  lg = std::make_unique<LooperGUI>( analyzer );
 
-  beat_widget = new BeatSlider();
-  bpm_widget = new BPMWidget();
-  date_widget = new DateWidget();
+  beat_widget = std::make_unique<BeatSlider>();
+  bpm_widget = std::make_unique<BPMWidget>();
+  date_widget = std::make_unique<DateWidget>();
 
   // Other GUI variables
   bool gui_ask_end = false;
@@ -588,7 +590,8 @@ int main(int argc, char *argv[])
   setup_options( argc, argv );
 
   // ****************************************************************** Sounds
-  sound_engine = new SoundEngine();
+  LOGMAIN( "__SoundEngine" );
+  sound_engine = std::make_shared<SoundEngine>();
   // variables are not used, but show how could be used
   auto idx_clave = sound_engine->add_sound( "ressources/claves_120ms.wav" );
   UNUSED(idx_clave);
@@ -609,23 +612,23 @@ int main(int argc, char *argv[])
 
   // ****************************************************************** Looper
   LOGMAIN( "__LOOPER with SoundEngine and all PatternAudio" );
-  looper = new Looper( sound_engine );
-  analyzer = new Analyzer( looper );
+  looper = std::make_shared<Looper>( sound_engine );
+  analyzer = std::make_shared<Analyzer>( looper );
   // if there is an infile, it has priority
   if (_p_infile) {
-    std::ifstream ifile( *_p_infile );
+    std::ifstream ifile( _p_infile.value() );
     looper->read_from( ifile );
     ifile.close();
     
     // if param bpm; takes precedence
     if (_p_bpm) {
-      looper->set_all_bpm( *_p_bpm );
+      looper->set_all_bpm( _p_bpm.value() );
     }
   }
   else {
     // bpm passed as param takes precedence
     if (_p_bpm) {
-      _p_sig.bpm = *_p_bpm;
+      _p_sig.bpm = _p_bpm.value();
     }
     for( auto& patstr: _p_patternlist) {
       PatternAudio *pat = new PatternAudio( sound_engine );
@@ -642,8 +645,8 @@ int main(int argc, char *argv[])
     LOGMAIN( looper->str_dump() );
 
     if (_p_outfile) {
-      LOGMAIN( "__Writing to " << (*_p_outfile) );
-      std::ofstream ofile( *_p_outfile );
+      LOGMAIN( "__Writing to " << _p_outfile.value() );
+      std::ofstream ofile( _p_outfile.value() );
       looper->write_to( ofile );
       ofile.close();
     }
@@ -662,7 +665,8 @@ int main(int argc, char *argv[])
   
   // Clean up before exit
   clear_globals();
-  
+
+  LOGMAIN( "__END" );
   return 0;
 }
 // ***************************************************************************

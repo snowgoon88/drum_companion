@@ -135,11 +135,15 @@ class Analyzer
 {
 public:
   // ****************************************************** Analyzer::creation
-  Analyzer( Looper* looper = nullptr ) :
+  Analyzer( std::shared_ptr<Looper> looper = nullptr ) :
     _looper(looper),
     _error(false),
     _str_error("")
   {
+  }
+  ~Analyzer()
+  {
+    LOGAN( "__DESTROY Analyzer" );
   }
   // *********************************************************** Analyser::str
   std::string str_dump () const
@@ -515,7 +519,7 @@ public:
   std::string str_error() { return _str_error; }
   // ***************************************************** Analyzer::attributs
   std::string _formula;
-  Looper* _looper;
+  std::shared_ptr<Looper> _looper;
   
   TokenStack output;
   OpTokenStack auxiliary;

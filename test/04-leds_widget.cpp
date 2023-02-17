@@ -18,6 +18,7 @@
 #include <string>
 #include <chrono>
 #include <thread>
+#include <memory>
 
 #include <signal.h>          // C std lib (signal, sigaction, etc)
 
@@ -79,10 +80,10 @@ bool should_exit = false;
 // Audio
 int _tempo = 30;
 Signature _p_sig { 30, 4, 2};
-SoundEngine *sound_engine = nullptr;
+std::shared_ptr<SoundEngine> sound_engine = nullptr;
 PatternAudio *pattern_audio = nullptr;  // GUI only
-Looper *looper = nullptr;
-Analyzer *analyzer = nullptr;
+std::shared_ptr<Analyzer> analyzer = nullptr;
+std::shared_ptr<Looper> looper = nullptr;
 
 // Args
 bool _p_verb = false;
@@ -97,35 +98,35 @@ void clear_globals()
   if (bpm_widget) delete bpm_widget;
   if (beat_widget) delete beat_widget;
 
-  if (sound_engine != nullptr ) {
-    LOGMAIN( "  will clean sound_engine" );
-    delete sound_engine;
-  }
-  LOGMAIN( "  sound_engine OK" );
+  // if (sound_engine != nullptr ) {
+  //   LOGMAIN( "  will clean sound_engine" );
+  //   delete sound_engine;
+  // }
+  // LOGMAIN( "  sound_engine OK" );
   
-  if (looper != nullptr) {
-    LOGMAIN( "  will clean looper" );
-    // Needed if looper patterns are created at start
-    // for( auto& pat_ptr: looper->all_patterns) {
-    //   LOGMAIN( "    will clean pattern " << pat_ptr->_id );
-    //   delete pat_ptr;
-    //   LOGMAIN( "    pattern OK" ); 
-    // }
-    delete looper;
-  }
-  LOGMAIN( "  looper OK" );
+  // if (looper != nullptr) {
+  //   LOGMAIN( "  will clean looper" );
+  //   // Needed if looper patterns are created at start
+  //   // for( auto& pat_ptr: looper->all_patterns) {
+  //   //   LOGMAIN( "    will clean pattern " << pat_ptr->_id );
+  //   //   delete pat_ptr;
+  //   //   LOGMAIN( "    pattern OK" );
+  //   // }
+  //   delete looper;
+  // }
+  // LOGMAIN( "  looper OK" );
 
-  if (pattern_audio != nullptr ) {
+   if (pattern_audio != nullptr ) {
     LOGMAIN( "  will clean pattern_audio" );
     delete pattern_audio;
   }
   LOGMAIN( "  pattern_audio OK" );
 
-  if (analyzer != nullptr) {
-    LOGMAIN( "  will clean analyzer" );
-    delete analyzer;
-  }
-  LOGMAIN( "  analyzer OK" );
+  // if (analyzer != nullptr) {
+  //   LOGMAIN( "  will clean analyzer" );
+  //   delete analyzer;
+  // }
+  // LOGMAIN( "  analyzer OK" );
 
 }
 
@@ -391,7 +392,7 @@ int main(int argc, char *argv[])
 
   // ************************************************************ init engines
   LOGMAIN( "__Main Init engines");
-  sound_engine = new SoundEngine();
+  sound_engine = std::make_shared<SoundEngine>(SoundEngine());
   // variables are not used, but show how could be used
   auto idx_clave = sound_engine->add_sound( "ressources/claves_120ms.wav" );
   UNUSED(idx_clave);
@@ -407,8 +408,8 @@ int main(int argc, char *argv[])
 
     // ****************************************************************** Looper
   LOGMAIN( "__LOOPER with SoundEngine and all PatternAudio" );
-  looper = new Looper( sound_engine );
-  analyzer = new Analyzer( looper );
+  looper = std::make_shared<Looper>( sound_engine );
+  analyzer = std::make_shared<Analyzer>( looper );
 
   auto id = looper->add( pattern_audio );
   LOGMAIN( "  add p" << id << "=" << pattern_audio->str_verbose() );

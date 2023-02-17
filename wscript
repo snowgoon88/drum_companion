@@ -92,7 +92,7 @@ def configure( conf ):
             raise ConfigurationError( msg=e.msg+"\ncomdp not found, install using 'pip install compdb'" )
 
     #conf.env['CXXFLAGS'] = ['-D_REENTRANT','-Wall','-fPIC','-std=c++11']
-    conf.env['CXXFLAGS'] = ['-Wall','-std=c++11']
+    conf.env['CXXFLAGS'] = ['-Wall','-std=c++17']
     ##DELconf.env.INCLUDES_JSON = conf.path.abspath()+'/include'
 
     # ## Check ImGUI is present and configured and ready to be used ...

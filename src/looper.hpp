@@ -81,7 +81,7 @@ public:
   
 public:
   // ******************************************************** Looper::creation
-  Looper( SoundEngine* engine = nullptr, unsigned int main_bpm=90 ) :
+  Looper( std::shared_ptr<SoundEngine> engine = nullptr, unsigned int main_bpm=90 ) :
     _engine(engine), max_pattern_id(0),
     _state(empty),
     _main_bpm(main_bpm), _sync_bpm(true),
@@ -91,6 +91,7 @@ public:
   }
   virtual ~Looper()
   {
+    LOGLO( "__DESTROY Looper" );
   }
   // ************************************************************* Looper::str
   std::string str_status () const
@@ -376,7 +377,7 @@ public:
 
   }
   // ******************************************************* Looper::attributs
-  SoundEngine *_engine;
+  std::shared_ptr<SoundEngine>  _engine;
   PatternList sequence;
   PatternVec  all_patterns;
   uint max_pattern_id;

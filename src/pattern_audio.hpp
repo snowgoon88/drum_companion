@@ -84,6 +84,7 @@
 #include <math.h>   // round
 #include <cmath>
 #include <string>
+#include <memory>
 
 // uncomment to disable assert()
 // #define NDEBUG
@@ -192,7 +193,10 @@ public:
   enum AudioState { ready, running, paused, ended, empty };
   
 public:
-  PatternAudio( SoundEngine* engine = nullptr ) :
+  /** PatternAudio can be created WITHOUT SoundEngine, for testing without
+   * emitting sounds.
+   */
+  PatternAudio( std::shared_ptr<SoundEngine> engine = nullptr ) :
     _engine(engine),
     _state(empty), _id_beat(0),
     _start_time(std::chrono::system_clock::now())
@@ -200,6 +204,7 @@ public:
   }
   virtual ~PatternAudio()
   {
+    LOGPA( "__DEL PatternAudio p" << _id );
   }
   // ******************************************************* PatternAudio::str
   std::string str_status () const
@@ -542,7 +547,7 @@ public:
   uint get_bpm() { return _signature.bpm; }
   // ************************************************* PatternAudio::attributs
   Signature _signature;
-  SoundEngine *_engine;
+  std::shared_ptr<SoundEngine> _engine;
   AudioState _state;
   Timeline _timeline;   // sequence of 0,1,2...
   // sequence of (idx_sound x delay in ms)
