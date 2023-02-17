@@ -204,7 +204,7 @@ public:
   }
   virtual ~PatternAudio()
   {
-    LOGPA( "__DEL PatternAudio p" << _id );
+    LOGPA( "__DESTROY PatternAudio p" << _id );
   }
   // ******************************************************* PatternAudio::str
   std::string str_status () const

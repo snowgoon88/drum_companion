@@ -48,6 +48,7 @@
 #include <pattern_audio.hpp>
 #include <sound_engine.hpp>
 #include <list>
+#include <memory>
 #include <algorithm>
 //#include <vector>
 #include <string>
@@ -72,10 +73,10 @@
 class Looper
 {
 public:
-  using PatternList = std::list<PatternAudio*>;
+  using PatternList = std::list<std::shared_ptr<PatternAudio>>;
 private:
   using UintIt = std::iterator<std::input_iterator_tag, unsigned int>;
-  using PatternVec = std::list<PatternAudio*>;
+  using PatternVec = std::list<std::shared_ptr<PatternAudio>>;
 public:
   enum LooperState { ready, running, paused, empty };
   
@@ -189,7 +190,7 @@ public:
     auto nb_pattern = read_uint( is, "nb_pat" );
     all_patterns.clear(); // TODO what if some undeleted patterns ?
     for( unsigned int idp = 0; idp < nb_pattern; ++idp) {
-      PatternAudio *pat = new PatternAudio( _engine );
+      auto pat = std::make_shared<PatternAudio>( _engine );
       pat->read_from( is );
       add( pat );
     }
@@ -202,7 +203,7 @@ public:
     }
   }
   // ******************************************************** Looper::patterns
-  uint add( PatternAudio* pattern )
+  uint add( std::shared_ptr<PatternAudio> pattern )
   {
     if (pattern->_state == PatternAudio::ready ) {
       pattern->_id = max_pattern_id;
@@ -224,17 +225,17 @@ public:
   {
     // erase if we find pat_id
     auto res = std::find_if( all_patterns.begin(), all_patterns.end(),
-                             [pat_id](PatternAudio *p){ return p->_id == pat_id;} );
+                             [pat_id](std::shared_ptr<PatternAudio> p){ return p->_id == pat_id;} );
     if (res != all_patterns.end()) {
       all_patterns.erase( res );
       return true;
     }
     return false;
   }
-  PatternAudio* get_pattern( uint id )
+  std::shared_ptr<PatternAudio> get_pattern( uint id )
   {
     auto res = std::find_if( all_patterns.begin(), all_patterns.end(),
-                             [id](PatternAudio *p){ return p->_id == id;} );
+                             [id](std::shared_ptr<PatternAudio> p){ return p->_id == id;} );
     if (res != all_patterns.end()) {
       return *res;
     }

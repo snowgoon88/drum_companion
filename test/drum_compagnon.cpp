@@ -76,7 +76,7 @@ glfw_error_callback(int error, const char *description) {
 
 // *************************************************************** App GLOBALS
 std::shared_ptr<SoundEngine> sound_engine = nullptr;
-PatternAudio *pattern_audio = nullptr;  // GUI only
+std::shared_ptr<PatternAudio> pattern_audio = nullptr;  // GUI only
 std::shared_ptr<Analyzer> analyzer = nullptr;
 std::shared_ptr<Looper> looper = nullptr;
 bool should_exit = false;
@@ -240,7 +240,7 @@ void setup_options( int argc, char **argv )
 // ***************************************************************************
 void add_pattern()
 {
-  PatternAudio *pat = new PatternAudio( sound_engine );
+  auto pat = std::make_shared<PatternAudio>( sound_engine );
   pat->_signature = _p_sig;
   pat->init_as_empty();
   auto id = looper->add( pat );
@@ -631,7 +631,7 @@ int main(int argc, char *argv[])
       _p_sig.bpm = _p_bpm.value();
     }
     for( auto& patstr: _p_patternlist) {
-      PatternAudio *pat = new PatternAudio( sound_engine );
+      auto pat = std::make_shared<PatternAudio>( sound_engine );
       pat->_signature = _p_sig;
       pat->init_from_string( patstr );
       auto id = looper->add( pat );

@@ -22,7 +22,7 @@
 // ***************************************************************************
 // ******************************************************************* Loggers
 // ***************************************************************************
-//#define LOG_PATTERNGUI
+#define LOG_PATTERNGUI
 #ifdef LOG_PATTERNGUI
 #  define LOGPG(msg) (LOG_BASE("[PAGU]", msg))
 #else
@@ -126,7 +126,7 @@ class PatternGUI
 {
 public:
   // **************************************************** PatternGUI::creation
-  PatternGUI( PatternAudio* pattern_audio ) :
+  PatternGUI( std::shared_ptr<PatternAudio> pattern_audio ) :
     pattern( pattern_audio ),
     should_apply(false), should_reset(false),
     should_dump(false),
@@ -137,6 +137,7 @@ public:
   }
   virtual ~PatternGUI()
   {
+    LOGPG( "__DESTROy PatternGUI for p" << pattern->_id );
   }
   // ************************************************** PatternGUI::str_header
   std::string str_header () const
@@ -348,7 +349,7 @@ public:
   }
 
   // *************************************************** PatternGUI::attributs
-  PatternAudio *pattern;
+  std::shared_ptr<PatternAudio> pattern;
 
   // State
   bool should_apply; // some changes need to be applied ?

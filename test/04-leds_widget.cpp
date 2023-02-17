@@ -81,7 +81,7 @@ bool should_exit = false;
 int _tempo = 30;
 Signature _p_sig { 30, 4, 2};
 std::shared_ptr<SoundEngine> sound_engine = nullptr;
-PatternAudio *pattern_audio = nullptr;  // GUI only
+std::shared_ptr<PatternAudio> pattern_audio = nullptr;  // GUI only
 std::shared_ptr<Analyzer> analyzer = nullptr;
 std::shared_ptr<Looper> looper = nullptr;
 
@@ -116,11 +116,11 @@ void clear_globals()
   // }
   // LOGMAIN( "  looper OK" );
 
-   if (pattern_audio != nullptr ) {
-    LOGMAIN( "  will clean pattern_audio" );
-    delete pattern_audio;
-  }
-  LOGMAIN( "  pattern_audio OK" );
+  //  if (pattern_audio != nullptr ) {
+  //   LOGMAIN( "  will clean pattern_audio" );
+  //   delete pattern_audio;
+  // }
+  // LOGMAIN( "  pattern_audio OK" );
 
   // if (analyzer != nullptr) {
   //   LOGMAIN( "  will clean analyzer" );
@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
 
   // ************************************************************* PlayPattern
   LOGMAIN( "__PATTERN_AUDIO with SoundEngine" );
-  pattern_audio = new PatternAudio( sound_engine );
+  pattern_audio = std::make_shared<PatternAudio>( sound_engine );
   pattern_audio->_id = 0;
   pattern_audio->_signature = _p_sig;
   pattern_audio->init_from_string( "2x1x1x1x" );
