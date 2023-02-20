@@ -471,7 +471,7 @@ int run_gui()
       
       // PatternGUIs
       for( auto& pg: pg_list) {
-        pg.draw();        
+        pg.draw( !looper->_sync_bpm );
       }
 
       ImGui::Separator();

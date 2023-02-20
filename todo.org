@@ -1,5 +1,5 @@
 * __CURRENT__ :
-* IDEA [17/21] linux
+* IDEA [17/23] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -61,6 +61,9 @@ WITHOUT being destroyed WHILE in apply() function !!!
 ** DONE more reactive to keybord for changing BPM
 ** IDEA on/off synchronize all patterns
 ** IDEA on/off relative bpm change
+** TODO allow save to file from GUI
+** TODO allow to load from file from GUI
+
 * TODO [2/3] Ressources to try
 ** TODO [6/7] GUI : imgui
 https://github.com/ocornut/imgui
@@ -97,7 +100,7 @@ Il semble que l'on peut aussi dire quand on joue une source (ms)
 
 ** DONE [/] docopt.cpp
 https://github.com/docopt/docopt.cpp
-* [0/9] Safe code
+* TODO [0/9] Safe code
 ** TODO Ensure notes/sounds in PatternAudio exist in SoundEngine
 ** TODO clean up DEL
 ** TODO clean up TODO

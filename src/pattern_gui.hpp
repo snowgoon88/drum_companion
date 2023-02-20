@@ -154,7 +154,7 @@ public:
   }
 
   // ******************************************************** PatternGUI::draw
-  void draw()
+  void draw( bool ask_bpm=true )
   {
     if (ImGui::CollapsingHeader( str_header().c_str(),
                                  ImGuiTreeNodeFlags_None)) {
@@ -163,10 +163,12 @@ public:
       std::string pat_id = "P"+std::to_string( pattern->_id);
       ImGui::PushID( pat_id.c_str() );
 
-      // read info from PatternAudio
-      bpm_val = pattern->get_bpm();
-      // BPM, Signature
-      ImGui::InputInt( "BPM: ", &bpm_val );
+      if (ask_bpm) {
+        // read info from PatternAudio
+        bpm_val = pattern->get_bpm();
+        // BPM, Signature
+        ImGui::InputInt( "BPM: ", &bpm_val );
+      }
       ImGui::InputInt( "Nb Beats: ", &beat_val );
       ImGui::InputInt( "Nb SubDiv: ", &subdiv_val );
 
