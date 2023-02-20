@@ -27,15 +27,14 @@ class BPMWidget
 {
   struct key_mem_S {
     ImGuiKey id;
-    float duration;
     int effect;
+    int nb_repeat;
   };
   using KeyMem = key_mem_S;
-  KeyMem keys[2] = { {ImGuiKey_KeypadSubtract, 0.f, -1},
-                     {ImGuiKey_KeypadAdd, 0.f, +1} };
+  KeyMem keys[2] = { {ImGuiKey_KeypadSubtract, -1, 0},
+                     {ImGuiKey_KeypadAdd, +1, 0} };
+  float repeat_duration = 0.1f;
 
-  bool verb = true;
-  
 public:
   // ***************************************************** BPMWidget::creation
   BPMWidget()
@@ -44,7 +43,7 @@ public:
   virtual ~BPMWidget() {}
 
   // ********************************************************* BPMWidget::draw
-  void draw( unsigned int bpm )
+  void draw( unsigned int bpm, bool verb=false)
   {
     _bpm = bpm;
     ImVec2 size(320.0f, 180.0f);
@@ -98,24 +97,26 @@ public:
       }
       if (ImGui::IsKeyDown( key.id )) {
         float new_duration = ImGui::GetKeyData( key.id )->DownDuration;
-        int nb_repeat = 0;
+
+        // when key has just been pressed, make sure added is a least 1
+        int added_repeat = (key.nb_repeat==0) ? 1 : 0;
+        added_repeat += static_cast<int>(trunc((new_duration - repeat_duration * key.nb_repeat) / repeat_duration));
+        // Ctrl multiply speed
+        int mult_effect = 1;
+        if (ImGui::GetIO().KeyCtrl) {//ImGui::ImGuiKey_ModCtrl()) {
+           mult_effect = 10;
+        }
+
         if (verb) {
-          ImGui::Text( "Down for %f s, old=%f", new_duration, key.duration );
+          ImGui::Text( "Down for %f s, rep=%d, nb=%d, mul=%d",
+                       new_duration, key.nb_repeat, added_repeat, mult_effect );
         }
-        
-            float delta = new_duration - key.duration;
-        if (delta > 0.1) {
-          nb_repeat = static_cast<int>( trunc(delta / 0.1));
-          if (ImGui::GetIO().KeyCtrl) {//ImGui::ImGuiKey_ModCtrl()) {
-            nb_repeat *= 10;
-          }
-          _bpm += key.effect * nb_repeat;
-          
-          key.duration = new_duration;
-        }
+        _bpm += key.effect * added_repeat * mult_effect;
+
+        key.nb_repeat += added_repeat;
       }
       else if (ImGui::IsKeyReleased( key.id )) {
-        key.duration = 0.f;
+        key.nb_repeat = 0;
       }
     }
     

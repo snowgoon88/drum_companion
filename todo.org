@@ -1,5 +1,5 @@
 * __CURRENT__ :
-* TODO [16/21] linux
+* IDEA [17/21] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -41,16 +41,26 @@ if (item_disabled)
 ** DONE Doc/Help for Looper
 ** DONE Change Looper->all_pattern, to allow removal/adding patterns
 => now a list
-** TODO clean up and renumber/id of Looper->all_pattern (must be called by HAND)
-** TODO [2/3] DEL a Pattern to gui
+** IDEA clean up and renumber/id of Looper->all_pattern (must be called by HAND)
+** IDEA [2/3] DEL a Pattern to gui
 *** DONE ADD "Del Px" for every Pattern
-*** TODO ADD "x" add end of PatternGUI Title to trigger del
+*** IDEA [0/1] ADD "x" add end of PatternGUI Title to trigger del
+**** IDEA use bool ImGui::CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFlags flags)
+p_visible could be owned bt PatternGUI and, when set to false,
+trigger the deletion of the Pattern
+BUT PatternGUI must have a way to call del_pattern(id)
+WITHOUT being destroyed WHILE in apply() function !!!
+=> in run_gui()/while {
+    // After pg.apply()
+    if (pg.ask_for_deletion) del_pattern( pg._pattern->_id );
+}
+
 *** DONE IF deleted Pattern is used in Looper ? POPUP ? Make it invalid ?
 **** ask analyzer to validate formula
 **** if formula NOT valid, change status of Looper to "empty" until valid again ?
-** TODO more reactive to keybord for changing BPM
-** TODO on/off synchronize all patterns
-** TODO on/off relative bpm change
+** DONE more reactive to keybord for changing BPM
+** IDEA on/off synchronize all patterns
+** IDEA on/off relative bpm change
 * TODO [2/3] Ressources to try
 ** TODO [6/7] GUI : imgui
 https://github.com/ocornut/imgui
@@ -87,7 +97,7 @@ Il semble que l'on peut aussi dire quand on joue une source (ms)
 
 ** DONE [/] docopt.cpp
 https://github.com/docopt/docopt.cpp
-* [0/8] Safe code
+* [0/9] Safe code
 ** TODO Ensure notes/sounds in PatternAudio exist in SoundEngine
 ** TODO clean up DEL
 ** TODO clean up TODO
@@ -102,7 +112,9 @@ https://github.com/docopt/docopt.cpp
 ** TODO Check all _state are still needed (ex: ended ??)
 ** TODO Remove PatternAudio object from drum_compagnon.cpp
 ** TODO When reading Looper from file, might need to delete some existing patterns
-* TODO [0/0] WINDOWS
+** TODO Check shared vs unique vs T* vs T& for various elements
+
+* TODO [6/9] WINDOWS
 ** TODO Check still compiling <2023-02-05 dim.>
 ** 00-engine-play + CodeWorks/MinGW
 works fine under VSC with C:\\Program Files (x86)\\CodeBlocks\\MinGW\\bin\\g++.exe in tasks.json and proper -I

@@ -392,7 +392,7 @@ int main(int argc, char *argv[])
 
   // ************************************************************ init engines
   LOGMAIN( "__Main Init engines");
-  sound_engine = std::make_shared<SoundEngine>(SoundEngine());
+  sound_engine = std::make_shared<SoundEngine>();
   // variables are not used, but show how could be used
   auto idx_clave = sound_engine->add_sound( "ressources/claves_120ms.wav" );
   UNUSED(idx_clave);
