@@ -1,4 +1,4 @@
-* __CURRENT__ :
+* __CURRENT__ : save/load file from GUI
 * IDEA [17/23] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline

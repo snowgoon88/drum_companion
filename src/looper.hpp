@@ -20,10 +20,10 @@
  * some GUI action).
  *
  * - add_pattern(): can only add 'ready' Pattern, set its id. Update 'all_patterns'
- * if _sync_pattern, then also sets all Patterns bpm.
+ * if _sync_bpm, then also sets all Patterns bpm.
  *
  * - set_sequence() or concat(): _state <- ready (if sequence.size() > 0)
- * if _sync_pattern, then sets all Patterns bpm.
+ * if _sync_bpm, then sets all Patterns bpm.
  *
  * - start():
  *   _state == ready AND sequence not empty THEN _its->start(), _state <- running.
