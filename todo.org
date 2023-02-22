@@ -65,7 +65,7 @@ WITHOUT being destroyed WHILE in apply() function !!!
 ** TODO allow to load from file from GUI
 
 * TODO [2/3] Ressources to try
-** TODO [6/7] GUI : imgui
+*** TODO [6/7] GUI : imgui
 https://github.com/ocornut/imgui
 - examples_glfw_opengl2/3 work
 *** DONE Compile with WAF a basic example 
@@ -100,6 +100,11 @@ Il semble que l'on peut aussi dire quand on joue une source (ms)
 
 ** DONE [/] docopt.cpp
 https://github.com/docopt/docopt.cpp
+** TODO [1/2] ImGuiFileDialog library
+- https://github.com/aiekick/ImGuiFileDialog
+*** TODO Compile given example
+*** DONE Compile a basic example in waf
+
 * TODO [0/9] Safe code
 ** TODO Ensure notes/sounds in PatternAudio exist in SoundEngine
 ** TODO clean up DEL

@@ -101,10 +101,18 @@ def configure( conf ):
     # conf.recurse( 'visugl' )
     imgui_node = conf.path.find_node( 'libs/imgui' )
     if not imgui_node:
-        raise ConfigurationError( msg='No ImGui in lib' )
+        raise ConfigurationError( msg='No ImGui in libs' )
     conf.env.INCLUDES_IMGUI = [imgui_node.abspath()]
     conf.end_msg("yes")
     # conf.env.INCLUDES_VISUGL  = [visuglnode.abspath()+'/src']
+
+    # ## Check ImGuiFileDiaolg is present and configured and ready to be used ...
+    conf.start_msg( "Looking for ImGuiFileDialog" )
+    imguifile_node = conf.path.find_node( 'libs/ImGuiFileDialog' )
+    if not imguifile_node:
+        raise ConfigurationError( msg='No ImGuiFileDialog in libs' )
+    conf.env.INCLUDES_IMGUIFILEDIALOG = [imguifile_node.abspath()]
+    conf.end_msg("yes")
 
     ## Check MiniAudio
     conf.start_msg( "Looking for MiniAudio" )

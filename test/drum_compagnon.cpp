@@ -286,6 +286,16 @@ void del_pattern( int id )
     }
   }
 }
+// ***************************************************************************
+// ***************************************************************** Save/Load
+// ***************************************************************************
+void save_looper( const std::string& filename )
+{
+  LOGMAIN( "__Writing to " << filename );
+  std::ofstream ofile( filename );
+  looper->write_to( ofile );
+  ofile.close();
+}
 
 // ***************************************************************************
 // ******************************************************************* run_gui
@@ -645,10 +655,7 @@ int main(int argc, char *argv[])
     LOGMAIN( looper->str_dump() );
 
     if (_p_outfile) {
-      LOGMAIN( "__Writing to " << _p_outfile.value() );
-      std::ofstream ofile( _p_outfile.value() );
-      looper->write_to( ofile );
-      ofile.close();
+      save_looper( _p_outfile.value() );
     }
   }
 

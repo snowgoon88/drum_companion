@@ -22,6 +22,13 @@ def build(bld):
     ]
     imgui_sources = [imgui_dir+path for path in imgui_files+imgui_backend]
 
+    # ---------------------------------------------------------- ImGuiFileDialog
+    ## build list of ImGuiFileDialog sources
+    imguifile_dir = "../libs/ImGuiFileDialog/"
+    imguifile_files = [ "ImGuiFileDialog.cpp"
+    ]
+    imguifile_sources = [imguifile_dir+path for path in imguifile_files]
+
     # ------------------------------------------------------------------  docopt
     docopt_dir = "../libs/docopt.cpp/"
     docopt_files = [ "docopt.cpp",
@@ -37,17 +44,20 @@ def build(bld):
     def build_file( file ):
         print( "** Buildind "+file )
         bld.program(
-            source =   [file] + imgui_sources,
+            source =   [file] + imgui_sources + imguifile_sources,
             target =   file[:-4],
-            includes = [".", "../src", imgui_dir, imgui_dir+"backends/"],
+            includes = [".", "../src", imgui_dir, imgui_dir+"backends/",
+                        imguifile_dir],
             libs =     [],#["m","rt","dl"],
             use =      ["DOCOPT", "docopt.obj",
                         "IMGUI",
+                        "IMGUIFILEDIALOG",
                         "MINIAUDIO",
                         "GLFW3", "GL"]
         )
 
-    base_files = ["04-leds_widget.cpp", "04-date_widget.cpp", "drum_compagnon.cpp"]
+    # base_files = ["04-leds_widget.cpp", "04-date_widget.cpp", "drum_compagnon.cpp"]
+    base_files = ["04-file_widget.cpp", "drum_compagnon.cpp"]
     for file in base_files:
         build_file( file )
         
