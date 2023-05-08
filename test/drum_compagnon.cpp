@@ -37,6 +37,9 @@
 #include <beat_slider_widget.hpp>
 #include <bpm_widget.hpp>
 
+// File Dialog for Load/Save
+#include <ImGuiFileDialog.h>
+
 // ***************************************************************************
 // ************************************************************* Grafik - INIT
 // ***************************************************************************
@@ -74,12 +77,24 @@ glfw_error_callback(int error, const char *description) {
 #  define LOGMAIN(msg)
 #endif
 
+//#define LOG_MAINLOOP
+#ifdef LOG_MAINLOOP
+#  define LOGMAINLOOP(msg) (LOG_BASE("[LOOP]", msg))
+#else
+#  define LOGMAINLOOP(msg)
+#endif
 // *************************************************************** App GLOBALS
 std::shared_ptr<SoundEngine> sound_engine = nullptr;
 std::shared_ptr<PatternAudio> pattern_audio = nullptr;  // GUI only
 std::shared_ptr<Analyzer> analyzer = nullptr;
 std::shared_ptr<Looper> looper = nullptr;
 bool should_exit = false;
+
+bool should_open_load_dialog = false;
+bool should_open_save_dialog = false;
+const char *filter_dialog = "Loop *.loop{.loop},All{(.*)}}";
+std::optional<std::string> ask_load_file = std::nullopt;
+
 
 // *********************************************************************** GUI
 
@@ -296,6 +311,15 @@ void save_looper( const std::string& filename )
   looper->write_to( ofile );
   ofile.close();
 }
+void load_looper(const std::string &filename)
+{
+  LOGMAIN( "__Loading " << filename );
+  std::ifstream ifile(filename);
+  looper->read_from(ifile);
+  ifile.close();
+
+  // TODO update BPM widget ?
+}
 
 // ***************************************************************************
 // ******************************************************************* run_gui
@@ -421,9 +445,91 @@ int run_gui()
 
         ImGui::End();
       }
-      LOGMAIN("__guiloop Drum Companion");
+      LOGMAINLOOP("__guiloop Drum Companion");
       // Create a window with title and append into it.
-      ImGui::Begin("Drum Companion");
+      ImGui::Begin("Drum Companion", nullptr /*no close btn*/, ImGuiWindowFlags_MenuBar);
+
+      // MenuBar
+      if (ImGui::BeginMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+          if (ImGui::MenuItem("Open", "Ctrl+O")) {
+            should_open_load_dialog = true;
+          }
+          if (ImGui::MenuItem("Save", "Ctrl+S")) {
+            should_open_save_dialog = true;
+          }
+          if (ImGui::MenuItem("Save As..")) {}
+          ImGui::Separator();
+          if (ImGui::MenuItem("Quit", "Ctrl+Q")) {}
+          ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Help")) {
+          if (ImGui::MenuItem("About", nullptr)) {}
+          ImGui::EndMenu();
+        }
+        ImGui::EndMenuBar();
+      }
+
+      // FileDialog
+      if (should_open_load_dialog) {
+        should_open_load_dialog = false;
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseLoadFileK", // dialog key
+                                                "Choose file to load",     // dialog title
+                                                filter_dialog,
+                                                ".",  // basedir for scan
+                                                "",   // base filename
+                                                0,    // func for display right
+                                                0.0f, // base width pane
+                                                1,    // count selection
+                                                nullptr, // user data
+                                                0 // flags
+                                                );
+      }
+      else if (should_open_save_dialog) {
+        should_open_save_dialog = false;
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseSaveFileK", // dialog key
+                                                "Choose file to save",     // dialog title
+                                                filter_dialog,
+                                                ".",  // basedir for scan
+                                                "",   // base filename
+                                                0,    // func for display right
+                                                0.0f, // base width pane
+                                                1,    // count selection
+                                                nullptr, // user data
+                                                ImGuiFileDialogFlags_ConfirmOverwrite  // flags
+                                                );
+      }
+      // Then deal with FileDialog
+      if (ImGuiFileDialog::Instance()->Display("ChooseLoadFileK")) {
+        // Action OK
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+          std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+          std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+          // action
+          std::cout << "__LOADING " << std::endl;
+          std::cout << "PathName = " << filePathName << std::endl;
+          std::cout << "Path = " << filePath << std::endl;
+          ask_load_file = std::make_optional<std::string>(filePathName);
+        }
+        // Close
+        ImGuiFileDialog::Instance()->Close();
+      }
+      else if (ImGuiFileDialog::Instance()->Display("ChooseSaveFileK")) {
+        // Action OK
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+          std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+          std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+          // action
+          std::cout << "__SAVING" << std::endl;
+          std::cout << "PathName = " << filePathName << std::endl;
+          std::cout << "Path = " << filePath << std::endl;
+          save_looper(filePathName);
+          //ask_load_file = std::make_optional<std::string>(filePathName);
+        }
+        // Close
+        ImGuiFileDialog::Instance()->Close();
+      }
+
 
       // BeatSlider
       beat_widget->set_dir_forward( looper->odd_beat );
@@ -433,7 +539,7 @@ int run_gui()
       // BPM
       bpm_widget->draw( looper->_main_bpm );
 
-      LOGMAIN( "  buttons" );
+      LOGMAINLOOP( "  buttons" );
       // Play/Pause
       if (looper->_state == Looper::LooperState::running) {
         ImGui::PushStyleColor(ImGuiCol_Button, GREEN_COL);
@@ -485,7 +591,7 @@ int run_gui()
       }
 
       ImGui::Separator();
-      LOGMAIN( "ADD/DEL PatternAudio" );
+      LOGMAINLOOP( "ADD/DEL PatternAudio" );
 
       if (ImGui::Button("ADD pattern")) {
         ask_add_pa = true;
@@ -522,9 +628,22 @@ int run_gui()
     if (ImGui::IsKeyDown(526)) { // Escape
       gui_ask_end = true;
     }
+    if (ImGui::IsKeyReleased(564)) { // S
+      if (ImGui::GetIO().KeyCtrl) {  // Ctrl+S
+        should_open_save_dialog = true;
+      }
+    }
 
     // Now apply logic
-    LOGMAIN( "__apply logic" );
+    LOGMAINLOOP( "__apply logic" );
+    // TODO some logic are not mutually possible ?
+
+    // loading file
+    if (ask_load_file) {
+      // TODO reset, not running
+      load_looper(ask_load_file.value());
+    }
+
     // update BPM of looper only when NOT runnine
     // if (looper->_state != Looper::LooperState::running) {
       looper->set_all_bpm( bpm_widget->get_new_bpm() );
@@ -626,10 +745,8 @@ int main(int argc, char *argv[])
   analyzer = std::make_shared<Analyzer>( looper );
   // if there is an infile, it has priority
   if (_p_infile) {
-    std::ifstream ifile( _p_infile.value() );
-    looper->read_from( ifile );
-    ifile.close();
-    
+    load_looper( _p_infile.value() );
+
     // if param bpm; takes precedence
     if (_p_bpm) {
       looper->set_all_bpm( _p_bpm.value() );

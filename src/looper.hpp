@@ -168,6 +168,7 @@ public:
     write_comment( os, "-- Looper --" );
     write_token( os, "main_bpm", _main_bpm );
     write_token( os, "sync_bpm", _sync_bpm );
+    write_token( os, "formula", _formula );
     write_token( os, "nb_pat", all_patterns.size() );
     for( auto& pat: all_patterns) {
       write_comment( os, "pattern p"+std::to_string( pat->_id ) );
@@ -187,8 +188,10 @@ public:
 
     _main_bpm = read_uint( is, "main_bpm" );
     _sync_bpm = read_bool( is, "sync_bpm" );
+    _formula = read_string( is, "formula" );
     auto nb_pattern = read_uint( is, "nb_pat" );
     all_patterns.clear(); // TODO what if some undeleted patterns ?
+    max_pattern_id = 0;
     for( unsigned int idp = 0; idp < nb_pattern; ++idp) {
       auto pat = std::make_shared<PatternAudio>( _engine );
       pat->read_from( is );

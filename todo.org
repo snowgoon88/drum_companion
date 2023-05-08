@@ -1,5 +1,5 @@
 * __CURRENT__ : save/load file from GUI
-* IDEA [17/23] linux
+* IDEA [18/25] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -61,8 +61,15 @@ WITHOUT being destroyed WHILE in apply() function !!!
 ** DONE more reactive to keybord for changing BPM
 ** IDEA on/off synchronize all patterns
 ** IDEA on/off relative bpm change
-** TODO allow save to file from GUI
-** TODO allow to load from file from GUI
+** IDEA Confirm when quitting
+** DONE [3/3] allow save to file from GUI
+*** DONE Menu bar
+*** DONE Shortcut
+*** DONE Include looper formula in save
+** TODO [0/1] allow to load from file from GUI
+
+*** TODO when loading, must update GUI => patternS, looper, etc
+** TODO when loading/init from file => update Looper formula !
 
 * TODO [2/3] Ressources to try
 *** TODO [6/7] GUI : imgui

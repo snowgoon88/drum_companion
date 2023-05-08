@@ -132,7 +132,7 @@ int run_gui()
   glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
   // Create window with graphics context
   GLFWwindow *window = glfwCreateWindow(
-      600, 500, "Time Widget v1.0", NULL, NULL);
+      600, 500, "FileDilaog Widget v1.0", NULL, NULL);
   if (window == NULL)
     return 1;
 
@@ -200,8 +200,19 @@ int run_gui()
       ImGui::Begin("FileDialog Widget");
 
       // open Dialog Simple
+      const char *filters = "Prog *.c/hpp{.cpp,.h,.hpp},Loop *.loop{.loop},All{(.*)}";
       if (ImGui::Button("Open File Dialog"))
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".cpp,.h,.hpp", ".");
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", // dialog key
+                                                "Choose File",      // dialog title
+                                                filters,            //filters
+                                                ".",                // basedir for scan
+                                                "",                 // base filename
+                                                0,                  // func for display right
+                                                0.0f,               // base width pane
+                                                1,                  // count selection
+                                                nullptr,         // user data
+                                                ImGuiFileDialogFlags_ConfirmOverwrite // flags
+                                                );
 
       // display
       if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
