@@ -8,6 +8,7 @@
  * can be changed by button, click (InputInt) and keyboard +/- (+CTRL)
  */
 
+#include <string>
 #include <led_display_widget.hpp>
 
 // ***************************************************************************
@@ -86,6 +87,17 @@ public:
     }
     if (ImGui::Button( "-10" )) {
       _bpm -= 10;
+    }
+    ImGui::EndGroup();
+
+    // Pre-defined tempo buttton
+    ImGui::SameLine(0, 30); // spacing
+    ImGui::BeginGroup();
+    static int tempo[] = {60, 72, 84, 96, 110, 120};
+    for( auto t: tempo) {
+      if (ImGui::Button( std::to_string(t).c_str() )) {
+        _bpm = t;
+      }
     }
     ImGui::EndGroup();
 

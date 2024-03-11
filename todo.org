@@ -1,5 +1,5 @@
 * __CURRENT__ : save/load file from GUI
-* IDEA [18/25] linux
+* IDEA [19/27] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -71,6 +71,8 @@ WITHOUT being destroyed WHILE in apply() function !!!
 *** TODO when loading, must update GUI => patternS, looper, etc
 ** TODO when loading/init from file => update Looper formula !
 
+** DONE pré-selected tempo
+** TODO prevent screensaver from blacking the screen
 * TODO [2/3] Ressources to try
 *** TODO [6/7] GUI : imgui
 https://github.com/ocornut/imgui
