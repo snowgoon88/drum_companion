@@ -1,5 +1,5 @@
 * __CURRENT__ : save/load file from GUI
-* IDEA [19/27] linux
+* IDEA [21/30] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -61,18 +61,22 @@ WITHOUT being destroyed WHILE in apply() function !!!
 ** DONE more reactive to keybord for changing BPM
 ** IDEA on/off synchronize all patterns
 ** IDEA on/off relative bpm change
+** IDEA pre defined patern (4x4, 5clave, 3x4, 6x8)
+** DONE Ctrl-Q for quit
 ** IDEA Confirm when quitting
 ** DONE [3/3] allow save to file from GUI
 *** DONE Menu bar
 *** DONE Shortcut
 *** DONE Include looper formula in save
+** DONE Ctrl-O for Open
 ** TODO [0/1] allow to load from file from GUI
-
 *** TODO when loading, must update GUI => patternS, looper, etc
 ** TODO when loading/init from file => update Looper formula !
-
 ** DONE pré-selected tempo
 ** TODO prevent screensaver from blacking the screen
+https://stackoverflow.com/questions/31498114/how-to-programmatically-prevent-linux-computer-from-sleeping-or-turning-on-scree
+https://linux.die.net/man/3/xresetscreensaver
+https://www.linuxquestions.org/questions/slackware-14/how-do-i-stop-the-screen-from-blanking-when-i-watch-1-hour-youtube-movies-4175478789/page2.html
 * TODO [2/3] Ressources to try
 *** TODO [6/7] GUI : imgui
 https://github.com/ocornut/imgui

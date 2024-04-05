@@ -90,10 +90,6 @@ std::shared_ptr<Analyzer> analyzer = nullptr;
 std::shared_ptr<Looper> looper = nullptr;
 bool should_exit = false;
 
-bool should_open_load_dialog = false;
-bool should_open_save_dialog = false;
-const char *filter_dialog = "Loop *.loop{.loop},All{(.*)}}";
-std::optional<std::string> ask_load_file = std::nullopt;
 
 
 // *********************************************************************** GUI
@@ -121,6 +117,13 @@ bool _p_debug = false;
 ImVec4 hoover_color = YELLOW_COL;
 ImVec4 NoteButton::colors[3] = {CLEAR_COL, GREEN_COL, RED_COL};
 ImVec4 NoteButton::hoover_color = YELLOW_COL;
+
+// Popup file dialogs
+bool is_popup_dialog = false;
+bool should_open_load_dialog = false;
+bool should_open_save_dialog = false;
+const char *filter_dialog = "Loop *.loop{.loop},All{(.*)}}";
+std::optional<std::string> ask_load_file = std::nullopt;
 
 void clear_globals()
 {
@@ -473,6 +476,7 @@ int run_gui()
       // FileDialog
       if (should_open_load_dialog) {
         should_open_load_dialog = false;
+        is_popup_dialog = true;
         ImGuiFileDialog::Instance()->OpenDialog("ChooseLoadFileK", // dialog key
                                                 "Choose file to load",     // dialog title
                                                 filter_dialog,
@@ -487,6 +491,7 @@ int run_gui()
       }
       else if (should_open_save_dialog) {
         should_open_save_dialog = false;
+        is_popup_dialog = true;
         ImGuiFileDialog::Instance()->OpenDialog("ChooseSaveFileK", // dialog key
                                                 "Choose file to save",     // dialog title
                                                 filter_dialog,
@@ -513,6 +518,7 @@ int run_gui()
         }
         // Close
         ImGuiFileDialog::Instance()->Close();
+        is_popup_dialog = false;
       }
       else if (ImGuiFileDialog::Instance()->Display("ChooseSaveFileK")) {
         // Action OK
@@ -528,6 +534,7 @@ int run_gui()
         }
         // Close
         ImGuiFileDialog::Instance()->Close();
+        is_popup_dialog = false;
       }
 
 
@@ -625,12 +632,32 @@ int run_gui()
     glfwSwapBuffers(window);
 
     // test Keyboard
-    if (ImGui::IsKeyDown(526)) { // Escape
-      gui_ask_end = true;
+    if (ImGui::IsKeyReleased(526)) { // Escape
+      LOGMAIN( "__ESC");
+      // if a popup_menu is open, close it
+      if (is_popup_dialog) {
+        ImGuiFileDialog::Instance()->Close();
+        is_popup_dialog = false;
+        LOGMAIN( "  closing popup");
+      }
+      else {
+        gui_ask_end = true;
+        LOGMAIN( "  asking to end");
+      }
     }
     if (ImGui::IsKeyReleased(564)) { // S
       if (ImGui::GetIO().KeyCtrl) {  // Ctrl+S
         should_open_save_dialog = true;
+      }
+    }
+    if (ImGui::IsKeyReleased(560)) { // O
+      if (ImGui::GetIO().KeyCtrl) {  // Ctrl+O
+        should_open_load_dialog = true;
+      }
+    }
+    if (ImGui::IsKeyReleased(546)) { // Q (key, not char)
+      if (ImGui::GetIO().KeyCtrl) {  // Ctrl+Q
+        gui_ask_end = true;
       }
     }
 
