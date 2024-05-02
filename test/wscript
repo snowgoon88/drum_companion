@@ -57,7 +57,7 @@ def build(bld):
         )
 
     # base_files = ["04-leds_widget.cpp", "04-date_widget.cpp", "drum_compagnon.cpp"]
-    base_files = ["04-file_widget.cpp", "drum_compagnon.cpp"]
+    base_files = ["04-file_widget.cpp", "drum_compagnon.cpp", "big_clock.cpp"]
     for file in base_files:
         build_file( file )
         
