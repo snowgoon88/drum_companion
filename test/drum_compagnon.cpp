@@ -26,17 +26,17 @@
 
 #include <signal.h>          // C std lib (signal, sigaction, etc)
 
-#include <utils.hpp>        // loggers, etc
-#include <pattern_audio.hpp>
-#include <sound_engine.hpp>
-#include <looper.hpp>
-#include <analyzer.hpp>
-#include <pattern_gui.hpp>
-#include <looper_gui.hpp>
-#include <date_widget.hpp>
-#include <beat_slider_widget.hpp>
-#include <bpm_widget.hpp>
-
+#include "utils.hpp"        // loggers, etc
+#include "pattern_audio.hpp"
+#include "sound_engine.hpp"
+#include "looper.hpp"
+#include "analyzer.hpp"
+#include "pattern_gui.hpp"
+#include "looper_gui.hpp"
+#include "date_widget.hpp"
+#include "beat_slider_widget.hpp"
+#include "bpm_widget.hpp"
+#include "blank_screen.hpp"
 // File Dialog for Load/Save
 #include <ImGuiFileDialog.h>
 
@@ -89,6 +89,7 @@ std::shared_ptr<PatternAudio> pattern_audio = nullptr;  // GUI only
 std::shared_ptr<Analyzer> analyzer = nullptr;
 std::shared_ptr<Looper> looper = nullptr;
 bool should_exit = false;
+BlankScreen blank_screen;
 
 
 
@@ -806,13 +807,19 @@ int main(int argc, char *argv[])
   if (_p_verb) {
     std::cout << looper->str_verbose() << std::endl;
   }
-  
+
+  // prevent blank_screen
+  blank_screen.disable();
+  //LOGMAIN( "__afterDisable"+blank_screen.str_info() );
   if (_p_gui) {
     run_gui();
   }
   else {
     run();
   }
+  // restore blank_screen behavior
+  blank_screen.restore();
+  // LOGMAIN( "__afterRestore"+blank_screen.str_info() );
   
   // Clean up before exit
   clear_globals();

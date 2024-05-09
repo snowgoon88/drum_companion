@@ -48,12 +48,13 @@ def build(bld):
             target =   file[:-4],
             includes = [".", "../src", imgui_dir, imgui_dir+"backends/",
                         imguifile_dir],
-            libs =     [],#["m","rt","dl"],
+            lib =     ['X11','Xss'],#["m","rt","dl"], # X11 screensaver
             use =      ["DOCOPT", "docopt.obj",
                         "IMGUI",
                         "IMGUIFILEDIALOG",
                         "MINIAUDIO",
-                        "GLFW3", "GL"]
+                        "GLFW3", "GL",
+                        "X11", "XEXT"]
         )
 
     # base_files = ["04-leds_widget.cpp", "04-date_widget.cpp", "drum_compagnon.cpp"]

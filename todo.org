@@ -1,5 +1,5 @@
-* __CURRENT__ : save/load file from GUI
-* IDEA [21/30] linux
+* __CURRENT__ : save/load file from GUI, prevent blank screen
+* IDEA [23/31] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -73,10 +73,18 @@ WITHOUT being destroyed WHILE in apply() function !!!
 *** TODO when loading, must update GUI => patternS, looper, etc
 ** TODO when loading/init from file => update Looper formula !
 ** DONE pré-selected tempo
-** TODO prevent screensaver from blacking the screen
+** DONE prevent screensaver from blacking the screen
 https://stackoverflow.com/questions/31498114/how-to-programmatically-prevent-linux-computer-from-sleeping-or-turning-on-scree
 https://linux.die.net/man/3/xresetscreensaver
 https://www.linuxquestions.org/questions/slackware-14/how-do-i-stop-the-screen-from-blanking-when-i-watch-1-hour-youtube-movies-4175478789/page2.html
+** DONE Prevent from sleeping
+*** Linux: DBus et systemd-inhibit => NO
+https://www.freedesktop.org/wiki/Software/systemd/inhibit/
+https://www.freedesktop.org/wiki/Software/systemd/logind/
+++ https://www.freedesktop.org/wiki/Software/systemd/logind/
+list https://unix.stackexchange.com/questions/642656/prevent-computer-from-sleeping-in-c
+*** Linux: X11 DMPS + Screensaver
+il faut désactiver à la fois le screen saver et le DPMS pour que le blank screen ne soit pas enclenché. Voir CppRambling.
 * TODO [2/3] Ressources to try
 *** TODO [6/7] GUI : imgui
 https://github.com/ocornut/imgui

@@ -12,11 +12,14 @@
 #include <chrono>
 #include <thread>
 #include <memory>            // unique_ptr, shared_ptr, etc
+#include <X11/extensions/scrnsaver.h> // X__ScreenSaver
+#include <unistd.h>
 
 #include <signal.h>          // C std lib (signal, sigaction, etc)
 
 #include "utils.hpp"        // loggers, etc
 #include "date_widget.hpp"
+#include "blank_screen.hpp"
 
 // ***************************************************************************
 // ************************************************************* Grafik - INIT
@@ -61,11 +64,12 @@ glfw_error_callback(int error, const char *description) {
 #else
 #  define LOGMAINLOOP(msg)
 #endif
+
 // *************************************************************** App GLOBALS
 bool should_exit = false;
+BlankScreen blank_screen;
 
 // *********************************************************************** GUI
-
 std::unique_ptr<DateWidget> date_widget;
 
 // Args
@@ -250,6 +254,8 @@ int run_gui()
         gui_ask_end = true;
       }
     }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
 
   // Cleanup
@@ -263,18 +269,18 @@ int run_gui()
   return 0;
 }
 
-// ***************************************************************************
-// *********************************************************************** run
-// ***************************************************************************
-int run()
-{
-  while (! should_exit) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-  }
+// // ***************************************************************************
+// // *********************************************************************** run
+// // ***************************************************************************
+// int run()
+// {
+//   while (! should_exit) {
+//     std::this_thread::sleep_for(std::chrono::milliseconds(50));
+//   }
 
-  return 0;
-}
-    
+//   return 0;
+// }
+
 // ***************************************************************************
 // ********************************************************************** MAIN
 // ***************************************************************************
@@ -287,7 +293,14 @@ int main(int argc, char *argv[])
   // Args
   setup_options( argc, argv );
 
+  // prevent blank_screen
+  blank_screen.disable();
+  //LOGMAIN( "__afterDisable"+blank_screen.str_info() );
+  // run clock
   run_gui();
+  // restore blank_screen behavior
+  blank_screen.restore();
+  // LOGMAIN( "__afterRestore"+blank_screen.str_info() );
 
   LOGMAIN( "__END" );
   return 0;

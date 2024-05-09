@@ -133,7 +133,18 @@ def configure( conf ):
     #conf.env.LIB_DOCOPT = [ "dl", "m", "pthread" ]
     conf.env.INCLUDES_DOCOPT = [do_node.abspath()]
     conf.end_msg("yes")
-    
+
+    ## Require X11, using wraper around pkg-config
+    conf.check_cfg(package='x11',
+                   uselib_store='X11',
+                   args=['--cflags', '--libs']
+    )
+    ## Require X11 extensions using wraper around pkg-config
+    conf.check_cfg(package='xext',
+                   uselib_store='XEXT',
+                   args=['--cflags', '--libs']
+    )
+
     # ## Require VisuGL
     # # print( "Looking for VisuGL" )
     # # #print( "path="+conf.path.name )
