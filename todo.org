@@ -1,5 +1,5 @@
-* __CURRENT__ : save/load file from GUI, prevent blank screen
-* IDEA [25/32] linux
+* __CURRENT__ :
+* IDEA [26/32] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -81,8 +81,8 @@ si _p_infile => load_looper( _p_infile.value() );
 
 *** DONE when loading, must update GUI => patternS, looper, etc
 ** DONE when loading/init from file => update Looper formula !
-** TODO [0/1] Save-AS in Menu (vs Save if output_name already set)
-*** TODO change name of file in bar
+** DONE [1/1] Save-AS in Menu (vs Save if output_name already set)
+*** DONE change name of file in bar
 ** DONE pré-selected tempo
 ** DONE prevent screensaver from blacking the screen
 https://stackoverflow.com/questions/31498114/how-to-programmatically-prevent-linux-computer-from-sleeping-or-turning-on-scree

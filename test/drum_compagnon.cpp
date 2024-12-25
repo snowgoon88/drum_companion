@@ -17,8 +17,11 @@
 // Parsing command line options
 #include "docopt.h"
 
+#include <filesystem>
+namespace stdfs = std::filesystem;
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <chrono>
 #include <thread>
 #include <memory>            // unique_ptr, shared_ptr, etc
@@ -125,6 +128,7 @@ bool should_open_load_dialog = false;
 bool should_open_save_dialog = false;
 const char *filter_dialog = "Loop *.loop{.loop},All{(.*)}}";
 std::optional<std::string> ask_load_file = std::nullopt;
+std::optional<std::string> ask_save_file = std::nullopt;
 
 void clear_globals()
 {
@@ -456,8 +460,18 @@ int run_gui()
       }
       LOGMAINLOOP("__guiloop Drum Companion");
       // Create a window with title and append into it.
-      ImGui::Begin("Drum Companion", nullptr /*no close btn*/, ImGuiWindowFlags_MenuBar);
-
+      std::stringstream title_str;
+      title_str << "Drum Companion - ";
+      if (_p_outfile) {
+        // path relative to current_dir()
+        stdfs::path rel_outfile = stdfs::proximate( stdfs::path( _p_outfile.value() ));
+        title_str << rel_outfile;
+        //title_str << _p_outfile.value();
+      }
+      else {
+        title_str << "NOFILE";
+      }
+      ImGui::Begin( title_str.str().c_str(), nullptr /*no close btn*/, ImGuiWindowFlags_MenuBar);
       // MenuBar
       if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
@@ -465,9 +479,16 @@ int run_gui()
             should_open_load_dialog = true;
           }
           if (ImGui::MenuItem("Save", "Ctrl+S")) {
+            if (_p_outfile) {
+              ask_save_file = _p_outfile.value();
+            }
+            else {
+              should_open_save_dialog = true;
+            }
+          }
+          if (ImGui::MenuItem("Save As..")) {
             should_open_save_dialog = true;
           }
-          if (ImGui::MenuItem("Save As..")) {}
           ImGui::Separator();
           if (ImGui::MenuItem("Quit", "Ctrl+Q")) {}
           ImGui::EndMenu();
@@ -535,7 +556,8 @@ int run_gui()
           std::cout << "__SAVING" << std::endl;
           std::cout << "PathName = " << filePathName << std::endl;
           std::cout << "Path = " << filePath << std::endl;
-          save_looper(filePathName);
+          //save_looper(filePathName);
+          ask_save_file = filePathName;
           //ask_load_file = std::make_optional<std::string>(filePathName);
         }
         // Close
@@ -653,6 +675,16 @@ int run_gui()
     }
     if (ImGui::IsKeyReleased(564)) { // S
       if (ImGui::GetIO().KeyCtrl) {  // Ctrl+S
+        if (_p_outfile) {
+          ask_save_file = _p_outfile.value();
+        }
+        else {
+          should_open_save_dialog = true;
+        }
+      }
+    }
+    if (ImGui::IsKeyReleased(564)) { // S
+      if (ImGui::GetIO().KeyCtrl && ImGui::GetIO().KeyShift) {  // Ctrl+Shift+S
         should_open_save_dialog = true;
       }
     }
@@ -671,6 +703,13 @@ int run_gui()
     LOGMAINLOOP( "__apply logic" );
     // TODO some logic are not mutually possible ?
 
+    // saving file
+    if (ask_save_file) {
+      save_looper( ask_save_file.value() );
+
+      ask_save_file.reset();
+    }
+
     // loading file
     if (ask_load_file) {
       // TODO reset, not running
@@ -680,6 +719,7 @@ int run_gui()
       bpm_widget->set_new_bpm( looper->_main_bpm );
       build_pattern_gui();
 
+      _p_outfile = ask_load_file.value();
       ask_load_file.reset();
     }
 
@@ -756,6 +796,9 @@ int main(int argc, char *argv[])
   // // To deal with Ctrl-C (Win32 and Linux)
   signal(SIGINT, ctrlc_cbk);
 
+  // path to working directory
+  LOGMAIN( "__WorkingDir " << stdfs::current_path() );
+
   // Args
   setup_options( argc, argv );
 
@@ -786,7 +829,13 @@ int main(int argc, char *argv[])
   analyzer = std::make_shared<Analyzer>( looper );
   // if there is an infile, it has priority
   if (_p_infile) {
+    stdfs::path infile = stdfs::relative( stdfs::path( _p_infile.value() ));
+    LOGMAIN( "__Input file: " << infile  );
+    if (infile.has_relative_path()) {
+      LOGMAIN( "  Rel. Path: " << infile.relative_path() );
+    }
     load_looper( _p_infile.value() );
+    _p_outfile = _p_infile.value();
 
     // if param bpm; takes precedence
     if (_p_bpm) {
