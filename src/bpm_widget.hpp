@@ -135,9 +135,10 @@ public:
   }
   // **************************************************** BPMWidget::attributs
 public:
-  unsigned int get_new_bpm() { return _bpm; }
+    unsigned int get_new_bpm() { return _bpm; }
+    void set_new_bpm( unsigned int bpm ) { _bpm = bpm; }
 private:
-  int _bpm;
+    int _bpm;
 
 
   // Widget to draw large LED display

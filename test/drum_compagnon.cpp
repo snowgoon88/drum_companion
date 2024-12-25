@@ -96,7 +96,7 @@ BlankScreen blank_screen;
 // *********************************************************************** GUI
 
 std::list<PatternGUI> pg_list;
-std::unique_ptr<LooperGUI> lg = nullptr;
+std::unique_ptr<LooperGUI> looper_widget = nullptr;
 std::unique_ptr<DateWidget> date_widget;
 std::unique_ptr<BeatSlider> beat_widget;
 std::unique_ptr<BPMWidget> bpm_widget;
@@ -134,13 +134,13 @@ void clear_globals()
   //   delete sound_engine;
   // }
   // LOGMAIN( "  sound_engine OK" );
-  
+
   // if (pattern_audio != nullptr ) {
   //   LOGMAIN( "  will clean pattern_audio" );
   //   delete pattern_audio;
   // }
   // LOGMAIN( "  pattern_audio OK" );
-  
+
   // if (looper != nullptr) {
   //   LOGMAIN( "  will clean looper" );
   //   for( auto& pat_ptr: looper->all_patterns) {
@@ -199,7 +199,7 @@ R"(Drum Companion.
 
 void setup_options( int argc, char **argv )
 {
-  std::map<std::string, docopt::value> args = docopt::docopt(_usage, 
+  std::map<std::string, docopt::value> args = docopt::docopt(_usage,
                                                   { argv + 1, argv + argc },
                                                   // show help if requested
                                                   true,
@@ -301,7 +301,7 @@ void del_pattern( int id )
       // formula is invalid, make sure Looper cannot run.
       looper->_state = Looper::LooperState::empty;
       // TODO accessing lg->error_buffer is bad practice
-      lg->error_buffer = analyzer->str_error();
+      looper_widget->error_buffer = analyzer->str_error();
     }
   }
 }
@@ -321,8 +321,16 @@ void load_looper(const std::string &filename)
   std::ifstream ifile(filename);
   looper->read_from(ifile);
   ifile.close();
-
-  // TODO update BPM widget ?
+}
+// ***************************************************************************
+// ********************************************************** build/update_gui
+// ***************************************************************************
+void build_pattern_gui()
+{
+  pg_list.clear();
+  for( auto pat: looper->all_patterns) {
+    pg_list.push_back( PatternGUI(pat) );
+  }
 }
 
 // ***************************************************************************
@@ -333,12 +341,9 @@ int run_gui()
   // ************************************************************* GUI - state
 
   // ********************************************************** GUI - creation
-  // create all PatternGUI
-  for( auto pat: looper->all_patterns) {
-    pg_list.push_back( PatternGUI(pat) );
-  }
+  build_pattern_gui();
 
-  lg = std::make_unique<LooperGUI>( analyzer );
+  looper_widget = std::make_unique<LooperGUI>( analyzer );
 
   beat_widget = std::make_unique<BeatSlider>();
   bpm_widget = std::make_unique<BPMWidget>();
@@ -352,11 +357,11 @@ int run_gui()
 
   bool ask_add_pa = false;
   int ask_del_pa = -1;      // if >= 0, ask to delete indicated PatternAudio
-  
+
   // ******************************************************* Grafik - creation
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
-  if (!glfwInit())  
+  if (!glfwInit())
     return 1;
 
     // Decide GL+GLSL versions
@@ -591,8 +596,8 @@ int run_gui()
       }
 
       // LooperGUI
-      lg->draw();
-      
+      looper_widget->draw();
+
       // PatternGUIs
       for( auto& pg: pg_list) {
         pg.draw( !looper->_sync_bpm );
@@ -670,8 +675,16 @@ int run_gui()
     if (ask_load_file) {
       // TODO reset, not running
       load_looper(ask_load_file.value());
+      looper_widget->_init_from_looper();
+
+      bpm_widget->set_new_bpm( looper->_main_bpm );
+      build_pattern_gui();
+
+      ask_load_file.reset();
     }
 
+    // TODO toujours vrai et ok ce qui suit ?
+    //      NON !!!, car BPM overule new looper read from file
     // update BPM of looper only when NOT runnine
     // if (looper->_state != Looper::LooperState::running) {
       looper->set_all_bpm( bpm_widget->get_new_bpm() );
@@ -687,7 +700,7 @@ int run_gui()
       ask_del_pa = -1;
     }
 
-    lg->apply();
+    looper_widget->apply();
     for( auto& pg: pg_list) {
       pg.apply();
     }

@@ -1,5 +1,5 @@
 * __CURRENT__ : save/load file from GUI, prevent blank screen
-* IDEA [23/31] linux
+* IDEA [25/32] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -59,19 +59,30 @@ WITHOUT being destroyed WHILE in apply() function !!!
 **** ask analyzer to validate formula
 **** if formula NOT valid, change status of Looper to "empty" until valid again ?
 ** DONE more reactive to keybord for changing BPM
-** IDEA on/off synchronize all patterns
-** IDEA on/off relative bpm change
-** IDEA pre defined patern (4x4, 5clave, 3x4, 6x8)
 ** DONE Ctrl-Q for quit
-** IDEA Confirm when quitting
-** DONE [3/3] allow save to file from GUI
+** DONE [3/3] allow save to file from GUI : Save
 *** DONE Menu bar
 *** DONE Shortcut
 *** DONE Include looper formula in save
 ** DONE Ctrl-O for Open
-** TODO [0/1] allow to load from file from GUI
-*** TODO when loading, must update GUI => patternS, looper, etc
-** TODO when loading/init from file => update Looper formula !
+** DONE [1/1] allow to load from file from GUI
+// si infile est passé en CLI
+si _p_infile => load_looper( _p_infile.value() );
+[drum_compagnon 515]
+    std::cout << "__LOADING " << std::endl;
+    std::cout << "PathName = " << filePathName << std::endl;
+    std::cout << "Path = " << filePath << std::endl;
+    ask_load_file = std::make_optional<std::string>(filePathName);
+=> [drum_compagnon 670]
+    if (ask_load_file) {
+      // TODO reset, not running
+      load_looper(ask_load_file.value());
+    }
+
+*** DONE when loading, must update GUI => patternS, looper, etc
+** DONE when loading/init from file => update Looper formula !
+** TODO [0/1] Save-AS in Menu (vs Save if output_name already set)
+*** TODO change name of file in bar
 ** DONE pré-selected tempo
 ** DONE prevent screensaver from blacking the screen
 https://stackoverflow.com/questions/31498114/how-to-programmatically-prevent-linux-computer-from-sleeping-or-turning-on-scree
@@ -85,6 +96,10 @@ https://www.freedesktop.org/wiki/Software/systemd/logind/
 list https://unix.stackexchange.com/questions/642656/prevent-computer-from-sleeping-in-c
 *** Linux: X11 DMPS + Screensaver
 il faut désactiver à la fois le screen saver et le DPMS pour que le blank screen ne soit pas enclenché. Voir CppRambling.
+** IDEA on/off synchronize all patterns
+** IDEA on/off relative bpm change
+** IDEA pre defined patern (4x4, 5clave, 3x4, 6x8)
+** IDEA Confirm when quitting
 * TODO [2/3] Ressources to try
 *** TODO [6/7] GUI : imgui
 https://github.com/ocornut/imgui
