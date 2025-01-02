@@ -55,6 +55,7 @@ WITHOUT being destroyed WHILE in apply() function !!!
     if (pg.ask_for_deletion) del_pattern( pg._pattern->_id );
 }
 
+dans pattern_gui.hpp, utiliser static bool show_open
 *** DONE IF deleted Pattern is used in Looper ? POPUP ? Make it invalid ?
 **** ask analyzer to validate formula
 **** if formula NOT valid, change status of Looper to "empty" until valid again ?

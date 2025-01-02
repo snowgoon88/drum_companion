@@ -156,7 +156,9 @@ public:
   // ******************************************************** PatternGUI::draw
   void draw( bool ask_bpm=true )
   {
+    static bool show_open = true;
     if (ImGui::CollapsingHeader( str_header().c_str(),
+                                 // &show_open, could display closing cross
                                  ImGuiTreeNodeFlags_None)) {
 
       // To ensure unique ID for ImGui
