@@ -557,7 +557,12 @@ int run_gui()
           std::cout << "PathName = " << filePathName << std::endl;
           std::cout << "Path = " << filePath << std::endl;
           //save_looper(filePathName);
-          ask_save_file = filePathName;
+          // add ".loop" if not already the case
+          std::filesystem::path pathName {filePathName};
+          if (not pathName.has_extension()) {
+            pathName.replace_extension( std::filesystem::path {"loop"});
+          }
+          ask_save_file = pathName.c_str();
           //ask_load_file = std::make_optional<std::string>(filePathName);
         }
         // Close
@@ -706,7 +711,8 @@ int run_gui()
     // saving file
     if (ask_save_file) {
       save_looper( ask_save_file.value() );
-
+      // update _p_outfile
+      _p_outfile = ask_save_file;
       ask_save_file.reset();
     }
 

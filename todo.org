@@ -1,5 +1,5 @@
-* __CURRENT__ :
-* IDEA [26/32] linux
+* __CURRENT__
+* IDEA [28/34] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
 generalize it use when sig/beats change
@@ -39,6 +39,8 @@ if (item_disabled)
 ** DONE ADD line after last PatternGUI, before Buttons
 ** DONE ADD a Pattern to gui
 ** DONE Doc/Help for Looper
+** DONE when "SaveAs" (or save with empty file), does not update title
+** DONE add .extension when specifying filenae (Save AS)
 ** DONE Change Looper->all_pattern, to allow removal/adding patterns
 => now a list
 ** IDEA clean up and renumber/id of Looper->all_pattern (must be called by HAND)
@@ -102,17 +104,17 @@ il faut désactiver à la fois le screen saver et le DPMS pour que le blank scre
 ** IDEA pre defined patern (4x4, 5clave, 3x4, 6x8)
 ** IDEA Confirm when quitting
 * TODO [2/3] Ressources to try
-*** TODO [6/7] GUI : imgui
+** TODO [6/7] GUI : imgui
 https://github.com/ocornut/imgui
 - examples_glfw_opengl2/3 work
-*** DONE Compile with WAF a basic example 
+*** DONE Compile with WAF a basic example
 *** DONE Define Play/Pause/Stop button
 *** DONE Play/Pause Pattern without miniaudio engine
 *** DONE ESC for quitting [02-pp-pattern]
 *** DONE Set Window size [00-button]
 *** TODO Adapt Window Size
 *** DONE Scale things => ImGui::GetStyle().ScaleAllSizes(2.0f);
-*** [4/4] Make my own basic example
+** [4/4] Make my own basic example
 **** DONE BPM =
 **** DONE size = | unit = 
 **** DONE unit x size button
