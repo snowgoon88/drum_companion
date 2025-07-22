@@ -160,7 +160,17 @@ https://github.com/docopt/docopt.cpp
 ** TODO Remove PatternAudio object from drum_compagnon.cpp
 ** TODO When reading Looper from file, might need to delete some existing patterns
 ** TODO Check shared vs unique vs T* vs T& for various elements
-
+* Playback
+** iAudio7
+from https://www.notice-facile.com/notice/20796/cowon+systems+iaudio-7-_f
+Flac: compression 0~8, 44.1 kHz, mono/stereo
+WAV: 48 kHz, 16 bit, mono/stereo
+ogg: ~q10, 44.1kHz, mono/stereo
+** convert
+see https://www.maketecheasier.com/resample-hi-res-flac-linux/
+for flac in *.flac; do sox -S "${flac}" resample/"${flac}" rate -v -L 44100 dither; done
+** miniaudio
+https://miniaud.io/docs/manual/index.html
 * TODO [6/9] WINDOWS
 ** TODO Check still compiling <2023-02-05 dim.>
 ** 00-engine-play + CodeWorks/MinGW
