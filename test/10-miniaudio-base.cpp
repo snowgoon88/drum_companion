@@ -10,6 +10,9 @@
 
 #include <stdio.h>  // getchar();
 #include <iostream>
+#include <chrono>
+#include <thread>
+
 
 
 std::string format_str( const ma_format fmt )
@@ -71,6 +74,7 @@ int main(int argc, char *argv[])
      << "    flags: " << "TODO" << std::endl;
   }
 
+  // a 'ma_sound' has a 'ma_data_source' (ma_sound_get_data_source).
   ma_sound sound;
   result = ma_sound_init_from_file(&engine, argv[1], 0, NULL, NULL, &sound);
   if (result != MA_SUCCESS) {
@@ -81,13 +85,14 @@ int main(int argc, char *argv[])
   ma_format snd_format;
   ma_uint32 snd_channels;
   ma_uint32 snd_rate;
-  ma_channel snd_channel_map;
+  // ma_channel snd_channel_map;
   size_t snd_channel_map_cap;
+  // ma_sound_init_from_file(&engine, "my_sound.wav", MA_SOUND_FLAG_DECODE, pGroup, NULL, &sound);
   result = ma_sound_get_data_format( &sound,
                                      &snd_format,
                                      &snd_channels,
                                      &snd_rate,
-                                     &snd_channel_map,
+                                     NULL, //&snd_channel_map, // as not needed
                                      snd_channel_map_cap);
   if (result != MA_SUCCESS) {
     std::cerr << "Failed to read sound data" << std::endl;
@@ -115,11 +120,38 @@ int main(int argc, char *argv[])
             << ")" << std::endl
             << "  length s : " << snd_length_s << std::endl;
 
+  ma_bool32 snd_looping = ma_sound_is_looping( &sound );
+  std::cout << "__sound is_looping=" << snd_looping << std::endl;
+
+  ma_uint64 snd_cursor;
+  result = ma_sound_get_cursor_in_pcm_frames( &sound, &snd_cursor);
+  if (result != MA_SUCCESS) {
+    std::cerr << "Failed to read sound pcm position" << std::endl;
+    return -1;
+  }
+  std::cout << "__sound at " << snd_cursor << " pcm." << std::endl;
+
   ma_sound_start(&sound);
   //ma_engine_play_sound( &engine, argv[1], NULL );
 
+  // display sound "cursor position" at 500ms time intervals
+  for (unsigned int i = 0; i < 10; ++i) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    result = ma_sound_get_cursor_in_pcm_frames( &sound, &snd_cursor);
+    if (result != MA_SUCCESS) {
+      std::cerr << "Failed to read sound pcm position" << std::endl;
+      return -1;
+    }
+    std::cout << "__sound at " << snd_cursor << " pcm." << std::endl;
+  }
+
   std::cout << "Press ENTER to quit..." << std::endl;
   getchar();
+
+  // MA_API ma_uint64 ma_sound_get_time_in_pcm_frames(const ma_sound* pSound);
+
+  // MA_API void ma_sound_set_looping(ma_sound* pSound, ma_bool32 isLooping);
+  // MA_API ma_bool32 ma_sound_is_looping(const ma_sound* pSound);
 
   ma_sound_stop( &sound );
   ma_sound_uninit( &sound );
