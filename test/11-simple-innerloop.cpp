@@ -4,6 +4,12 @@
  *
  * AD-HOC on 'ressources/Bashung — La Nuit Je Mens.wav'
  * as I can hard code loop position and music properties.
+ *
+ * Loop "enabled" between frames 200000 and 200000 + 2*48000 (2 seconds)
+ * Hit Enter: disable loop
+ * Hit Enter again: stop play
+ *
+ * To make better : display current time in seconds
  */
 
 #define MINIAUDIO_IMPLEMENTATION
@@ -14,6 +20,11 @@
 
 // *********************************************************************** GLOBAL
 ma_result result;
+
+// TODO length of loop > frameCount of data_callback
+bool loop_enabled {true};
+ma_uint64 loop_frame_start {200000};
+ma_uint64 loop_frame_length {48000 * 2};  // 1 second ?
 
 // data_callback read from data_source (i.e. ma_decoder)
 // and copy to pOutput of device
@@ -26,10 +37,25 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
 
     // TOOD results
     ma_uint64 pCursor;
-    ma_decoder_get_cursor_in_pcm_frames(pDecoder, &pCursor);
     ma_uint64 pFrameRead;
-    ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount, &pFrameRead);
-    std::cout << "feed " << pFrameRead << " from " << pCursor << std::endl;
+    ma_decoder_get_cursor_in_pcm_frames(pDecoder, &pCursor);
+    // std::cout << "cursor at " << pCursor << std::endl;
+
+    if (loop_enabled && ((pCursor + frameCount) > (loop_frame_start + loop_frame_length))) {
+        // feed what is left of loop
+        ma_decoder_read_pcm_frames( pDecoder, pOutput,
+                                    (loop_frame_start+loop_frame_length-pCursor),
+                                    &pFrameRead );
+        // std::cout << "feed END " << pFrameRead << " from " << pCursor << std::endl;
+        // then set pcm to loop_start
+        ma_decoder_seek_to_pcm_frame( pDecoder, loop_frame_start );
+    }
+    else {
+        ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount, &pFrameRead);
+        // std::cout << "feed NOR " << pFrameRead << " from " << pCursor << std::endl;
+    }
+
+    std::cout << "  " << (pCursor / 48000) << " frames" << "\r";
 
     (void)pInput;
 }
@@ -81,6 +107,10 @@ int main(int argc, char *argv[])
         ma_decoder_uninit(&decoder);
         return -4;
     }
+
+    std::cout << "Press ENTER to quit loop..." << std::endl;
+    getchar();
+    loop_enabled = false;
 
     std::cout << "Press ENTER to quit..." << std::endl;
     getchar();

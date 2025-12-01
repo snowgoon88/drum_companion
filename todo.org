@@ -1,10 +1,11 @@
-* __CURRENT_: essayer "looping" (sec 4 dans miniaudio)
+* __CURRENT_: display wav ds ImGUI
 
 * PlayLoop
 l'idée est de faire un lecteur "Live", avec des boucles, pour utiliser avec Marie.
 ** lire MiniAudio/PCM pour comprendre si on peut "looper" de manière "intrinsèque"
-* [/] loop (4 - Data Sources)
-** essayer de faire une loop
+* [1/2] loop (4 - Data Sources)
+** DONE essayer de faire une loop
+** TODO display wav in ImGUI
 * IDEA [28/34] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
