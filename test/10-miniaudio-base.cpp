@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
      << "    flags: " << "TODO" << std::endl;
   }
 
+  // ***** Using Engine is a HighLevel API
   // a 'ma_sound' has a 'ma_data_source' (ma_sound_get_data_source).
   ma_sound sound;
   result = ma_sound_init_from_file(&engine, argv[1], 0, NULL, NULL, &sound);
@@ -137,7 +138,7 @@ int main(int argc, char *argv[])
   // display sound "cursor position" at 500ms time intervals
   for (unsigned int i = 0; i < 10; ++i) {
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    result = ma_sound_get_cursor_in_pcm_frames( &sound, &snd_cursor);
+   result = ma_sound_get_cursor_in_pcm_frames( &sound, &snd_cursor);
     if (result != MA_SUCCESS) {
       std::cerr << "Failed to read sound pcm position" << std::endl;
       return -1;

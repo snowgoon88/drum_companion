@@ -1,4 +1,10 @@
-* __CURRENT__
+* __CURRENT_: essayer "looping" (sec 4 dans miniaudio)
+
+* PlayLoop
+l'idée est de faire un lecteur "Live", avec des boucles, pour utiliser avec Marie.
+** lire MiniAudio/PCM pour comprendre si on peut "looper" de manière "intrinsèque"
+* [/] loop (4 - Data Sources)
+** essayer de faire une loop
 * IDEA [28/34] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline
@@ -171,6 +177,26 @@ see https://www.maketecheasier.com/resample-hi-res-flac-linux/
 for flac in *.flac; do sox -S "${flac}" resample/"${flac}" rate -v -L 44100 dither; done
 ** miniaudio
 https://miniaud.io/docs/manual/index.html
+*** Concepts
+
+**** MiniAudio Objects
+you need to allocate memory for objects yourself. => Attention au STACK
+you must ensure the memory address of your objects remain the same throughout their lifetime. => NO COPY !!!
+**** Low level API
+donnée audio raw de l'audio device.
+Attention, "loopback" ne semble possible qu'en WASAPI (??)
+***** context: top level, permet d'énumérer les devices
+***** device: abstraction pour physical device
+move data to/from device, asynchronously.
+***** frame: one sample for each channel
+***** ma_decoder is decoupled from Engine and Device => read file
+**** High level API
+***** ressource management loading and streaming sounds
+***** node graph pour mixing and effect
+***** high level "engine" autour de ressource manager
+*** [/] pas compris
+ASIO et WASAPI sont des interfaces différentes que les applications peuvent utiliser pour lire du son sous Windows. WASAPI est l'interface native actuelle de Microsoft pour la lecture audio, et ASIO est une alternative tierce conçue pour répondre au marché audio professionnel il y a plusieurs décennies.
+
 * TODO [6/9] WINDOWS
 ** TODO Check still compiling <2023-02-05 dim.>
 ** 00-engine-play + CodeWorks/MinGW
