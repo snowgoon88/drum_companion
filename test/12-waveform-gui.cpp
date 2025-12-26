@@ -130,6 +130,12 @@ void Demo_LinePlots() {
     }
 }
 
+// ********************************************************************* utils
+std::ostream& operator<<(std::ostream& out, const ImVec2& vec) {
+   out << "( " << vec.x << ", " << vec.y << ")";
+   return out;
+}
+
 /**
  * usage: argv[0]: filepath
  */
@@ -199,7 +205,35 @@ int main(int argc, char *argv[])
         // ImPlot::ShowDemoWindow();
 
         // Demo_LinePlots();
-        plot_wav();
+        // ImGuiViewport.Size
+        auto view_ptr = ImGui::GetMainViewport();
+        // std::cout << "ViewPort size " << view_ptr->Size << std::endl;
+        ImGui::SetNextWindowPos({0,0},ImGuiCond_Always);
+        ImGui::SetNextWindowSize(view_ptr->Size, ImGuiCond_Always);
+        if (ImGui::Begin( "Player" )) {
+
+            plot_wav();
+
+            ImGui::End();
+        }
+
+        // Logic
+        // ImGuiIO& io = ImGui::GetIO();
+        // if (ImGui::IsKeyDown( ImGuiKey_Q )) {
+        //     if (io.KeyCtrl) {
+        //         std::cout << "__IO: Ctrl-Q" << std::endl;
+        //     }
+        //     else {
+        //         std::cout << "__IO: Q" << std::endl;
+        //     }
+        // }
+
+        // Exit if Ctrl-Q
+        // see also ImGui::Shortcut()
+        if (ImGui::IsKeyChordPressed( ImGuiMod_Ctrl | ImGuiKey_Q )) {
+            std::cout << "__IO: chord Ctrl-Q" << std::endl;
+            glfwSetWindowShouldClose( window, true );
+        }
 
         // Render
         ImGui::Render();

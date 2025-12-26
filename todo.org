@@ -7,16 +7,17 @@
 * PlayLoop
 l'idée est de faire un lecteur "Live", avec des boucles, pour utiliser avec Marie.
 ** lire MiniAudio/PCM pour comprendre si on peut "looper" de manière "intrinsèque"
-* [1/2] loop (4 - Data Sources)
+* [2/2] loop (4 - Data Sources)
 ** DONE essayer de faire une loop => 11-simple-innerloop.cpp
 ** [0/3] display wav in ImGUI
 *** TODO prevent from zooming in Y
 *** TODO restict zooming in X (max = size, min = ??)
 *** TODO display in frames OR seconds
-** [0/3] ImGUI ergonomy
-*** TODO quit on Ctrl-Q
-*** TODO full size
-*** TODO out of the "Debug" sub_windo ?
+** DONE [3/3] ImGUI ergonomy
+*** DONE quit on Ctrl-Q
+*** DONE full size
+*** DONE out of the "Debug" sub_windo ?
+by default, each Frame has a "Debug" window
 ** [0/4] play
 *** TODO Play / Stop buttons
 *** TODO Play-Pause button
