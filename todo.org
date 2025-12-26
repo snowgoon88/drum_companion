@@ -18,9 +18,10 @@ l'idée est de faire un lecteur "Live", avec des boucles, pour utiliser avec Mar
 *** DONE full size
 *** DONE out of the "Debug" sub_windo ?
 by default, each Frame has a "Debug" window
-** [0/4] play
-*** TODO Play / Stop buttons
-*** TODO Play-Pause button
+** [2/5] play
+*** DONE Play / Stop buttons
+*** DONE Play-Pause button
+*** TODO change color of button when playing ?
 *** TODO toStart button
 *** TODO sliding line synchronized
 * IDEA [28/34] linux

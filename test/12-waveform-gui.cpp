@@ -36,21 +36,54 @@
 #include <numeric>     // iota
 #include <vector>
 
+// WARN: I force using ALSA, as with PulseAudio, the audio buffer is not
+//       purged when I stop the device => some scratch when restarting
+//       the device.
 #define MINIAUDIO_IMPLEMENTATION
+#define MA_ENABLE_ONLY_SPECIFIC_BACKENDS
+#define MA_ENABLE_ALSA
 #include <miniaudio.h>
+
+// taken from libs/common/Fonts/IconsFontAwesome5.h
+#define ICON_FA_PLAY u8"\uf04b"
+#define ICON_FA_PAUSE u8"\uf04c"
+#define ICON_FA_STOP u8"\uf04d"
+#define ICON_FA_STEP_BACKWARD u8"\uf048"
+#define ICON_FA_STEP_FORWARD u8"\uf051"
 
 // Callback to handle GLFW errors
 void glfw_error_callback(int error, const char* description)
 {
     std::cerr << "GLFW Error " << error << ": " << description << std::endl;
 }
+std::string format_str( const ma_format fmt )
+{
+  switch (fmt) {
+    case ma_format_f32:
+      return "f32 => [-1.0, 1.0]";
+    case ma_format_s16:
+      return "s16 => [-32768, 32768]";
+    case ma_format_s24:
+      return "s24 => [-8388608, 8388608]";
+    case ma_format_s32:
+      return "s32 => [-2147483648, 2147483648]";
+    case ma_format_u8:
+      return "u8: [0, 255]";
+    case ma_format_unknown:
+        return "ma_format_unkown";
+    case ma_format_count:
+        return "ma_format_count";
+  }
+  return "unknown";
+}
 
 // ********************************************************** miniaudio GLOBAL
 static constexpr int FS    = 44100;          // sampling rate
 static constexpr int DOWNRATE = 100;         // danw sampling for display
 
-ma_decoder         m_decoder;                // miniaudio audio file decoder
-ma_device          m_device;                 // miniaudio playback device
+ma_decoder         m_decoder;                // miniaudio decoder for sound
+ma_device_config   m_device_config;          // miniaudio device config
+ma_device          m_device;                 // miniaudio device for sound
 
 std::string        m_filename;               // filename of audio file provided
 double             m_duration;               // length of audio file in seconds
@@ -58,6 +91,15 @@ std::vector<float> m_samples;                // local copy of audio file samples
 ma_uint64          m_nb_frames;                       // nb of frames in audio
 
 double m_time  = 0;                          // current playback time in seconds
+
+enum PlayerState { play, paused, stop };
+PlayerState m_playing {stop};                // is current audio playing
+
+bool g_demo_win {false};                     // display ImGuiDemoWindow ?
+bool g_ask_play {false};                     // ask to play audio ?
+bool g_ask_pause {false};                    // ask to play audio ?
+bool g_ask_stop {false};                     // ask to play audio ?
+
 
 // ******************************************************** miniaudio copy_wav
 void copy_wav( const std::string& filepath )
@@ -67,14 +109,16 @@ void copy_wav( const std::string& filepath )
     std::filesystem::path p(filepath);
     m_filename = p.filename().string();
 
+    // miniaudio audio file decoder
+    ma_decoder         decoder;
     // initialize decoder (force float, mono, 44100 Hz)
     auto decoder_cfg = ma_decoder_config_init(ma_format_f32, 1, FS);
-    if (ma_decoder_init_file(filepath.c_str(), &decoder_cfg, &m_decoder) != MA_SUCCESS) {
+    if (ma_decoder_init_file(filepath.c_str(), &decoder_cfg, &decoder) != MA_SUCCESS) {
         std::runtime_error("Failed to decode audio file: " + filepath);
     }
 
     // read all samples to local buffer
-    ma_decoder_get_length_in_pcm_frames( &m_decoder, &m_nb_frames);
+    ma_decoder_get_length_in_pcm_frames( &decoder, &m_nb_frames);
     m_samples.resize( m_nb_frames);
     // m_samples_x.resize( m_nb_frames );
     std::cout << "  read " << m_nb_frames << " frames." << std::endl;
@@ -82,12 +126,100 @@ void copy_wav( const std::string& filepath )
     // std::iota( m_samples_x.begin(), m_samples_x.end(), 1);
 
     ma_uint64 nb_frame_read;
-    ma_decoder_read_pcm_frames( &m_decoder, m_samples.data(),
+    ma_decoder_read_pcm_frames( &decoder, m_samples.data(),
                                 m_nb_frames, &nb_frame_read );
     std::cout << "  copied " << nb_frame_read << " frames." << std::endl;
-    ma_decoder_seek_to_pcm_frame( &m_decoder, 0 );
+    ma_decoder_seek_to_pcm_frame( &decoder, 0 );
     // compute audio file duration
     m_duration = (double)m_nb_frames / (double)FS;
+
+    ma_decoder_uninit(&decoder);
+}
+
+// ************************************************************* data_callback
+// data_callback read from data_source (i.e. ma_decoder)
+// and copy to pOutput of device
+void data_callback(ma_device* pDevice, void* pOutput, const void* pInput,
+                   ma_uint32 frameCount)
+{
+    ma_decoder* pDecoder = (ma_decoder*)pDevice->pUserData;
+    if (pDecoder == NULL) {
+        return;
+    }
+
+    // TOOD results
+    ma_uint64 pCursor;
+    ma_uint64 pFrameRead;
+    ma_decoder_get_cursor_in_pcm_frames(pDecoder, &pCursor);
+    // std::cout << "cursor at " << pCursor << std::endl;
+
+    // TODO length of loop > frameCount of data_callback
+    bool loop_enabled {false};
+    ma_uint64 loop_frame_start {200000};
+    ma_uint64 loop_frame_length {48000 * 2};  // 1 second ?
+    if (loop_enabled && ((pCursor + frameCount) > (loop_frame_start + loop_frame_length))) {
+        // feed what is left of loop
+        ma_decoder_read_pcm_frames( pDecoder, pOutput,
+                                    (loop_frame_start+loop_frame_length-pCursor),
+                                    &pFrameRead );
+        // std::cout << "feed END " << pFrameRead << " from " << pCursor << std::endl;
+        // then set pcm to loop_start
+        ma_decoder_seek_to_pcm_frame( pDecoder, loop_frame_start );
+    }
+    else {
+        ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount, &pFrameRead);
+        // std::cout << "feed NOR " << pFrameRead << " from " << pCursor << std::endl;
+    }
+
+    // std::cout << "  " << (pCursor / FS) << " frames" << "\r";
+    std::cout << "pCursor=" << pCursor << "\r" << std::flush;
+    (void)pInput;
+}
+
+// TODO use exceptions
+bool init_audio( const std::string& filepath )
+{
+    std::cout << "__init_audio:" << std::endl;
+    // get filename
+    std::filesystem::path p(filepath);
+    m_filename = p.filename().string();
+
+    ma_result result;
+    // open and read file as data_source
+    std::cout << "  Opening: " << m_filename << std::endl;
+    result = ma_decoder_init_file(filepath.c_str(), NULL, &m_decoder);
+    if (result != MA_SUCCESS) {
+        std::cerr << "ERROR: could not open file" << std::endl;
+        return false;
+    }
+    std::cout << "  Sound DATA *******************************" << std::endl
+            << "  format :" << format_str( m_decoder.outputFormat ) << std::endl
+            << "  channels : " << m_decoder.outputChannels << std::endl
+            << "  sampleRate : " << m_decoder.outputSampleRate << std::endl;
+
+    // configure and initialize output/sink device with properties similar to
+    // the decoded music
+    // the device will use the given callbackfunction to be fed.
+
+    m_device_config = ma_device_config_init(ma_device_type_playback);
+    m_device_config.playback.format   = m_decoder.outputFormat;
+    m_device_config.playback.channels = m_decoder.outputChannels;
+    m_device_config.sampleRate        = m_decoder.outputSampleRate;
+    m_device_config.dataCallback      = data_callback;
+    m_device_config.pUserData         = &m_decoder;
+
+    std::cout << "  Initialize playback device." << std::endl;
+    if (ma_device_init(NULL, &m_device_config, &m_device) != MA_SUCCESS) {
+        std::cerr << "ERROR: failed to initialize/open device" << std::endl;
+        ma_decoder_uninit(&m_decoder);
+        return false;
+    }
+
+    ma_uint64 nb_frames;
+    ma_decoder_get_length_in_pcm_frames( &m_decoder, &nb_frames);
+    std::cout << "  size: " << nb_frames << " frames." << std::endl;
+
+    return true;
 }
 
 void plot_wav()
@@ -143,6 +275,8 @@ int main(int argc, char *argv[])
 {
     // load filepath (.wav file) into memory
     std::string filepath = (argc < 2) ? "ressources/Bashung - La Nuit Je Mens.wav" : argv[1];
+    if (not init_audio( filepath ))
+        return -1;
     copy_wav( filepath );
 
     // Setup error callback
@@ -186,6 +320,13 @@ int main(int argc, char *argv[])
 
     // Setup style
     ImGui::StyleColorsDark();
+    ImGuiIO& io = ImGui::GetIO();
+    ImFontConfig config;
+    config.MergeMode = false;
+    io.Fonts->AddFontFromFileTTF("ressources/DejaVuSansMono.ttf", 16.0f, &config);
+    // Merge into first font to add Icons
+    config.MergeMode = true;
+    io.Fonts->AddFontFromFileTTF("ressources/fontawesome-webfont.ttf", 0.0f, &config);
 
     // Setup backend
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -200,21 +341,77 @@ int main(int argc, char *argv[])
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // // Demo windows
-        // ImGui::ShowDemoWindow();
-        // ImPlot::ShowDemoWindow();
-
-        // Demo_LinePlots();
         // ImGuiViewport.Size
         auto view_ptr = ImGui::GetMainViewport();
         // std::cout << "ViewPort size " << view_ptr->Size << std::endl;
-        ImGui::SetNextWindowPos({0,0},ImGuiCond_Always);
-        ImGui::SetNextWindowSize(view_ptr->Size, ImGuiCond_Always);
+
+        // Demo windows
+        ImGui::SetNextWindowPos({view_ptr->Size.x - 600, 10}, ImGuiCond_Once);
+        ImGui::ShowDemoWindow( &g_demo_win );
+        // ImPlot::ShowDemoWindow();
+
+        // Demo_LinePlots();
+        ImGui::SetNextWindowPos({10,40}, ImGuiCond_Once);
+        // auto ImGUI::ImVec2 w_size
+        ImGui::SetNextWindowSize( {view_ptr->Size.x * 0.95f, 400}, ImGuiCond_Once);
         if (ImGui::Begin( "Player" )) {
 
+            //if (ImGui::Button( u8"⏵", {30, 30})) {
+            ImGui::PushFont(nullptr, 40.0f);    // change fontSize
+
+            ImGui::BeginGroup();
+            {
+                ImGui::BeginGroup();
+                {
+                    // if (ImGui::Button( u8"P", {80, 80})) {
+                    if (m_playing == play) {
+                        if (ImGui::Button( ICON_FA_PAUSE, {80, 80})) {
+                            g_ask_pause = true;
+                        }
+                    }
+                    else {
+                        if (ImGui::Button( ICON_FA_PLAY, {80, 80})) {
+                            g_ask_play = true;
+                        }
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button( ICON_FA_STOP, {80, 80})) {
+                        g_ask_stop = true;
+                    }
+                }
+                ImGui::EndGroup();
+                // Capture group size to create a Button with same width
+                ImVec2 size = ImGui::GetItemRectSize();
+
+                if (ImGui::Button( "No loop", {size.x, 80})) {
+                }
+                ImGui::PopFont();
+            }
+            ImGui::EndGroup();
+
+            ImGui::SameLine();
             plot_wav();
 
             ImGui::End();
+        }
+
+        // Audio logic
+        if (g_ask_play) {
+            ma_device_start( &m_device);
+            m_playing = play;
+            g_ask_play = false;
+        }
+        if (g_ask_pause && m_playing == play) {
+            ma_device_stop( &m_device );
+            m_playing = paused;
+            g_ask_pause = false;
+        }
+        if (g_ask_stop) {
+            m_playing = stop;
+            ma_device_stop( &m_device );
+            // to start of audio
+            ma_decoder_seek_to_pcm_frame( &m_decoder, 0 );
+            g_ask_stop = false;
         }
 
         // Logic
@@ -255,6 +452,9 @@ int main(int argc, char *argv[])
     ImGui::DestroyContext();
     glfwDestroyWindow(window);
     glfwTerminate();
+
+    ma_device_uninit( &m_device );
+    ma_decoder_uninit( &m_decoder );
 
     return 0;
 }
