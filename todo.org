@@ -1,11 +1,27 @@
 * __CURRENT_: display wav ds ImGUI
 
+
+* GitVersion:
+** imgui working: 2c03aac6d (v 1.87)
+** miniaudio: 82e70f4 (v 0.11.8)
 * PlayLoop
 l'idée est de faire un lecteur "Live", avec des boucles, pour utiliser avec Marie.
 ** lire MiniAudio/PCM pour comprendre si on peut "looper" de manière "intrinsèque"
 * [1/2] loop (4 - Data Sources)
-** DONE essayer de faire une loop
-** TODO display wav in ImGUI
+** DONE essayer de faire une loop => 11-simple-innerloop.cpp
+** [0/3] display wav in ImGUI
+*** TODO prevent from zooming in Y
+*** TODO restict zooming in X (max = size, min = ??)
+*** TODO display in frames OR seconds
+** [0/3] ImGUI ergonomy
+*** TODO quit on Ctrl-Q
+*** TODO full size
+*** TODO out of the "Debug" sub_windo ?
+** [0/4] play
+*** TODO Play / Stop buttons
+*** TODO Play-Pause button
+*** TODO toStart button
+*** TODO sliding line synchronized
 * IDEA [28/34] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline

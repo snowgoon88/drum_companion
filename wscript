@@ -106,6 +106,15 @@ def configure( conf ):
     conf.end_msg("yes")
     # conf.env.INCLUDES_VISUGL  = [visuglnode.abspath()+'/src']
 
+    # ## Check ImPlot is present and configured and ready to be used ...
+    conf.start_msg( "Looking for ImPlot" )
+    implot_node = conf.path.find_node( 'libs/implot' )
+    if not implot_node:
+        raise ConfigurationError( msg='No ImPlot in libs' )
+    conf.env.INCLUDES_IMPLOT = [implot_node.abspath()]
+    conf.end_msg("yes")
+    # conf.env.INCLUDES_VISUGL  = [visuglnode.abspath()+'/src']
+
     # ## Check ImGuiFileDiaolg is present and configured and ready to be used ...
     conf.start_msg( "Looking for ImGuiFileDialog" )
     imguifile_node = conf.path.find_node( 'libs/ImGuiFileDialog' )

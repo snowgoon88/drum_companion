@@ -29,6 +29,14 @@ def build(bld):
     ]
     imguifile_sources = [imguifile_dir+path for path in imguifile_files]
 
+    # ------------------------------------------------------------------- ImPlot
+    ## build list of ImGUI sources
+    implot_dir = "../libs/implot/"
+    implot_files = [ "implot.cpp",
+                    "implot_items.cpp",
+    ]
+    implot_sources = [implot_dir+path for path in implot_files]
+
     # ------------------------------------------------------------------  docopt
     docopt_dir = "../libs/docopt.cpp/"
     docopt_files = [ "docopt.cpp",
@@ -44,24 +52,29 @@ def build(bld):
     def build_file( file ):
         print( "** Buildind "+file )
         bld.program(
-            source =   [file] + imgui_sources + imguifile_sources,
+            source =   [file] + imgui_sources + implot_sources,
             target =   file[:-4],
             includes = [".", "../src", imgui_dir, imgui_dir+"backends/",
                         imguifile_dir],
             lib =     ['X11','Xss'],#["m","rt","dl"], # X11 screensaver
-            use =      ["DOCOPT", "docopt.obj",
+            use =      [# "DOCOPT", "docopt.obj",
                         "IMGUI",
-                        "IMGUIFILEDIALOG",
+                        # "IMGUIFILEDIALOG",
+                        "IMPLOT",
                         "MINIAUDIO",
                         "GLFW3", "GL",
                         "X11", "XEXT"]
         )
 
     # base_files = ["04-leds_widget.cpp", "04-date_widget.cpp", "drum_compagnon.cpp"]
-    base_files = ["00-engine-play.cpp", "04-file_widget.cpp",
-                  "10-miniaudio-base.cpp",
-                  "11-simple-innerloop.cpp",
-                  "drum_compagnon.cpp", "big_clock.cpp"]
+    # base_files = ["00-engine-play.cpp", "04-file_widget.cpp",
+    #               "10-miniaudio-base.cpp",
+    #               "11-simple-innerloop.cpp",
+    #               "12-waveform-gui.cpp",
+    #               "drum_compagnon.cpp", "big_clock.cpp"]
+    base_files = [ # "drum_compagnon.cpp", "big_clock.cpp",
+                   "12-waveform-gui.cpp",
+                 ]
     for file in base_files:
         build_file( file )
         
