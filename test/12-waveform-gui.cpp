@@ -76,10 +76,23 @@ std::string format_str( const ma_format fmt )
   }
   return "unknown";
 }
+// ******************************************************************* Globals
+const ImVec4 CLEAR_COL = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+const ImVec4 RED_COL = ImVec4(1.0f, 0.0f, 0.0f, 1.00f);
+const ImVec4 GREEN_COL = ImVec4(0.0f, 1.0f, 0.0f, 1.00f);
+const ImVec4 YELLOW_COL = ImVec4(0.7f, 0.7f, 0.0f, 1.00f);
 
 // ********************************************************** miniaudio GLOBAL
 static constexpr int FS    = 44100;          // sampling rate
 static constexpr int DOWNRATE = 100;         // danw sampling for display
+
+// TODO length of loop > frameCount of data_callback
+bool               m_loop_enabled {true};
+ma_uint64          m_loop_frame_start {300000};
+ma_uint64          m_loop_frame_length {FS * 3};  // 3 second ?
+ImPlotRect         g_loop_rect ( (double) (m_loop_frame_start / DOWNRATE),
+                                 (double) ((m_loop_frame_start + m_loop_frame_length) / DOWNRATE),
+                                 -1.0, 1.0 );
 
 ma_decoder         m_decoder;                // miniaudio decoder for sound
 ma_device_config   m_device_config;          // miniaudio device config
@@ -88,13 +101,16 @@ ma_device          m_device;                 // miniaudio device for sound
 std::string        m_filename;               // filename of audio file provided
 double             m_duration;               // length of audio file in seconds
 std::vector<float> m_samples;                // local copy of audio file samples
-ma_uint64          m_nb_frames;                       // nb of frames in audio
+ma_uint64          m_nb_frames;              // nb of frames in audio
+double             m_pCursor {0.0};          // actual position of the audio cursor.
+
 
 double m_time  = 0;                          // current playback time in seconds
 
 enum PlayerState { play, paused, stop };
 PlayerState m_playing {stop};                // is current audio playing
 
+std::string g_player_title;                  // title of Player Window
 bool g_demo_win {false};                     // display ImGuiDemoWindow ?
 bool g_ask_play {false};                     // ask to play audio ?
 bool g_ask_pause {false};                    // ask to play audio ?
@@ -151,28 +167,37 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput,
     ma_uint64 pCursor;
     ma_uint64 pFrameRead;
     ma_decoder_get_cursor_in_pcm_frames(pDecoder, &pCursor);
+    m_pCursor = (double) (pCursor / DOWNRATE);
+
     // std::cout << "cursor at " << pCursor << std::endl;
 
     // TODO length of loop > frameCount of data_callback
-    bool loop_enabled {false};
-    ma_uint64 loop_frame_start {200000};
-    ma_uint64 loop_frame_length {48000 * 2};  // 1 second ?
-    if (loop_enabled && ((pCursor + frameCount) > (loop_frame_start + loop_frame_length))) {
+    // bool loop_enabled {false};
+    // ma_uint64 loop_frame_start {200000};
+    // ma_uint64 loop_frame_length {48000 * 2};  // 1 second ?
+    if (m_loop_enabled &&
+        (pCursor < (m_loop_frame_start + m_loop_frame_length)) &&
+        ((pCursor + frameCount) >= (m_loop_frame_start + m_loop_frame_length))) {
+        //DEBUG std::cout << "END Loop" << std::endl;
+
         // feed what is left of loop
         ma_decoder_read_pcm_frames( pDecoder, pOutput,
-                                    (loop_frame_start+loop_frame_length-pCursor),
+                                    (m_loop_frame_start+m_loop_frame_length-pCursor),
                                     &pFrameRead );
-        // std::cout << "feed END " << pFrameRead << " from " << pCursor << std::endl;
+        //DEBUG std::cout << "feed END " << pFrameRead << " from " << pCursor << std::endl;
         // then set pcm to loop_start
-        ma_decoder_seek_to_pcm_frame( pDecoder, loop_frame_start );
+        ma_decoder_seek_to_pcm_frame( pDecoder, m_loop_frame_start );
     }
     else {
+        //DEBUG std::cout << "OUT loop" << std::endl;
         ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount, &pFrameRead);
         // std::cout << "feed NOR " << pFrameRead << " from " << pCursor << std::endl;
     }
 
     // std::cout << "  " << (pCursor / FS) << " frames" << "\r";
     std::cout << "pCursor=" << pCursor << "\r" << std::flush;
+    //DEBUG std::cout << "pCursor=" << pCursor << std::endl;
+    // TODO what is this for ????????
     (void)pInput;
 }
 
@@ -183,6 +208,7 @@ bool init_audio( const std::string& filepath )
     // get filename
     std::filesystem::path p(filepath);
     m_filename = p.filename().string();
+    g_player_title = std::string( "Player: " ) + m_filename;
 
     ma_result result;
     // open and read file as data_source
@@ -222,7 +248,7 @@ bool init_audio( const std::string& filepath )
     return true;
 }
 
-void plot_wav()
+void plot_wav( bool verb=false )
 {
     // if (ImPlot::BeginPlot( "m_filename x, y" )) {
     //     ImPlot::SetupAxes("x","y");
@@ -231,14 +257,43 @@ void plot_wav()
     //     ImPlot::EndPlot();
     // }
     if (ImPlot::BeginPlot( "m_filename samples" )) {
+        // if (verb) {
+        //     auto limits_rect_init = ImPlot::GetPlotLimits();
+        //     std::cout << "__plot_wav: before from " << limits_rect_init.Min().x
+        //               << " to " << limits_rect_init.Max().x << std::endl;
+        // }
         ImPlot::SetupAxes("x","y");
+        ImPlot::SetupAxisLimits( ImAxis_Y1, -1.0, 1.0, ImPlotCond_Always );
+        if (verb) {
+            auto limits_rect_before = ImPlot::GetPlotLimits();
+            std::cout << "__plot_wav: before from " << limits_rect_before.Min().x
+                      << " to " << limits_rect_before.Max().x << std::endl;
+        }
         ImPlot::PlotLine("m_frames_2 ", m_samples.data(), m_nb_frames / DOWNRATE,
                          1.0, 0.0,                // xscale, xstart
                          ImPlotLineFlags_None, 0, // flags, offset
                          DOWNRATE * sizeof(float) );  // stride
-
+        ImPlot::DragRect( 0, &g_loop_rect.X.Min, &g_loop_rect.Y.Min,
+                          &g_loop_rect.X.Max, &g_loop_rect.Y.Max,
+                          m_loop_enabled ? GREEN_COL : YELLOW_COL,
+                          ImPlotDragToolFlags_NoCursors | ImPlotDragToolFlags_NoFit |
+                          ImPlotDragToolFlags_NoInputs );
+        ImPlot::DragLineX( 1, &m_pCursor, ImVec4(1,0,0,1), 1 /*thickness */,
+                          ImPlotDragToolFlags_NoCursors | ImPlotDragToolFlags_NoFit |
+                          ImPlotDragToolFlags_NoInputs );
+        // if (verb) {
+        //     auto limits_rect_after = ImPlot::GetPlotLimits();
+        //     std::cout << "            after from " << limits_rect_after.Min().x
+        //               << " to " << limits_rect_after.Max().x << std::endl;
+        // }
         ImPlot::EndPlot();
     }
+    // get the actual x-limits, keep the same span, but setting the actual pCursor
+    // position at 'ratio' from left-limit
+
+    // Returns the current plot axis range.
+    //IMPLOT_API ImPlotRect GetPlotLimits(ImAxis x_axis = IMPLOT_AUTO, ImAxis y_axis = IMPLOT_AUTO);
+    // see ##Tags, ##Rolling, ##Scrolling in 'implot_demo.cpp'
 }
 
 // ************************************************************* Demo_LinePlot
@@ -354,7 +409,8 @@ int main(int argc, char *argv[])
         ImGui::SetNextWindowPos({10,40}, ImGuiCond_Once);
         // auto ImGUI::ImVec2 w_size
         ImGui::SetNextWindowSize( {view_ptr->Size.x * 0.95f, 400}, ImGuiCond_Once);
-        if (ImGui::Begin( "Player" )) {
+        ImGui::PushFont( nullptr, 25.0f );
+        if (ImGui::Begin( g_player_title.c_str() )) {
 
             //if (ImGui::Button( u8"⏵", {30, 30})) {
             ImGui::PushFont(nullptr, 40.0f);    // change fontSize
@@ -364,6 +420,11 @@ int main(int argc, char *argv[])
                 ImGui::BeginGroup();
                 {
                     // if (ImGui::Button( u8"P", {80, 80})) {
+                    // Colorize Play/Pause in Green if not stop
+                    if (m_playing != stop) {
+                        ImGui::PushStyleColor(ImGuiCol_Button, GREEN_COL);
+                        ImGui::PushStyleColor(ImGuiCol_ButtonActive, GREEN_COL);
+                    }
                     if (m_playing == play) {
                         if (ImGui::Button( ICON_FA_PAUSE, {80, 80})) {
                             g_ask_pause = true;
@@ -374,26 +435,51 @@ int main(int argc, char *argv[])
                             g_ask_play = true;
                         }
                     }
+                    if (m_playing != stop) {
+                        ImGui::PopStyleColor(2);
+                    }
+
                     ImGui::SameLine();
+                    if (m_playing == stop) {
+                        ImGui::PushStyleColor(ImGuiCol_Button, RED_COL);
+                        ImGui::PushStyleColor(ImGuiCol_ButtonActive, RED_COL);
+                    }
                     if (ImGui::Button( ICON_FA_STOP, {80, 80})) {
                         g_ask_stop = true;
+                    }
+                    if (m_playing == stop) {
+                        ImGui::PopStyleColor(2);
                     }
                 }
                 ImGui::EndGroup();
                 // Capture group size to create a Button with same width
                 ImVec2 size = ImGui::GetItemRectSize();
 
-                if (ImGui::Button( "No loop", {size.x, 80})) {
+                if (m_loop_enabled) {
+                    ImGui::PushStyleColor(ImGuiCol_Button, GREEN_COL);
+                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, GREEN_COL);
+                    if (ImGui::Button( "Looping", {size.x, 80})) {
+                        m_loop_enabled = false;
+                    }
                 }
+                else {
+                    ImGui::PushStyleColor(ImGuiCol_Button, YELLOW_COL);
+                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, YELLOW_COL);
+                    if (ImGui::Button( "No loop", {size.x, 80})) {
+                        m_loop_enabled = true;
+                    }
+                }
+                ImGui::PopStyleColor(2);
+
                 ImGui::PopFont();
             }
             ImGui::EndGroup();
 
             ImGui::SameLine();
-            plot_wav();
-
-            ImGui::End();
+            plot_wav( false /*verb*/ );
         }
+        ImGui::End();
+        ImGui::PopFont();
 
         // Audio logic
         if (g_ask_play) {
@@ -411,6 +497,7 @@ int main(int argc, char *argv[])
             ma_device_stop( &m_device );
             // to start of audio
             ma_decoder_seek_to_pcm_frame( &m_decoder, 0 );
+            m_pCursor = 0.0;
             g_ask_stop = false;
         }
 
