@@ -9,12 +9,12 @@ l'idée est de faire un lecteur "Live", avec des boucles, pour utiliser avec Mar
 ** lire MiniAudio/PCM pour comprendre si on peut "looper" de manière "intrinsèque"
 * [3/3] loop (4 - Data Sources)
 ** DONE essayer de faire une loop => 11-simple-innerloop.cpp
-** [1/3] display wav in ImGUI
+** [3/5] display wav in ImGUI
 *** DONE prevent from zooming in Y
 *** TODO restict zooming in X (max = size, min = ??)
 *** TODO display in frames OR seconds
-*** remove legende
-*** remove mouse position
+*** DONE remove legende
+*** DONE remove mouse position
 ** DONE [3/3] ImGUI ergonomy
 *** DONE quit on Ctrl-Q
 *** DONE full size
@@ -35,7 +35,7 @@ by default, each Frame has a "Debug" window
 *** TODO play/pause
 *** TODO stop
 *** TODO loop
-** several wav
+** several wavs
 * IDEA [28/34] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
 Already existing as PatternAudio::Timeline

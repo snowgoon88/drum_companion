@@ -248,7 +248,8 @@ bool init_audio( const std::string& filepath )
     return true;
 }
 
-void plot_wav( bool verb=false )
+void plot_wav( const ImVec2& size=ImVec2(-1, 0),
+               bool verb=false )
 {
     // if (ImPlot::BeginPlot( "m_filename x, y" )) {
     //     ImPlot::SetupAxes("x","y");
@@ -256,13 +257,24 @@ void plot_wav( bool verb=false )
     //     ImPlot::PlotLine("m_frames_1", m_samples_x.data(), m_samples.data(), m_nb_frames);
     //     ImPlot::EndPlot();
     // }
-    if (ImPlot::BeginPlot( "m_filename samples" )) {
+    if (ImPlot::BeginPlot( "m_filename samples",
+                           size,
+                           ImPlotFlags_NoTitle |
+                           ImPlotFlags_NoMouseText |
+                           ImPlotFlags_NoMenus )) {
         // if (verb) {
         //     auto limits_rect_init = ImPlot::GetPlotLimits();
         //     std::cout << "__plot_wav: before from " << limits_rect_init.Min().x
         //               << " to " << limits_rect_init.Max().x << std::endl;
         // }
-        ImPlot::SetupAxes("x","y");
+        // ImPlot::SetupAxes("x","y");
+        static auto axis_flags = ImPlotAxisFlags_NoLabel |
+                                 ImPlotAxisFlags_NoSideSwitch |
+                                 ImPlotAxisFlags_NoMenus;
+        ImPlot::SetupAxis( ImAxis_X1, "audio_x", axis_flags );
+        ImPlot::SetupAxis( ImAxis_Y1, "audio_y",
+                           axis_flags | ImPlotAxisFlags_NoHighlight |
+                           ImPlotAxisFlags_NoTickLabels );
         ImPlot::SetupAxisLimits( ImAxis_Y1, -1.0, 1.0, ImPlotCond_Always );
         if (verb) {
             auto limits_rect_before = ImPlot::GetPlotLimits();
@@ -271,14 +283,15 @@ void plot_wav( bool verb=false )
         }
         ImPlot::PlotLine("m_frames_2 ", m_samples.data(), m_nb_frames / DOWNRATE,
                          1.0, 0.0,                // xscale, xstart
-                         ImPlotLineFlags_None, 0, // flags, offset
+                         ImPlotItemFlags_NoLegend , // flags
+                         0, // offset
                          DOWNRATE * sizeof(float) );  // stride
         ImPlot::DragRect( 0, &g_loop_rect.X.Min, &g_loop_rect.Y.Min,
                           &g_loop_rect.X.Max, &g_loop_rect.Y.Max,
                           m_loop_enabled ? GREEN_COL : YELLOW_COL,
                           ImPlotDragToolFlags_NoCursors | ImPlotDragToolFlags_NoFit |
                           ImPlotDragToolFlags_NoInputs );
-        ImPlot::DragLineX( 1, &m_pCursor, ImVec4(1,0,0,1), 1 /*thickness */,
+        ImPlot::DragLineX( 1, &m_pCursor, ImVec4(1,0,0,1), 2 /*thickness */,
                           ImPlotDragToolFlags_NoCursors | ImPlotDragToolFlags_NoFit |
                           ImPlotDragToolFlags_NoInputs );
         // if (verb) {
@@ -474,9 +487,11 @@ int main(int argc, char *argv[])
                 ImGui::PopFont();
             }
             ImGui::EndGroup();
+            // Capture group size to create a plot_wave with same height
+            ImVec2 btn_size = ImGui::GetItemRectSize();
 
             ImGui::SameLine();
-            plot_wav( false /*verb*/ );
+            plot_wav( ImVec2(-1.0, btn_size.y), false /*verb*/ );
         }
         ImGui::End();
         ImGui::PopFont();
