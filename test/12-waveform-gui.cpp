@@ -115,7 +115,7 @@ bool g_demo_win {false};                     // display ImGuiDemoWindow ?
 bool g_ask_play {false};                     // ask to play audio ?
 bool g_ask_pause {false};                    // ask to play audio ?
 bool g_ask_stop {false};                     // ask to play audio ?
-
+bool g_ask_looping {false};                  // ask to switch audio looping
 
 // ******************************************************** miniaudio copy_wav
 void copy_wav( const std::string& filepath )
@@ -472,14 +472,14 @@ int main(int argc, char *argv[])
                     ImGui::PushStyleColor(ImGuiCol_Button, GREEN_COL);
                     ImGui::PushStyleColor(ImGuiCol_ButtonActive, GREEN_COL);
                     if (ImGui::Button( "Looping", {size.x, 80})) {
-                        m_loop_enabled = false;
+                        g_ask_looping = true;
                     }
                 }
                 else {
                     ImGui::PushStyleColor(ImGuiCol_Button, YELLOW_COL);
                     ImGui::PushStyleColor(ImGuiCol_ButtonActive, YELLOW_COL);
                     if (ImGui::Button( "No loop", {size.x, 80})) {
-                        m_loop_enabled = true;
+                        g_ask_looping = true;
                     }
                 }
                 ImGui::PopStyleColor(2);
@@ -495,6 +495,25 @@ int main(int argc, char *argv[])
         }
         ImGui::End();
         ImGui::PopFont();
+
+        // Keyboard logic, like buttons.
+        // see also ImGui::Shortcut()
+        if (ImGui::IsKeyChordPressed( ImGuiMod_Ctrl | ImGuiKey_Space )) {
+                g_ask_stop = true;
+        }
+        else {
+            if (ImGui::IsKeyPressed( ImGuiKey_Space )) {
+                if (m_playing == paused or m_playing == stop) {
+                    g_ask_play = true;
+                }
+                if (m_playing == play) {
+                    g_ask_pause = true;
+                }
+            }
+        }
+        if (ImGui::IsKeyPressed( ImGuiKey_Enter )) {
+            g_ask_looping = true;
+        }
 
         // Audio logic
         if (g_ask_play) {
@@ -514,6 +533,10 @@ int main(int argc, char *argv[])
             ma_decoder_seek_to_pcm_frame( &m_decoder, 0 );
             m_pCursor = 0.0;
             g_ask_stop = false;
+        }
+        if (g_ask_looping) {
+            m_loop_enabled = not m_loop_enabled;
+            g_ask_looping = false;
         }
 
         // Logic

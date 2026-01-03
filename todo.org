@@ -31,10 +31,11 @@ by default, each Frame has a "Debug" window
 ** DONE [1/1] loop enabled
 *** DONE with ONE loop
 *** several loops ??
-** [0/3] Keyboard shortcuts
-*** TODO play/pause
-*** TODO stop
-*** TODO loop
+** [3/4] Keyboard shortcuts
+*** DONE play/pause : SPACE
+*** DONE stop :       Ctrl-SPACE
+*** DONE loop :       ENTER
+*** TODO hint or textline about Key shorcuts
 ** several wavs
 * IDEA [28/34] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?
