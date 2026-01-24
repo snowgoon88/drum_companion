@@ -9,10 +9,11 @@ l'idée est de faire un lecteur "Live", avec des boucles, pour utiliser avec Mar
 ** lire MiniAudio/PCM pour comprendre si on peut "looper" de manière "intrinsèque"
 * [3/3] loop (4 - Data Sources)
 ** DONE essayer de faire une loop => 11-simple-innerloop.cpp
-** [3/5] display wav in ImGUI
+** [4/6] display wav in ImGUI
 *** DONE prevent from zooming in Y
-*** TODO restict zooming in X (max = size, min = ??)
+*** DONE restict zooming in X (max = size, min = ??)
 *** TODO display in frames OR seconds
+*** TODO restore to full view
 *** DONE remove legende
 *** DONE remove mouse position
 ** DONE [3/3] ImGUI ergonomy

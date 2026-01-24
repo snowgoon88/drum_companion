@@ -51,6 +51,18 @@
 #define ICON_FA_STEP_BACKWARD u8"\uf048"
 #define ICON_FA_STEP_FORWARD u8"\uf051"
 
+const std::string help_msg = "\n\
+*********************\n\
+** WaveForm PLayer **\n\
+*********************\n\n\
+** Key Shortcuts ****\n\
+ - <SPACE> : play/pause\n\
+ - <Ctrl-SPACE>: stop\n\
+ - <ENTER>: switch looping\n\
+\n\
+** <Ctrl-Q> to quit\
+";
+
 // Callback to handle GLFW errors
 void glfw_error_callback(int error, const char* description)
 {
@@ -84,7 +96,7 @@ const ImVec4 YELLOW_COL = ImVec4(0.7f, 0.7f, 0.0f, 1.00f);
 
 // ********************************************************** miniaudio GLOBAL
 static constexpr int FS    = 44100;          // sampling rate
-static constexpr int DOWNRATE = 100;         // danw sampling for display
+static constexpr int DOWNRATE = 100;         // donwsampling for display
 
 // TODO length of loop > frameCount of data_callback
 bool               m_loop_enabled {true};
@@ -111,6 +123,8 @@ enum PlayerState { play, paused, stop };
 PlayerState m_playing {stop};                // is current audio playing
 
 std::string g_player_title;                  // title of Player Window
+double g_zoom_min {1.0};                 // plot zoom min
+double g_zoom_max {10.0};                     // plot zoom max
 bool g_demo_win {false};                     // display ImGuiDemoWindow ?
 bool g_ask_play {false};                     // ask to play audio ?
 bool g_ask_pause {false};                    // ask to play audio ?
@@ -272,6 +286,7 @@ void plot_wav( const ImVec2& size=ImVec2(-1, 0),
                                  ImPlotAxisFlags_NoSideSwitch |
                                  ImPlotAxisFlags_NoMenus;
         ImPlot::SetupAxis( ImAxis_X1, "audio_x", axis_flags );
+        ImPlot::SetupAxisZoomConstraints(ImAxis_X1, g_zoom_min, g_zoom_max);
         ImPlot::SetupAxis( ImAxis_Y1, "audio_y",
                            axis_flags | ImPlotAxisFlags_NoHighlight |
                            ImPlotAxisFlags_NoTickLabels );
@@ -347,6 +362,12 @@ int main(int argc, char *argv[])
         return -1;
     copy_wav( filepath );
 
+    // setup graphic options
+    // Zoom is min (3 secondes) and max a bit more than the whole song
+    g_zoom_max = static_cast<double>(m_nb_frames + 2 * FS) / static_cast<double>(DOWNRATE);
+    g_zoom_min = static_cast<double>(1 * FS) / static_cast<double>(DOWNRATE);
+    std::cout << "Zoom limits: " << g_zoom_min << " - " << g_zoom_max << std::endl;
+
     // Setup error callback
     glfwSetErrorCallback(glfw_error_callback);
 
@@ -371,6 +392,7 @@ int main(int argc, char *argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
 
+    std::cout << help_msg << std::endl;
     // Create window
     GLFWwindow* window = glfwCreateWindow(1200, 800, "Live Looper", nullptr, nullptr);
     if (!window) {
