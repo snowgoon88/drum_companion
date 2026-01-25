@@ -7,7 +7,7 @@
 * PlayLoop
 l'idée est de faire un lecteur "Live", avec des boucles, pour utiliser avec Marie.
 ** lire MiniAudio/PCM pour comprendre si on peut "looper" de manière "intrinsèque"
-* [3/3] loop (4 - Data Sources)
+* [2/2] loop (4 - Data Sources)
 ** DONE essayer de faire une loop => 11-simple-innerloop.cpp
 ** [6/6] display wav in ImGUI
 *** DONE prevent from zooming in Y
@@ -29,15 +29,15 @@ by default, each Frame has a "Debug" window
 *** TODO [1/2] sliding line synchronized
 **** DONE red vert line at pCursor
 **** TODO sliding ??
-** DONE [1/2] loop enabled
+** [1/2] loop enabled
 *** DONE with ONE loop
 *** TODO save/read loop (and song) in yaml file ?
 *** several loops ??
-** [3/4] Keyboard shortcuts
+** [4/4] Keyboard shortcuts
 *** DONE play/pause : SPACE
 *** DONE stop :       Ctrl-SPACE
 *** DONE loop :       ENTER
-*** TODO hint or textline about Key shorcuts
+*** DONE hint or textline about Key shorcuts
 ** several wavs
 * IDEA [28/34] linux
 ** DONE [3/3] [dc] update PatternAudio (from vector of {0,1,2}) ?

@@ -95,6 +95,9 @@ const ImVec4 RED_COL = ImVec4(1.0f, 0.0f, 0.0f, 1.00f);
 const ImVec4 GREEN_COL = ImVec4(0.0f, 1.0f, 0.0f, 1.00f);
 const ImVec4 YELLOW_COL = ImVec4(0.7f, 0.7f, 0.0f, 1.00f);
 
+// ImGui::GetColorU32((ImGuiCol)ImGuiCol_Button))
+// ImGui::GetStyleColorVec4((ImGuiCol)ImGuiCol_Button))
+
 // ********************************************************** miniaudio GLOBAL
 static constexpr int FS    = 44100;          // sampling rate
 static constexpr int DOWNRATE = 100;         // donwsampling for display
@@ -492,11 +495,13 @@ int main(int argc, char *argv[])
                         if (ImGui::Button( ICON_FA_PAUSE, {80, 80})) {
                             g_ask_pause = true;
                         }
+                        ImGui::SetItemTooltip("<ESPACE>");
                     }
                     else {
                         if (ImGui::Button( ICON_FA_PLAY, {80, 80})) {
                             g_ask_play = true;
                         }
+                        ImGui::SetItemTooltip("<ESPACE>");
                     }
                     if (m_playing != stop) {
                         ImGui::PopStyleColor(2);
@@ -510,6 +515,7 @@ int main(int argc, char *argv[])
                     if (ImGui::Button( ICON_FA_STOP, {80, 80})) {
                         g_ask_stop = true;
                     }
+                    ImGui::SetItemTooltip("<Ctrl-ESPACE>");
                     if (m_playing == stop) {
                         ImGui::PopStyleColor(2);
                     }
@@ -524,6 +530,7 @@ int main(int argc, char *argv[])
                     if (ImGui::Button( "Looping", {size.x, 80})) {
                         g_ask_looping = true;
                     }
+                    ImGui::SetItemTooltip("<Enter>");
                 }
                 else {
                     ImGui::PushStyleColor(ImGuiCol_Button, YELLOW_COL);
@@ -531,6 +538,7 @@ int main(int argc, char *argv[])
                     if (ImGui::Button( "No loop", {size.x, 80})) {
                         g_ask_looping = true;
                     }
+                    ImGui::SetItemTooltip("<Enter>");
                 }
                 ImGui::PopStyleColor(2);
 
@@ -543,6 +551,21 @@ int main(int argc, char *argv[])
             ImGui::SameLine();
             plot_wav( ImVec2(-1.0, btn_size.y), g_ask_fullview, false /*verb*/ );
             g_ask_fullview = false;
+
+            ImGui::Text( "<Espace> " );
+            ImGui::SameLine();
+            ImGui::TextColored( ImGui::GetStyleColorVec4((ImGuiCol)ImGuiCol_ButtonHovered),
+                                ": Play/Pause: ");
+            ImGui::SameLine();
+            ImGui::Text( "<Ctrl-Espace> " );
+            ImGui::SameLine();
+            ImGui::TextColored( RED_COL, ": Stop: ");
+            ImGui::SameLine();
+            ImGui::Text( "<Enter> " );
+            ImGui::SameLine();
+            ImGui::TextColored( GREEN_COL, ": Looping");
+
+            // Stop: <Ctrl-ESPACE>;  Looping: <Enter>;");
         }
         ImGui::End();
         ImGui::PopFont();
