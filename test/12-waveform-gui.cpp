@@ -133,6 +133,15 @@ bool g_ask_stop {false};                     // ask to play audio ?
 bool g_ask_looping {false};                  // ask to switch audio looping
 bool g_ask_fullview {false};                 // ask to see full song
 
+
+// ****************************************************** ElapsedTimeFormatter
+int ElapsedTimeFormatter(double value, char* buff, int size, void* user_data)
+{
+    // WARNING does not look for hours
+    auto dts = div( static_cast<int>(value) * DOWNRATE, FS );  // seconds
+    auto dtm = div( dts.quot, 60 );                            // minutes
+    return snprintf( buff, size, "%d:%.2d", dtm.quot, dtm.rem );
+}
 // ******************************************************** miniaudio copy_wav
 void copy_wav( const std::string& filepath )
 {
@@ -290,6 +299,7 @@ void plot_wav( const ImVec2& size=ImVec2(-1, 0),
                                  ImPlotAxisFlags_NoMenus;
         ImPlot::SetupAxis( ImAxis_X1, "audio_x", axis_flags );
         ImPlot::SetupAxisZoomConstraints(ImAxis_X1, g_zoom_min, g_zoom_max);
+        ImPlot::SetupAxisFormat(ImAxis_X1, ElapsedTimeFormatter, nullptr);
         ImPlot::SetupAxis( ImAxis_Y1, "audio_y",
                            axis_flags | ImPlotAxisFlags_NoHighlight |
                            ImPlotAxisFlags_NoTickLabels );
