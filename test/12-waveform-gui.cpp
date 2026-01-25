@@ -58,7 +58,8 @@ const std::string help_msg = "\n\
 ** Key Shortcuts ****\n\
  - <SPACE> : play/pause\n\
  - <Ctrl-SPACE>: stop\n\
- - <ENTER>: switch looping\n\
+ - <ENTER>: switch looping\n\n\
+ - <F>: restore full_view\n\
 \n\
 ** <Ctrl-Q> to quit\
 ";
@@ -130,6 +131,7 @@ bool g_ask_play {false};                     // ask to play audio ?
 bool g_ask_pause {false};                    // ask to play audio ?
 bool g_ask_stop {false};                     // ask to play audio ?
 bool g_ask_looping {false};                  // ask to switch audio looping
+bool g_ask_fullview {false};                 // ask to see full song
 
 // ******************************************************** miniaudio copy_wav
 void copy_wav( const std::string& filepath )
@@ -263,6 +265,7 @@ bool init_audio( const std::string& filepath )
 }
 
 void plot_wav( const ImVec2& size=ImVec2(-1, 0),
+               bool set_full_view=false,
                bool verb=false )
 {
     // if (ImPlot::BeginPlot( "m_filename x, y" )) {
@@ -290,8 +293,23 @@ void plot_wav( const ImVec2& size=ImVec2(-1, 0),
         ImPlot::SetupAxis( ImAxis_Y1, "audio_y",
                            axis_flags | ImPlotAxisFlags_NoHighlight |
                            ImPlotAxisFlags_NoTickLabels );
+        // first time, set to full view (set only once)
+        ImPlot::SetupAxisLimits( ImAxis_X1,
+                                 0.0, static_cast<double>(m_nb_frames / DOWNRATE),
+                                 // 0.0, 1000.0,
+                                 ImPlotCond_Once );
+        // but, if asked, set back to full size
+        if (set_full_view) {
+            std::cout << "Setting FULLVIEW" << std::endl; //
+            ImPlot::SetupAxisLimits( ImAxis_X1,
+                                     0.0, static_cast<double>(m_nb_frames / DOWNRATE),
+                                     // 0.0, 1000.0,
+                                     ImPlotCond_Always );
+        }
         ImPlot::SetupAxisLimits( ImAxis_Y1, -1.0, 1.0, ImPlotCond_Always );
-        if (verb) {
+        ImPlot::SetupFinish();
+
+        if (verb or set_full_view) {
             auto limits_rect_before = ImPlot::GetPlotLimits();
             std::cout << "__plot_wav: before from " << limits_rect_before.Min().x
                       << " to " << limits_rect_before.Max().x << std::endl;
@@ -513,7 +531,8 @@ int main(int argc, char *argv[])
             ImVec2 btn_size = ImGui::GetItemRectSize();
 
             ImGui::SameLine();
-            plot_wav( ImVec2(-1.0, btn_size.y), false /*verb*/ );
+            plot_wav( ImVec2(-1.0, btn_size.y), g_ask_fullview, false /*verb*/ );
+            g_ask_fullview = false;
         }
         ImGui::End();
         ImGui::PopFont();
@@ -535,6 +554,11 @@ int main(int argc, char *argv[])
         }
         if (ImGui::IsKeyPressed( ImGuiKey_Enter )) {
             g_ask_looping = true;
+        }
+        // fullview
+        if (ImGui::IsKeyPressed( ImGuiKey_F )) {
+            std::cout << "Ask for fullview" << std::endl;
+            g_ask_fullview = true;
         }
 
         // Audio logic
