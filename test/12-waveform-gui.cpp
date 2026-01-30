@@ -393,6 +393,27 @@ int main(int argc, char *argv[])
         return -1;
     copy_wav( filepath );
 
+    // setup a path where to look for ressources
+    // $XDG_HOME_DATA_HOME/app_name or $HOME/.local/share/app_name
+    auto data_path = std::filesystem::path();
+    if (const char* data_p = std::getenv("XDG_DATA_HOME")) {
+        std::cout << "__DATA path::found $XDG_DATA_HOME" << std::endl;
+        data_path = data_p;
+        data_path /= "waveform";
+    }
+    else if (const char* data_p = std::getenv("HOME")) {
+        std::cout << "__DATA path::found $HOME" << std::endl;
+        data_path = data_p;
+        data_path /= ".local/share/waveform";
+    }
+    if (not data_path.empty()) {
+        std::cout << "__DATA will use " << data_path << std::endl;
+    }
+    else {
+       std::cerr << "ERROR: not data_path" << std::endl;
+       return -1;
+    }
+
     // setup graphic options
     // Zoom is min (3 secondes) and max a bit more than the whole song
     g_zoom_max = static_cast<double>(m_nb_frames + 2 * FS) / static_cast<double>(DOWNRATE);
@@ -444,10 +465,13 @@ int main(int argc, char *argv[])
     ImGuiIO& io = ImGui::GetIO();
     ImFontConfig config;
     config.MergeMode = false;
-    io.Fonts->AddFontFromFileTTF("ressources/DejaVuSansMono.ttf", 16.0f, &config);
+    // data_path is not empty
+    auto font_path = data_path / "DejaVuSansMono.ttf";
+    io.Fonts->AddFontFromFileTTF( font_path.c_str(), 16.0f, &config);
     // Merge into first font to add Icons
     config.MergeMode = true;
-    io.Fonts->AddFontFromFileTTF("ressources/fontawesome-webfont.ttf", 0.0f, &config);
+    font_path = data_path / "fontawesome-webfont.ttf";
+    io.Fonts->AddFontFromFileTTF( font_path.c_str(), 0.0f, &config);
 
     // Setup backend
     ImGui_ImplGlfw_InitForOpenGL(window, true);

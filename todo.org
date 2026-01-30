@@ -1,5 +1,4 @@
-* __CURRENT_: display frame/sec ds ImGUI
-
+* __CURRENT_: display save/read/(edit) loops
 
 * GitVersion:
 ** imgui working: 2c03aac6d (v 1.87)
