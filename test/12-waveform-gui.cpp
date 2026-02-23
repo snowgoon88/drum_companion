@@ -99,13 +99,13 @@ const ImVec4 YELLOW_COL = ImVec4(0.7f, 0.7f, 0.0f, 1.00f);
 // ImGui::GetStyleColorVec4((ImGuiCol)ImGuiCol_Button))
 
 // ********************************************************** miniaudio GLOBAL
-static constexpr int FS    = 44100;          // sampling rate
+static constexpr int DEFAULT_FS    = 44100;          // sampling rate
 static constexpr int DOWNRATE = 100;         // donwsampling for display
 
 // TODO length of loop > frameCount of data_callback
 bool               m_loop_enabled {true};
 ma_uint64          m_loop_frame_start {300000};
-ma_uint64          m_loop_frame_length {FS * 3};  // 3 second ?
+ma_uint64          m_loop_frame_length {DEFAULT_FS * 3};  // 3 second ?
 ImPlotRect         g_loop_rect ( (double) (m_loop_frame_start / DOWNRATE),
                                  (double) ((m_loop_frame_start + m_loop_frame_length) / DOWNRATE),
                                  -1.0, 1.0 );
@@ -118,6 +118,7 @@ std::string        m_filename;               // filename of audio file provided
 double             m_duration;               // length of audio file in seconds
 std::vector<float> m_samples;                // local copy of audio file samples
 ma_uint64          m_nb_frames;              // nb of frames in audio
+ma_uint32          m_sample_rate;            // actual sample rate
 double             m_pCursor {0.0};          // actual position of the audio cursor.
 
 
@@ -141,7 +142,7 @@ bool g_ask_fullview {false};                 // ask to see full song
 int ElapsedTimeFormatter(double value, char* buff, int size, void* user_data)
 {
     // WARNING does not look for hours
-    auto dts = div( static_cast<int>(value) * DOWNRATE, FS );  // seconds
+    auto dts = div( static_cast<int>(value) * DOWNRATE, m_sample_rate );  // seconds
     auto dtm = div( dts.quot, 60 );                            // minutes
     return snprintf( buff, size, "%d:%.2d", dtm.quot, dtm.rem );
 }
@@ -156,7 +157,7 @@ void copy_wav( const std::string& filepath )
     // miniaudio audio file decoder
     ma_decoder         decoder;
     // initialize decoder (force float, mono, 44100 Hz)
-    auto decoder_cfg = ma_decoder_config_init(ma_format_f32, 1, FS);
+    auto decoder_cfg = ma_decoder_config_init(ma_format_f32, 1, m_sample_rate);
     if (ma_decoder_init_file(filepath.c_str(), &decoder_cfg, &decoder) != MA_SUCCESS) {
         std::runtime_error("Failed to decode audio file: " + filepath);
     }
@@ -175,7 +176,7 @@ void copy_wav( const std::string& filepath )
     std::cout << "  copied " << nb_frame_read << " frames." << std::endl;
     ma_decoder_seek_to_pcm_frame( &decoder, 0 );
     // compute audio file duration
-    m_duration = (double)m_nb_frames / (double)FS;
+    m_duration = (double)m_nb_frames / (double)m_sample_rate;
 
     ma_decoder_uninit(&decoder);
 }
@@ -222,7 +223,7 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput,
         // std::cout << "feed NOR " << pFrameRead << " from " << pCursor << std::endl;
     }
 
-    // std::cout << "  " << (pCursor / FS) << " frames" << "\r";
+    // std::cout << "  " << (pCursor / m_sample_rate) << " frames" << "\r";
     std::cout << "pCursor=" << pCursor << "\r" << std::flush;
     //DEBUG std::cout << "pCursor=" << pCursor << std::endl;
     // TODO what is this for ????????
@@ -250,6 +251,7 @@ bool init_audio( const std::string& filepath )
             << "  format :" << format_str( m_decoder.outputFormat ) << std::endl
             << "  channels : " << m_decoder.outputChannels << std::endl
             << "  sampleRate : " << m_decoder.outputSampleRate << std::endl;
+    m_sample_rate = m_decoder.outputSampleRate;
 
     // configure and initialize output/sink device with properties similar to
     // the decoded music
@@ -416,8 +418,8 @@ int main(int argc, char *argv[])
 
     // setup graphic options
     // Zoom is min (3 secondes) and max a bit more than the whole song
-    g_zoom_max = static_cast<double>(m_nb_frames + 2 * FS) / static_cast<double>(DOWNRATE);
-    g_zoom_min = static_cast<double>(1 * FS) / static_cast<double>(DOWNRATE);
+    g_zoom_max = static_cast<double>(m_nb_frames + 2 * m_sample_rate) / static_cast<double>(DOWNRATE);
+    g_zoom_min = static_cast<double>(1 * m_sample_rate) / static_cast<double>(DOWNRATE);
     std::cout << "Zoom limits: " << g_zoom_min << " - " << g_zoom_max << std::endl;
 
     // Setup error callback
